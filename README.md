@@ -1,12 +1,12 @@
 # 10_Penguin
-# Event Management & Coordination Platform
+# Event Management & Coordination 
 
 #Domain
 Event Management Systems
 
 
 
-1. Problem Statement
+1. Problem Statement :Event Registration and Attendee Management platform
 
 Event planning and management involve multiple stakeholders such as clients, event organizers, staff members, and attendees. In traditional systems, processes like event approval, attendee registration, staff coordination, and attendee verification are often handled manually or using disconnected platforms. This results in inefficiencies, delayed approvals, miscommunication, and poor overall event execution.
 
@@ -20,7 +20,7 @@ This project focuses on modeling and designing such a system using **UML Activit
 
 The system involves the following actors:
 
-1. Client  
+1. Client(Event Sponsor)  
 2. Event Organizer  
 3. Event Staff  
 4. Attendee  
@@ -30,7 +30,7 @@ The system involves the following actors:
 
 3. Planned Features by Actors
 
-3.1 Client
+3.1 Client(Event Sponsor)
 
 The client initiates and approves event-related requests.
 
