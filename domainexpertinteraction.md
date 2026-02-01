@@ -11,7 +11,7 @@ Date of Interaction :01-02-2026
 Mode of Interaction: zoom meeting
 
 
-Duration (in minutes): 38mins
+Duration (in minutes): 45minutes
 
 
 Publicly Accessible Video Link: https://drive.google.com/file/d/1VdjGubTnipbZH-5PcEytTg39yRzHN3f_/view?usp=sharing
