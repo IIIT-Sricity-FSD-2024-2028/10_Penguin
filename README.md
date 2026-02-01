@@ -1,164 +1,158 @@
 # 10_Penguin
 # Event Management & Coordination Platform
 
-## Domain
-
+#Domain
 Event Management Systems
 
----
 
-## 1. Problem Statement
 
-Event planning and execution involve multiple stakeholders such as clients, event organizers, staff members, and attendees. In many cases, these processes are handled manually or through disconnected tools, leading to delays, miscommunication, approval bottlenecks, and poor coordination during events.
+1. Problem Statement
 
-There is a need for a **centralized Event Management & Coordination Platform** that can manage the **complete event lifecycle**—from event request initiation and approval to attendee registration, staff coordination, and real-time attendee verification during the event.
+Event planning and management involve multiple stakeholders such as clients, event organizers, staff members, and attendees. In traditional systems, processes like event approval, attendee registration, staff coordination, and attendee verification are often handled manually or using disconnected platforms. This results in inefficiencies, delayed approvals, miscommunication, and poor overall event execution.
 
-This project focuses on designing and documenting such a system using **UML Activity Diagrams**, aligned with real-world event workflows and Full Stack Software Development (FFSD) principles.
+There is a need for a **centralized Event Management & Coordination Platform** that streamlines the **complete event lifecycle**, starting from event request initiation and approval to attendee registration, staff coordination, and real-time attendee verification during events.
 
----
+This project focuses on modeling and designing such a system using **UML Activity Diagrams** to clearly define workflows, responsibilities, and decision points across all actors.
 
-## 2. Identified Actors
 
-The system consists of the following actors:
 
-1. Client
-2. Event Organizer
-3. Event Staff
-4. Attendee
-5. System (Automated Services)
+2. Identified Actors
 
----
+The system involves the following actors:
 
-## 3. Planned Features by Actors
+1. Client  
+2. Event Organizer  
+3. Event Staff  
+4. Attendee  
+5. System (Automated Processes)
 
-### 3.1 Client
 
-The client initiates and reviews event-related activities.
 
-**Planned Features:**
+3. Planned Features by Actors
 
-* Log in to the system
-* Provide event requirements (type, date, budget, preferences)
-* Select an event organizer
-* Review proposed event plans
-* Approve or request modifications to event plans
-* Receive post-event reports
+3.1 Client
 
----
-
-### 3.2 Event Organizer
-
-The event organizer is responsible for planning and coordinating the event.
+The client initiates and approves event-related requests.
 
 **Planned Features:**
+- Log in to the system  
+- Initiate event registration  
+- Provide event requirements and preferences  
+- Select an event organizer  
+- Review event plans  
+- Approve or request revisions to event plans  
+- Receive final event reports  
 
-* Receive event requests from clients
-* Analyze event requirements
-* Create and submit detailed event plans
-* Select suitable staff and services based on budget and ratings
-* Modify plans based on client feedback
-* Manage attendee eligibility rules
-* Oversee event execution and reporting
 
----
 
-### 3.3 Event Staff
+3.2 Event Organizer
 
-Event staff support operational and on-site activities.
-
-**Planned Features:**
-
-* Register and log in as staff
-* Add service details and pricing
-* Set availability status
-* Receive event participation requests
-* Accept or reject event assignments
-* Participate in approved events
-
----
-
-### 3.4 Attendee
-
-Attendees register for and participate in events.
+The event organizer is responsible for planning and executing the event.
 
 **Planned Features:**
+- Receive event requests from clients  
+- Analyze client requirements  
+- Create detailed event plans  
+- Select staff based on availability, budget, and ratings  
+- Submit plans for client approval  
+- Revise plans based on client feedback  
+- Manage attendee eligibility criteria  
+- Execute events and generate reports  
 
-* Authenticate into the system
-* Browse available event categories
-* Register for public or private events
-* Make payments if required
-* Receive confirmation and entry credentials (QR code or ticket)
-* Get notified about eligibility status
 
----
 
-### 3.5 System (Automated Services)
+3.3 Event Staff
 
-The system provides validation and automation support.
+Event staff handle operational tasks during events.
 
-**Responsibilities:**
+**Planned Features:**
+- Register and log in as staff  
+- Provide service details  
+- Set pricing and availability  
+- Activate staff profile  
+- Receive event participation requests  
+- Accept or decline requests  
+- Update availability status  
+- Participate in assigned events  
 
-* Validate user credentials
-* Check event availability
-* Enforce eligibility rules
-* Generate QR codes or tickets
-* Verify attendees during event entry
-* Maintain logs and send notifications
 
----
 
-## 4. Activity Diagrams Included
+3.4 Attendee
 
-This project includes UML Activity Diagrams for the following workflows:
+Attendees register and participate in events.
 
-* Client Event Registration Flow
-* Event Approval and Planning Process
-* Attendee Registration Workflow
-* Attendee Management and Eligibility Verification
-* Event Staff Registration and Request Handling
-* Attendee Verification During Event Entry
+**Planned Features:**
+- Authenticate into the system  
+- Browse event categories  
+- Check event availability  
+- Register for public or private events  
+- Make payments (if required)  
+- Receive confirmation and entry credentials  
+- Attend events after verification  
+
+
+
+3.5 System (Automated Functions)
+
+The system supports validation and automation.
+
+**Planned Responsibilities:**
+- Authenticate users  
+- Validate event availability  
+- Enforce attendee eligibility rules  
+- Verify tickets or QR codes at entry  
+- Track attendee presence  
+- Send notifications and confirmations  
+
+
+
+4. Activity Diagrams Included
+
+The project includes UML Activity Diagrams for the following workflows:
+
+- Client Event Registration  
+- Event Approval and Planning  
+- Attendee Registration  
+- Attendee Management  
+- Event Staff Registration and Request Handling  
+- Attendee Verification During Event Entry  
 
 Each diagram clearly represents:
+- Sequential activities  
+- Decision points  
+- Actor responsibilities  
+- Loopbacks and conditions  
+- Start and end states  
 
-* Start and end nodes
-* Actor-specific responsibilities
-* Decision points and conditions
-* Loopbacks for revisions and retries
 
----
 
-## 5. Key System Capabilities
+5. Key System Capabilities
 
-* End-to-end event lifecycle modeling
-* Clear role-based responsibility separation
-* Structured approval and verification processes
-* Real-time attendee verification support
-* Scalable design adaptable to various event types
-* Industry-aligned documentation standards
+- End-to-end event lifecycle modeling  
+- Clear role-based responsibility separation  
+- Structured approval and verification processes  
+- Improved coordination between actors  
+- Scalable workflows for different event types  
 
----
 
-## 6. Project Objective
+
+6. Project Objective
 
 The objectives of this project are to:
 
-* Understand real-world event management workflows
-* Apply software engineering principles in system modeling
-* Design UML activity diagrams for multi-actor systems
-* Prepare structured documentation suitable for full-stack implementation
-* Enhance problem-solving and system design skills
+- Understand real-world event management workflows  
+- Apply UML and activity diagram concepts  
+- Model multi-actor systems effectively  
+- Improve process clarity and coordination  
+- Create design documentation suitable for full-stack implementation  
 
----
 
-## 7. Tools & Technologies
 
-* UML Activity Diagrams
-* draw.io / diagrams.net
-* GitHub for documentation and version control
-* Requirement-driven design methodology
+7. Tools Used
 
----
+- UML Activity Diagrams  
+- draw.io / diagrams.net  
+- GitHub for documentation  
+- Requirement-driven system design
 
-## 8. Academic Relevance
 
-This project is developed as part of the **Full Stack Software Development (FFSD)** curriculum and is intended to span multiple semesters, allowing scope for future implementation, enhancement, and integration.
