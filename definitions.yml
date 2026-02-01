@@ -1,6 +1,6 @@
 # Domain: Event Management and Coordination
-# Problem Statement: Event Registration and Attendee Management
-# Last Updated: 2026-01-27
+# Problem Statement: Event Registration and Attendee Management platform
+# Last Updated: 2026-01-31
 
 DomainTerm1: Event
 definition:
@@ -9,7 +9,7 @@ examples:
   - A technology conference
   - A music concert
 aliases:
-  - Program
+  - conference
   - Occasion
 
 DomainTerm2: Attendee
@@ -19,7 +19,7 @@ examples:
   - A participant attending a conference
   - A guest joining a concert
 aliases:
-  - Participant
+  - visitor
   - guest
 
 DomainTerm3: Event Organizer
@@ -29,7 +29,7 @@ examples:
   - An event management company
   - An organizing committee
 aliases:
-  - Organizer
+  - event manager
   - Event Coordinator
 
 DomainTerm4: Registration
@@ -42,8 +42,7 @@ aliases:
   - Enrollment
   - Sign-up
 
-DomainTerm5:
-  term: Event Client
+DomainTerm5: Event Client
   definition: 
     An individual or organization that requests, sponsors, or commissions an event to be organized.
   examples:
@@ -53,8 +52,7 @@ DomainTerm5:
     - Event Sponsor
     - Event Owner
 
-DomainTerm6:
-  term: Notification
+DomainTerm6: Notification
   definition: 
     A message sent to inform an attendee or event organizer about event-related updates, reminders, or changes.
   examples:
@@ -94,16 +92,7 @@ aliases:
   - Fee
   - Participation Charge
 
-DomainTerm10: Event Remainder
-  definition: 
-    A notification sent to remaind attendees about upcoming event details.
-  examples:
-    - Remainder sent one day before the event
-  aliases:
-    - Remainder
-    - Notification
-
-    DomainTerm11: Event Security
+    DomainTerm10: Event Security
     definition: 
       Measures and personnel responsible for ensuring safety during an event.
     examples:
@@ -112,7 +101,7 @@ DomainTerm10: Event Remainder
       - Security Arrangement
       - Safety Management
 
-      DomainTerm12: Venue
+     DomainTerm11: Venue
   definition: 
     The physical location where an event is conducted.
   examples:
@@ -122,7 +111,7 @@ DomainTerm10: Event Remainder
     - Location
     - Event Site
 
-DomainTerm13: Session
+DomainTerm12: Session
   definition: 
     A scheduled segment of an event focused on a specific activity or topic.
   examples:
@@ -132,7 +121,7 @@ DomainTerm13: Session
     - Slot
     - Segment
 
-DomainTerm14: Guest Speaker
+DomainTerm13: Guest Speaker
   definition: 
     An invited person who delivers a talk or presentation during an event.
   examples:
@@ -142,27 +131,17 @@ DomainTerm14: Guest Speaker
     - Speaker
     - Presenter
 
-DomainTerm15: Ticket
+DomainTerm14: Ticket
   definition: 
     A confirmation that grants an attendee permission to enter an event.
   examples:
     - QR code entry pass
     - Printed ticket
   aliases:
-    - Pass
+    - voucher
     - Entry Pass
 
-DomainTerm16: Invitation
-  definition: 
-    A formal request sent to invite a person to attend an event.
-  examples:
-    - Email invitation
-    - Printed invite card
-  aliases:
-    - Invite
-    - Call
-
-DomainTerm17: Feedback
+DomainTerm15: Feedback
   definition: 
     Opinions or responses provided by attendees after participating in an event.
   examples:
@@ -172,7 +151,7 @@ DomainTerm17: Feedback
     - Review
     - Response
 
-DomainTerm18: Event Approval
+DomainTerm16: Event Approval
   definition: 
     The process of formally authorizing an event plan before execution.
   examples:
@@ -182,7 +161,7 @@ DomainTerm18: Event Approval
     - Approval
     - Authorization
 
-DomainTerm19: Staff Assignment
+DomainTerm17: Staff Assignment
   definition: 
     The allocation of staff members to specific roles or duties in an event.
   examples:
@@ -192,7 +171,7 @@ DomainTerm19: Staff Assignment
     - Duty Allocation
     - Task Assignment
 
-DomainTerm20: Crowd Management
+DomainTerm18: Crowd Management
   definition: 
     The coordination of attendee movement and behavior to ensure safety and order.
   examples:
@@ -202,7 +181,7 @@ DomainTerm20: Crowd Management
     - Crowd Control
     - Audience Management
 
-DomainTerm21: Event Budget
+DomainTerm19: Event Budget
   definition: 
     The planned allocation of financial resources for conducting an event.
   examples:
@@ -212,16 +191,16 @@ DomainTerm21: Event Budget
     - Budget Plan
     - Expense Plan
 
-DomainTerm22: Refund
+DomainTerm20: Refund
   definition: 
-    The return of payment made for an event when participation is cancelled.
+    The return of payment made for an event(attendee and staff) when participation is cancelled.
   examples:
     - Registration cancellation refund
   aliases:
     - Repayment
     - Reimbursement
 
-DomainTerm23: Waiting List
+DomainTerm21: Waiting List
   definition: 
     A list of attendees who are queued to participate when event capacity is full.
   examples:
@@ -230,7 +209,7 @@ DomainTerm23: Waiting List
     - Standby List
     - Queue List
 
-DomainTerm24: Event Capacity
+DomainTerm22: Event Capacity
   definition: 
     The maximum number of attendees allowed to participate in an event.
   examples:
@@ -239,7 +218,7 @@ DomainTerm24: Event Capacity
     - Participant Limit
     - Seat Limit
 
-DomainTerm25: Event Cancellation
+DomainTerm23: Event Cancellation
   definition: 
     The formal decision to discontinue an event before it takes place.
   examples:
@@ -248,7 +227,7 @@ DomainTerm25: Event Cancellation
     - Cancellation
     - Event Withdrawal
 
-DomainTerm26: Event Update
+DomainTerm24: Event Update
   definition: 
     Information shared to notify participants about changes related to an event.
   examples:
@@ -258,7 +237,7 @@ DomainTerm26: Event Update
     - Update
     - Announcement
 
-DomainTerm27: Registration Deadline
+DomainTerm25: Registration Deadline
   definition: 
     The final date or time by which an attendee must complete registration.
   examples:
@@ -267,7 +246,7 @@ DomainTerm27: Registration Deadline
     - Cutoff Date
     - Closing Date
 
-DomainTerm28: Event Summary
+DomainTerm26: Event Summary
   definition: 
     A brief overview describing how an event was conducted and its outcomes.
   examples:
@@ -276,16 +255,7 @@ DomainTerm28: Event Summary
     - Event Overview
     - Summary Report
 
-DomainTerm29: Event Performance
-  definition: 
-    The overall evaluation of an event based on attendance, feedback, and execution.
-  examples:
-    - Success assessment
-  aliases:
-    - Event Outcome
-    - Performance Review
-
-DomainTerm30: Volunteer
+DomainTerm27: Volunteer
   definition: 
     A person who offers assistance during an event without financial compensation.
   examples:
@@ -294,7 +264,7 @@ DomainTerm30: Volunteer
     - Helper
     - Event Volunteer
     
-DomainTerm31: Staff Profile
+DomainTerm28: Staff Profile
   definition: 
     A record describing the skills, availability, and service details of a staff member involved in events.
   examples:
@@ -304,7 +274,7 @@ DomainTerm31: Staff Profile
     - Staff Record
     - Staff Details
 
-    DomainTerm32: Availability Status
+    DomainTerm29: Availability Status
   definition: 
     The current state indicating whether a staff member is available to participate in an event.
   examples:
@@ -314,7 +284,7 @@ DomainTerm31: Staff Profile
     - Availability
     - Status
 
-    DomainTerm33: Event Request
+    DomainTerm30: Event Request
   definition: 
     A formal request sent to staff members asking them to participate in an event.
   examples:
@@ -323,7 +293,7 @@ DomainTerm31: Staff Profile
     - Participation Request
     - Staff Request
 
-    DomainTerm34: Participation Confirmation
+    DomainTerm31: Participation Confirmation
   definition: 
     An acknowledgment from a staff member agreeing to take part in an event.
   examples:
@@ -332,7 +302,7 @@ DomainTerm31: Staff Profile
     - Confirmation
     - Acceptance
 
-DomainTerm35: Event Requirements
+DomainTerm32: Event Requirements
   definition: 
     A set of needs and expectations defined by the client for conducting an event.
   examples:
@@ -342,7 +312,7 @@ DomainTerm35: Event Requirements
     - Event Needs
     - Requirements
 
-DomainTerm36: Ticket Availability
+DomainTerm33: Ticket Availability
   definition: 
     The current state indicating whether tickets are available for registration.
   examples:
@@ -352,7 +322,7 @@ DomainTerm36: Ticket Availability
     - Seat Availability
     - Pass Availability
 
-    DomainTerm37: Registration Request
+    DomainTerm34: Registration Request
   definition: 
     A formal submission made by an attendee to participate in an event.
   examples:
@@ -361,7 +331,7 @@ DomainTerm36: Ticket Availability
     - Signup Request
     - Enrollment Request
 
-DomainTerm38: Client Communication
+DomainTerm35: Client Communication
   definition: 
     The exchange of information between the event organizer and the client throughout the event lifecycle.
   examples:
@@ -370,7 +340,7 @@ DomainTerm38: Client Communication
     - Client Interaction
     - Client Coordination
 
-    DomainTerm39: Event Coordination
+    DomainTerm36: Event Coordination
   definition: 
     The act of organizing and synchronizing people, services, and activities during an event.
   examples:
