@@ -1,0 +1,386 @@
+# Domain: Event Management and Coordination
+# Problem Statement: Event Registration and Attendee Management
+# Last Updated: 2026-01-27
+
+DomainTerm1: Event
+definition:
+  A planned gathering organized for a specific purpose and conducted at a defined place and time.
+examples:
+  - A technology conference
+  - A music concert
+aliases:
+  - Program
+  - Occasion
+
+DomainTerm2: Attendee
+definition:
+  A person who registers to take part in an event and is permitted to be present during the event.
+examples:
+  - A participant attending a conference
+  - A guest joining a concert
+aliases:
+  - Participant
+  - guest
+
+DomainTerm3: Event Organizer
+definition:
+  An individual responsible for planning, arranging, and supervising an event.
+examples:
+  - An event management company
+  - An organizing committee
+aliases:
+  - Organizer
+  - Event Coordinator
+
+DomainTerm4: Registration
+definition:
+  The process through which an attendee confirms participation in an event by providing required information.
+examples:
+  - Online registration for a conference
+  - On-site registration at the venue
+aliases:
+  - Enrollment
+  - Sign-up
+
+DomainTerm5:
+  term: Event Client
+  definition: 
+    An individual or organization that requests, sponsors, or commissions an event to be organized.
+  examples:
+    - Company hosting a product launch
+    - Organization sponsoring a conference
+  aliases:
+    - Event Sponsor
+    - Event Owner
+
+DomainTerm6:
+  term: Notification
+  definition: 
+    A message sent to inform an attendee or event organizer about event-related updates, reminders, or changes.
+  examples:
+    - Registration confirmation message
+    - Event schedule update reminder
+  aliases:
+    - Alert
+    - Reminder
+
+DomainTerm7: Check-In
+definition:
+  The process of verifying an attendee’s presence at the event venue before allowing entry.
+examples:
+  - QR code scanning at the entrance
+  - Manual identity verification
+aliases:
+  - Entry Confirmation
+  - Attendance Verification
+
+DomainTerm8: Staff
+  definition: 
+    People assigned to support and carry out operational activities during the planning and execution of an event.
+  examples:
+    - Volunteers managing attendee entry
+    - Crew handling stage arrangements
+  aliases:
+    - Event Staff
+    - Support Staff
+
+DomainTerm9: Payment
+definition:
+  The transfer of money by an attendee to confirm participation in a paid event.
+examples:
+  - Online payment during registration
+  - Cash payment at the venue counter
+aliases:
+  - Fee
+  - Participation Charge
+
+DomainTerm10: Event Remainder
+  definition: 
+    A notification sent to remaind attendees about upcoming event details.
+  examples:
+    - Remainder sent one day before the event
+  aliases:
+    - Remainder
+    - Notification
+
+    DomainTerm11: Event Security
+    definition: 
+      Measures and personnel responsible for ensuring safety during an event.
+    examples:
+      - Security team at entry points
+    aliases:
+      - Security Arrangement
+      - Safety Management
+
+      DomainTerm12: Venue
+  definition: 
+    The physical location where an event is conducted.
+  examples:
+    - College auditorium
+    - Open ground
+  aliases:
+    - Location
+    - Event Site
+
+DomainTerm13: Session
+  definition: 
+    A scheduled segment of an event focused on a specific activity or topic.
+  examples:
+    - Technical talk
+    - Workshop slot
+  aliases:
+    - Slot
+    - Segment
+
+DomainTerm14: Guest Speaker
+  definition: 
+    An invited person who delivers a talk or presentation during an event.
+  examples:
+    - Industry expert
+    - Chief guest
+  aliases:
+    - Speaker
+    - Presenter
+
+DomainTerm15: Ticket
+  definition: 
+    A confirmation that grants an attendee permission to enter an event.
+  examples:
+    - QR code entry pass
+    - Printed ticket
+  aliases:
+    - Pass
+    - Entry Pass
+
+DomainTerm16: Invitation
+  definition: 
+    A formal request sent to invite a person to attend an event.
+  examples:
+    - Email invitation
+    - Printed invite card
+  aliases:
+    - Invite
+    - Call
+
+DomainTerm17: Feedback
+  definition: 
+    Opinions or responses provided by attendees after participating in an event.
+  examples:
+    - Event feedback form
+    - Rating survey
+  aliases:
+    - Review
+    - Response
+
+DomainTerm18: Event Approval
+  definition: 
+    The process of formally authorizing an event plan before execution.
+  examples:
+    - Management approval
+    - Committee approval
+  aliases:
+    - Approval
+    - Authorization
+
+DomainTerm19: Staff Assignment
+  definition: 
+    The allocation of staff members to specific roles or duties in an event.
+  examples:
+    - Assigning volunteers to entry gate
+    - Stage management duty
+  aliases:
+    - Duty Allocation
+    - Task Assignment
+
+DomainTerm20: Crowd Management
+  definition: 
+    The coordination of attendee movement and behavior to ensure safety and order.
+  examples:
+    - Queue handling
+    - Entry flow control
+  aliases:
+    - Crowd Control
+    - Audience Management
+
+DomainTerm21: Event Budget
+  definition: 
+    The planned allocation of financial resources for conducting an event.
+  examples:
+    - Expense planning sheet
+    - Cost estimate
+  aliases:
+    - Budget Plan
+    - Expense Plan
+
+DomainTerm22: Refund
+  definition: 
+    The return of payment made for an event when participation is cancelled.
+  examples:
+    - Registration cancellation refund
+  aliases:
+    - Repayment
+    - Reimbursement
+
+DomainTerm23: Waiting List
+  definition: 
+    A list of attendees who are queued to participate when event capacity is full.
+  examples:
+    - Standby participant list
+  aliases:
+    - Standby List
+    - Queue List
+
+DomainTerm24: Event Capacity
+  definition: 
+    The maximum number of attendees allowed to participate in an event.
+  examples:
+    - Hall seating limit
+  aliases:
+    - Participant Limit
+    - Seat Limit
+
+DomainTerm25: Event Cancellation
+  definition: 
+    The formal decision to discontinue an event before it takes place.
+  examples:
+    - Event cancelled due to weather
+  aliases:
+    - Cancellation
+    - Event Withdrawal
+
+DomainTerm26: Event Update
+  definition: 
+    Information shared to notify participants about changes related to an event.
+  examples:
+    - Time change announcement
+    - Venue change notice
+  aliases:
+    - Update
+    - Announcement
+
+DomainTerm27: Registration Deadline
+  definition: 
+    The final date or time by which an attendee must complete registration.
+  examples:
+    - Last date to register
+  aliases:
+    - Cutoff Date
+    - Closing Date
+
+DomainTerm28: Event Summary
+  definition: 
+    A brief overview describing how an event was conducted and its outcomes.
+  examples:
+    - Post-event report
+  aliases:
+    - Event Overview
+    - Summary Report
+
+DomainTerm29: Event Performance
+  definition: 
+    The overall evaluation of an event based on attendance, feedback, and execution.
+  examples:
+    - Success assessment
+  aliases:
+    - Event Outcome
+    - Performance Review
+
+DomainTerm30: Volunteer
+  definition: 
+    A person who offers assistance during an event without financial compensation.
+  examples:
+    - Student volunteer
+  aliases:
+    - Helper
+    - Event Volunteer
+    
+DomainTerm31: Staff Profile
+  definition: 
+    A record describing the skills, availability, and service details of a staff member involved in events.
+  examples:
+    - Profile of a lighting technician
+    - Catering staff profile
+  aliases:
+    - Staff Record
+    - Staff Details
+
+    DomainTerm32: Availability Status
+  definition: 
+    The current state indicating whether a staff member is available to participate in an event.
+  examples:
+    - Available for weekend events
+    - Not available on a specific date
+  aliases:
+    - Availability
+    - Status
+
+    DomainTerm33: Event Request
+  definition: 
+    A formal request sent to staff members asking them to participate in an event.
+  examples:
+    - Request sent to a photographer
+  aliases:
+    - Participation Request
+    - Staff Request
+
+    DomainTerm34: Participation Confirmation
+  definition: 
+    An acknowledgment from a staff member agreeing to take part in an event.
+  examples:
+    - Staff accepts event assignment
+  aliases:
+    - Confirmation
+    - Acceptance
+
+DomainTerm35: Event Requirements
+  definition: 
+    A set of needs and expectations defined by the client for conducting an event.
+  examples:
+    - Sound system requirement
+    - Stage setup requirement
+  aliases:
+    - Event Needs
+    - Requirements
+
+DomainTerm36: Ticket Availability
+  definition: 
+    The current state indicating whether tickets are available for registration.
+  examples:
+    - Tickets sold out
+    - Limited tickets remaining
+  aliases:
+    - Seat Availability
+    - Pass Availability
+
+    DomainTerm37: Registration Request
+  definition: 
+    A formal submission made by an attendee to participate in an event.
+  examples:
+    - Online registration submission
+  aliases:
+    - Signup Request
+    - Enrollment Request
+
+DomainTerm38: Client Communication
+  definition: 
+    The exchange of information between the event organizer and the client throughout the event lifecycle.
+  examples:
+    - Sharing plan updates with client
+  aliases:
+    - Client Interaction
+    - Client Coordination
+
+    DomainTerm39: Event Coordination
+  definition: 
+    The act of organizing and synchronizing people, services, and activities during an event.
+  examples:
+    - Coordinating staff during event execution
+  aliases:
+    - Event Management
+    - Operational Coordination
+
+
+
+
+
+
