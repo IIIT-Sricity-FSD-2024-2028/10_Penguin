@@ -1,71 +1,68 @@
-# 10_Penguin
-# Event Management & Coordination 
+# Event Management and Coordination Platform
 
-#Domain
-Event Management Systems
+## 1. Overview
 
+The Event Management and Coordination Platform is a software-based information system designed to support the planning, approval, coordination, and execution of events. The system enables structured event registration, approval workflows, staff coordination, attendee registration, and real-time attendee verification in a consistent and centralized manner.
 
+This document presents a formal requirements-level description of the system by identifying the interacting actors and describing their planned features, which collectively define the functional scope of the platform.
 
-1. Problem Statement :Event Registration and Attendee Management platform
+---
 
-Event planning and management involve multiple stakeholders such as clients, event organizers, staff members, and attendees. In traditional systems, processes like event approval, attendee registration, staff coordination, and attendee verification are often handled manually or using disconnected platforms. This results in inefficiencies, delayed approvals, miscommunication, and poor overall event execution.
+## 2. Problem Definition
 
-There is a need for a **centralized Event Management & Coordination Platform** that streamlines the **complete event lifecycle**, starting from event request initiation and approval to attendee registration, staff coordination, and real-time attendee verification during events.
+Event organization involves multiple stakeholders such as clients, event organizers, staff members, and attendees. In the absence of a centralized event management system, event processes are often handled manually or through disconnected tools. This results in delayed approvals, miscommunication, inefficient staff allocation, and poor attendee management.
 
-This project focuses on modeling and designing such a system using **UML Activity Diagrams** to clearly define workflows, responsibilities, and decision points across all actors.
+The problem addressed by this project is the need for a centralized event management and coordination system that supports the complete event lifecycle while enabling real-time operational control during event execution.
 
+---
 
+## 3. Identification of System Actors
 
-2. Identified Actors
+Actors represent external roles that interact with the system to achieve specific objectives. Actor identification follows UML use-case modeling principles and focuses on roles rather than internal system components or implementation details.
 
-The system involves the following actors:
+---
 
-1. Client(Event Sponsor)  
-2. Event Organizer  
-3. Event Staff  
-4. Attendee  
-5. System (Automated Processes)
+## 4. Primary Actors and Planned Features
 
+### 4.1 Client
 
+**Description**  
+The Client is an end user who initiates event requests and approves event plans.
 
-3. Planned Features by Actors
-
-3.1 Client(Event Sponsor)
-
-The client initiates and approves event-related requests.
-
-**Planned Features:**
-- Log in to the system  
-- Initiate event registration  
+**Planned Features**
+- Register and authenticate into the system  
+- Initiate event registration requests  
 - Provide event requirements and preferences  
 - Select an event organizer  
-- Review event plans  
-- Approve or request revisions to event plans  
+- Review proposed event plans  
+- Approve event plans or request revisions  
 - Receive final event reports  
 
+---
 
+### 4.2 Event Organizer
 
-3.2 Event Organizer
+**Description**  
+The Event Organizer is responsible for planning, coordinating, and executing events based on client requirements.
 
-The event organizer is responsible for planning and executing the event.
-
-**Planned Features:**
+**Planned Features**
 - Receive event requests from clients  
-- Analyze client requirements  
-- Create detailed event plans  
-- Select staff based on availability, budget, and ratings  
+- Analyze event requirements  
+- Prepare detailed event plans  
+- Select staff based on availability and budget  
 - Submit plans for client approval  
-- Revise plans based on client feedback  
+- Modify plans based on feedback  
 - Manage attendee eligibility criteria  
-- Execute events and generate reports  
+- Generate post-event reports  
 
+---
 
+### 4.3 Event Staff
 
-3.3 Event Staff
+**Description**  
+Event Staff are operational users responsible for on-ground execution and service delivery during events.
 
-Event staff handle operational tasks during events.
-
-**Planned Features:**
+**Planned Features**
 - Register and log in as staff  
 - Provide service details  
 - Set pricing and availability  
@@ -75,84 +72,61 @@ Event staff handle operational tasks during events.
 - Update availability status  
 - Participate in assigned events  
 
+---
 
+### 4.4 Attendee
 
-3.4 Attendee
+**Description**  
+The Attendee is an end user who registers for and participates in events.
 
-Attendees register and participate in events.
-
-**Planned Features:**
+**Planned Features**
 - Authenticate into the system  
 - Browse event categories  
 - Check event availability  
 - Register for public or private events  
-- Make payments (if required)  
-- Receive confirmation and entry credentials  
-- Attend events after verification  
+- Make payments if required  
+- Receive registration confirmation  
+- Verify entry during event attendance  
 
+---
 
+### 4.5 System Administrator
 
-3.5 System (Automated Functions)
+**Description**  
+The System Administrator is responsible for platform maintenance and access control.
 
-The system supports validation and automation.
+**Planned Features**
+- Manage user accounts and roles  
+- Monitor system operations  
+- Maintain platform availability  
 
-**Planned Responsibilities:**
-- Authenticate users  
-- Validate event availability  
-- Enforce attendee eligibility rules  
-- Verify tickets or QR codes at entry  
-- Track attendee presence  
-- Send notifications and confirmations  
+---
 
+## 5. External Systems
 
+The system interacts with the following external systems, which remain outside the system boundary but support core event workflows:
 
-4. Activity Diagrams Included
+- Payment Gateway – Processes event-related payments securely  
+- Notification Service – Sends confirmations, reminders, and updates  
+- Verification Service – Supports ticket or QR-based attendee verification  
 
-The project includes UML Activity Diagrams for the following workflows:
+---
 
-- Client Event Registration  
-- Event Approval and Planning  
-- Attendee Registration  
-- Attendee Management  
-- Event Staff Registration and Request Handling  
-- Attendee Verification During Event Entry  
+## 6. Summary of Planned Features by Actor
 
-Each diagram clearly represents:
-- Sequential activities  
-- Decision points  
-- Actor responsibilities  
-- Loopbacks and conditions  
-- Start and end states  
+| Actor | Planned Features |
+|------|------------------|
+| Client | Initiate events, review and approve plans, receive reports |
+| Event Organizer | Plan events, manage staff, coordinate execution |
+| Event Staff | Manage availability, accept tasks, deliver services |
+| Attendee | Register for events, receive confirmation, attend events |
+| System Administrator | Platform maintenance and access control |
+| External Systems | Payments, notifications, verification |
 
+---
 
+## 7. Conclusion
 
-5. Key System Capabilities
+The Event Management and Coordination Platform addresses operational challenges in event planning and execution by providing a structured set of planned features aligned with clearly identified actors. By expressing system functionality in terms of planned features rather than implementation details, this document establishes a strong foundation for subsequent UML modeling and detailed system design.
 
-- End-to-end event lifecycle modeling  
-- Clear role-based responsibility separation  
-- Structured approval and verification processes  
-- Improved coordination between actors  
-- Scalable workflows for different event types  
-
-
-
-6. Project Objective
-
-The objectives of this project are to:
-
-- Understand real-world event management workflows  
-- Apply UML and activity diagram concepts  
-- Model multi-actor systems effectively  
-- Improve process clarity and coordination  
-- Create design documentation suitable for full-stack implementation  
-
-
-
-7. Tools Used
-
-- UML Activity Diagrams  
-- draw.io / diagrams.net  
-- GitHub for documentation  
-- Requirement-driven system design
-
-
+This document serves as a formal requirements-level description of the system.
