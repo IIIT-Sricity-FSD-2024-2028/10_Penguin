@@ -3,7 +3,7 @@ Problem Statement: Event Registration and Attendee Management platform
 
 ## 1. Overview
 
-The Event Management and Coordination Platform is a software-based information system designed to support the planning, approval, coordination, and execution of events. The system enables structured event registration, approval workflows, staff coordination, attendee registration, and real-time attendee verification in a consistent and centralized manner.
+The Event Registration and Attendee Management platform is a software-based information system designed to support the planning, approval, coordination, and execution of events. The system enables structured event registration, approval workflows, staff coordination, attendee registration, and real-time attendee verification in a consistent and centralized manner.
 
 This document presents a formal requirements-level description of the system by identifying the interacting actors and describing their planned features, which collectively define the functional scope of the platform.
 
@@ -128,6 +128,6 @@ The system interacts with the following external systems, which remain outside t
 
 ## 7. Conclusion
 
-The Event Management and Coordination Platform addresses operational challenges in event planning and execution by providing a structured set of planned features aligned with clearly identified actors. By expressing system functionality in terms of planned features rather than implementation details, this document establishes a strong foundation for subsequent UML modeling and detailed system design.
+The Event Registration and Attendee Management platform addresses operational challenges in event planning and execution by providing a structured set of planned features aligned with clearly identified actors. By expressing system functionality in terms of planned features rather than implementation details, this document establishes a strong foundation for subsequent UML modeling and detailed system design.
 
 This document serves as a formal requirements-level description of the system.
