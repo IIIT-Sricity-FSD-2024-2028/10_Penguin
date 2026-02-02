@@ -8,7 +8,7 @@
 - **Mode of Interaction:** Video Call  
 - **Duration (in minutes):** 45
 - **Publicly Accessible Video Link:**  
- https://drive.google.com/drive/u/1/folders/1r015nZ_CRegIGl3iO-x82_CMoATTqi-Q
+https://drive.google.com/drive/u/1/folders/1r015nZ_CRegIGl3iO-x82_CMoATTqi-Q
 
 ---
 
