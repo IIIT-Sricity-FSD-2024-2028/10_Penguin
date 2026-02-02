@@ -1,4 +1,5 @@
 # Event Management and Coordination Platform
+Problem Statement: Event Registration and Attendee Management platform 
 
 ## 1. Overview
 
