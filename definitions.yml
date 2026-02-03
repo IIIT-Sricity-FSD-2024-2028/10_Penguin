@@ -184,3 +184,15 @@ SystemAdministrator:
   aliases:
     - Admin
     - Platform Admin
+
+Event Sponsor:
+ name:Event sponsor
+definition: >
+  An individual or organization that provides financial, material, or service support to an event in exchange for visibility or association.
+examples:
+  - Company sponsoring a college cultural fest
+  - Brand supporting a sports event
+aliases:
+  - supporter
+  - Event Partner
+
