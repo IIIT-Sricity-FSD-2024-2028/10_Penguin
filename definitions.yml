@@ -116,7 +116,7 @@ EventManager:
   examples:
     - "Manager schedules event and views attendee list"
   aliases:
-    - Manager
+    - Event Organiser
     - Coordinator
 
 EventReport:
@@ -186,7 +186,7 @@ SystemAdministrator:
     - Platform Admin
 
 Event Sponsor:
- name:Event sponsor
+ name:Client
 definition: >
   An individual or organization that provides financial, material, or service support to an event in exchange for visibility or association.
 examples:
@@ -194,5 +194,5 @@ examples:
   - Brand supporting a sports event
 aliases:
   - supporter
-  - Event Partner
+  - Event Sponsor
 
