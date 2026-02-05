@@ -185,7 +185,7 @@ SystemAdministrator:
     - Admin
     - Platform Admin
 
-Event Sponsor:
+Client:
  name:Client
 definition: >
   An individual or organization that provides financial, material, or service support to an event in exchange for visibility or association.
