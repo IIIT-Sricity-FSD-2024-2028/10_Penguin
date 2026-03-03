@@ -11,9 +11,7 @@ This document presents a formal requirements-level description of the system by 
 
 ## 2. Problem Definition
 
-Event organization involves multiple stakeholders such as clients, event organizers, staff members, and attendees. In the absence of a centralized event management system, event processes are often handled manually or through disconnected tools. This results in delayed approvals, miscommunication, inefficient staff allocation, and poor attendee management.
-
-The problem addressed by this project is the need for a centralized event management and coordination system that supports the complete event lifecycle while enabling real-time operational control during event execution.
+Event registration and attendee management are essential for the smooth execution of any event. In many cases, these processes are handled manually or through disconnected systems, leading to long queues, data errors, delayed confirmations, and difficulty in tracking attendance. The primary problem is the absence of a centralized platform dedicated to managing the complete attendee lifecycle—from registration and payment to ticket generation and on-site verification. This project focuses mainly on providing an efficient and secure attendee registration and management system. Additional features such as event planning, staff coordination, and reporting are included to further support overall event operations.
 
 ---
 
