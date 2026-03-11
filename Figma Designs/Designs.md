@@ -5,7 +5,6 @@ EventFlow – Event Registration & Attendee Management System
 Figma Design Prototype
 
 ---
-
 Project
 
 **Event Registration & Attendee Management System**
