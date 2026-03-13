@@ -3,29 +3,29 @@ USE Event_Management;
 
 CREATE TABLE Client(
 Client_ID INT PRIMARY KEY,
-Name VARCHAR(100),
-Email VARCHAR(100) UNIQUE,
+Name VARCHAR(100) NOT NULL,
+Email VARCHAR(100) UNIQUE NOT NULL,
 Phone_No VARCHAR(15),
-Password VARCHAR(100),
+Password VARCHAR(100) NOT NULL,
 Address VARCHAR(255)
 );
 
 CREATE TABLE Event_Organizer(
 Organizer_ID INT PRIMARY KEY,
-Name VARCHAR(100),
-Email VARCHAR(100) UNIQUE,
+Name VARCHAR(100) NOT NULL,
+Email VARCHAR(100) UNIQUE NOT NULL,
 Phone_No VARCHAR(15),
-Password VARCHAR(100)
+Password VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE Event(
 Event_ID INT PRIMARY KEY,
-Organizer_ID INT,
-Client_ID INT,
-Name VARCHAR(200),
+Organizer_ID INT NOT NULL,
+Client_ID INT NOT NULL,
+Name VARCHAR(200) NOT NULL,
 Event_Type VARCHAR(100),
-Date DATE,
-Location VARCHAR(200),
+Date DATE NOT NULL,
+Location VARCHAR(200) NOT NULL,
 Capacity INT,
 Status VARCHAR(50),
 FOREIGN KEY(Organizer_ID) REFERENCES Event_Organizer(Organizer_ID),
@@ -34,9 +34,9 @@ FOREIGN KEY(Client_ID) REFERENCES Client(Client_ID)
 
 CREATE TABLE Event_Plan(
 EventPlan_ID INT PRIMARY KEY,
-Event_ID INT,
-Client_ID INT,
-Organizer_ID INT,
+Event_ID INT NOT NULL,
+Client_ID INT NOT NULL,
+Organizer_ID INT NOT NULL,
 Status VARCHAR(50),
 Approval_Status VARCHAR(50),
 FOREIGN KEY(Event_ID) REFERENCES Event(Event_ID),
@@ -46,10 +46,10 @@ FOREIGN KEY(Organizer_ID) REFERENCES Event_Organizer(Organizer_ID)
 
 CREATE TABLE Event_Report(
 EventReport_ID INT PRIMARY KEY,
-Organizer_ID INT,
-Event_ID INT,
-Client_ID INT,
-Submission_Date DATE,
+Organizer_ID INT NOT NULL,
+Event_ID INT NOT NULL,
+Client_ID INT NOT NULL,
+Submission_Date DATE NOT NULL,
 FOREIGN KEY(Organizer_ID) REFERENCES Event_Organizer(Organizer_ID),
 FOREIGN KEY(Event_ID) REFERENCES Event(Event_ID),
 FOREIGN KEY(Client_ID) REFERENCES Client(Client_ID)
@@ -57,19 +57,19 @@ FOREIGN KEY(Client_ID) REFERENCES Client(Client_ID)
 
 CREATE TABLE Attendee(
 Attendee_ID INT PRIMARY KEY,
-Name VARCHAR(100),
-Email VARCHAR(100) UNIQUE,
+Name VARCHAR(100) NOT NULL,
+Email VARCHAR(100) UNIQUE NOT NULL,
 Phone_No VARCHAR(15),
-Password VARCHAR(100),
+Password VARCHAR(100) NOT NULL,
 Address VARCHAR(255),
 Bio VARCHAR(255)
 );
 
 CREATE TABLE Registration(
 Registration_ID INT PRIMARY KEY,
-Attendee_ID INT,
-Event_ID INT,
-Registration_Date DATE,
+Attendee_ID INT NOT NULL,
+Event_ID INT NOT NULL,
+Registration_Date DATE NOT NULL,
 Status VARCHAR(50),
 Additional_Info VARCHAR(255),
 Ticket_Type VARCHAR(50),
@@ -79,17 +79,17 @@ FOREIGN KEY(Event_ID) REFERENCES Event(Event_ID)
 
 CREATE TABLE Payment(
 Payment_ID INT PRIMARY KEY,
-Registration_ID INT,
-Amount DECIMAL(10,2),
+Registration_ID INT NOT NULL,
+Amount DECIMAL(10,2) NOT NULL,
 Status VARCHAR(50),
-Payment_Date DATE,
+Payment_Date DATE NOT NULL,
 Payment_Method VARCHAR(50),
 FOREIGN KEY(Registration_ID) REFERENCES Registration(Registration_ID)
 );
 
 CREATE TABLE Staff(
 Staff_ID INT PRIMARY KEY,
-Name VARCHAR(100),
+Name VARCHAR(100) NOT NULL,
 Phone_No VARCHAR(15),
 Additional_Info VARCHAR(255),
 Rating FLOAT,
@@ -99,9 +99,9 @@ Available_Dates VARCHAR(255)
 );
 
 CREATE TABLE Event_Staff(
-Event_ID INT,
-Organizer_ID INT,
-Staff_ID INT,
+Event_ID INT NOT NULL,
+Organizer_ID INT NOT NULL,
+Staff_ID INT NOT NULL,
 Status VARCHAR(50),
 PRIMARY KEY(Event_ID,Staff_ID),
 FOREIGN KEY(Event_ID) REFERENCES Event(Event_ID),
@@ -111,9 +111,9 @@ FOREIGN KEY(Staff_ID) REFERENCES Staff(Staff_ID)
 
 CREATE TABLE Attendance(
 Attendance_ID INT PRIMARY KEY,
-Attendee_ID INT,
-Event_ID INT,
-Staff_ID INT,
+Attendee_ID INT NOT NULL,
+Event_ID INT NOT NULL,
+Staff_ID INT NOT NULL,
 CheckInTime DATETIME,
 Status VARCHAR(50),
 FOREIGN KEY(Attendee_ID) REFERENCES Attendee(Attendee_ID),
@@ -134,9 +134,9 @@ FOREIGN KEY(Payment_ID) REFERENCES Payment(Payment_ID)
 );
 
 CREATE TABLE Event_Review(
-Attendee_ID INT,
-Event_ID INT,
-Client_ID INT,
+Attendee_ID INT NOT NULL,
+Event_ID INT NOT NULL,
+Client_ID INT NOT NULL,
 Rating INT,
 Comment VARCHAR(255),
 Date DATE,
@@ -147,9 +147,9 @@ FOREIGN KEY(Client_ID) REFERENCES Client(Client_ID)
 );
 
 CREATE TABLE StaffReview(
-Organizer_ID INT,
-Staff_ID INT,
-Event_ID INT,
+Organizer_ID INT NOT NULL,
+Staff_ID INT NOT NULL,
+Event_ID INT NOT NULL,
 Rating FLOAT,
 Comment VARCHAR(255),
 ReviewDate DATE,
