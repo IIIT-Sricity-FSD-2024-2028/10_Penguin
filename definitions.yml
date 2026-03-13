@@ -195,4 +195,47 @@ examples:
 aliases:
   - supporter
   - Event Sponsor
+Payment:
+  name: Payment
+  definition: >
+    The transaction through which an attendee completes the required fee
+    for participating in a paid event.
+  examples:
+    - "An attendee completes payment during event registration"
+    - "Payment confirmation is generated after successful transaction"
+  aliases:
+    - Fee
+    - Transaction
 
+Attendance:
+  name: Attendance
+  definition: >
+    The recorded presence of a registered attendee after successful
+    verification during event check-in.
+  examples:
+    - "The staff marks attendance after verifying the attendee’s QR code"
+  aliases:
+    - Presence
+    - Participation
+
+EventReview:
+  name: Event Review
+  definition: >
+    Feedback provided by attendees or sponsors after an event to evaluate
+    the quality and overall experience of the event.
+  examples:
+    - "Attendees submit an event review after the workshop"
+  aliases:
+    - Event Feedback
+    - Rating
+
+StaffReview:
+  name: Staff Review
+  definition: >
+    An evaluation of the performance and effectiveness of event staff
+    during the execution of an event.
+  examples:
+    - "The event manager submits a staff review after the event ends"
+  aliases:
+    - Staff Evaluation
+    - Performance Review
