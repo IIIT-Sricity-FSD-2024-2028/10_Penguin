@@ -22,8 +22,7 @@ Figma Design Link
 
 **Figma Prototype**
 
-https://www.figma.com/proto/2Buf7FLyZd7t54hIEsaTjo/Prototype?node-id=64-3&t=hEHWHp8Us7hXt6tr-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=50%3A6972&show-proto-sidebar=1
-
+https://www.figma.com/proto/2Buf7FLyZd7t54hIEsaTjo/Prototype?node-id=64-3&t=b6MBLm47GQFv3bij-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=50%3A6972&show-proto-sidebar=1
 ---
 
 Design Overview
