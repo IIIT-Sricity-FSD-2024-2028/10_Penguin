@@ -100,7 +100,6 @@ FOREIGN KEY(Registration_ID) REFERENCES Registration(Registration_ID)
 CREATE TABLE Staff(
 Staff_ID INT PRIMARY KEY,
 User_ID INT NOT NULL,
-Additional_Info VARCHAR(255),
 Rating FLOAT,
 Available_Dates VARCHAR(255),
 FOREIGN KEY(User_ID) REFERENCES Users(User_ID),
