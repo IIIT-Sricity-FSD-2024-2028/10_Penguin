@@ -6,7 +6,7 @@ CREATE TABLE Users(
   Name VARCHAR(100) NOT NULL,
   Email VARCHAR(100) UNIQUE NOT NULL,
   Phone_No VARCHAR(15),
-  Status VARCHAR(15),
+  Status VARCHAR(15) NOT NULL,
   Address VARCHAR(255)
   );
 CREATE TABLE Super_User(
