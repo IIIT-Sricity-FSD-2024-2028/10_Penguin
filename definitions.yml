@@ -239,3 +239,17 @@ StaffReview:
   aliases:
     - Staff Evaluation
     - Performance Review
+
+    SuperAdmin:
+  name: Super Admin
+  definition: >
+    A top-level user with complete control over the entire system, responsible
+    for managing all modules, users, configurations, and overall system operations.
+    The Super Admin has unrestricted access and can perform all CRUD (Create, Read,
+    Update, Delete) actions across the platform.
+  examples:
+    - "The Super Admin created a new admin account and assigned event management permissions"
+    - "Only the Super Admin can delete users or modify system-level settings"
+  aliases:
+    - System Administrator
+    - super user
