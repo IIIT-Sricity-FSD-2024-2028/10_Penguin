@@ -1,1 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Test - EventFlow</title>
+    <style>
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #080b13;
+            color: #dde1f0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #7c6ff7;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            background: #0f1321;
+            border: 1px solid #1f2640;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-item {
+            background: #151929;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 3px solid #7c6ff7;
+            border-radius: 5px;
+        }
+        .pass {
+            border-left-color: #22d3a5;
+            color: #22d3a5;
+        }
+        .fail {
+            border-left-color: #f56565;
+            color: #f56565;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #1c2135;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            background: #7c6ff7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #6b5ee6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 EventFlow CRUD Operations Test</h1>
+        
+        <div class="test-section">
+            <h2>Test Suite</h2>
+            <button onclick="runAllTests()">▶️ Run All Tests</button>
+            <button onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
 
+        <div id="results"></div>
+    </div>
+
+    <script src="js/state.js"></script>
+    <script src="js/main.js"></script>
+    
+    <script>
+        function logResult(name, passed, message) {
+            const resultsDiv = document.getElementById('results');
+            const item = document.createElement('div');
+            item.className = `test-item ${passed ? 'pass' : 'fail'}`;
+            item.innerHTML = `
+                <strong>${passed ? '✓' : '✕'} ${name}</strong>
+                <div class="result">${message}</div>
+            `;
+            resultsDiv.appendChild(item);
+            console.log(`${passed ? '✓' : '✕'} ${name}: ${message}`);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function runAllTests() {
+            clearResults();
+            console.clear();
+            console.log('Starting CRUD Tests...');
+            
+            // Test 1: AppState initialization
+            try {
+                const hasUsers = AppState.users && AppState.users.length > 0;
+                const hasEvents = AppState.events && AppState.events.length > 0;
+                logResult(
+                    'AppState Initialization',
+                    hasUsers && hasEvents,
+                    `Users: ${AppState.users.length}, Events: ${AppState.events.length}, Registrations: ${AppState.registrations.length}`
+                );
+            } catch (e) {
+                logResult('AppState Initialization', false, e.message);
+            }
+
+            // Test 2: Create User
+            try {
+                const initialCount = AppState.users.length;
+                const newUser = createUser({
+                    name: 'Test User',
+                    email: `test${Date.now()}@example.com`,
+                    password: 'test123',
+                    role: 'attendee',
+                    phone: '+91 1234567890'
+                });
+                const passed = AppState.users.length === initialCount + 1 && newUser.id;
+                logResult(
+                    'Create User',
+                    passed,
+                    `New user created with ID: ${newUser.id}. Total users: ${AppState.users.length}`
+                );
+            } catch (e) {
+                logResult('Create User', false, e.message);
+            }
+
+            // Test 3: Update User
+            try {
+                const user = AppState.users[0];
+                const originalName = user.name;
+                const updatedUser = updateUser(user.id, { name: 'Updated Test' });
+                const passed = updatedUser && updatedUser.name === 'Updated Test';
+                updateUser(user.id, { name: originalName }); // Revert
+                logResult(
+                    'Update User',
+                    passed,
+                    `User ${user.id} updated from "${originalName}" to "${updatedUser.name}"`
+                );
+            } catch (e) {
+                logResult('Update User', false, e.message);
+            }
+
+            // Test 4: Create Event
+            try {
+                const initialCount = AppState.events.length;
+                const newEvent = createEvent({
+                    title: 'Test Event',
+                    category: 'Workshop',
+                    date: '2026-06-15',
+                    time: '14:00',
+                    location: 'Test Venue',
+                    city: 'Chennai',
+                    capacity: 100,
+                    price: 500,
+                    organizer: AppState.users[1]?.id,
+                    description: 'Test event for CRUD verification'
+                });
+                const passed = AppState.events.length === initialCount + 1 && newEvent.id;
+                logResult(
+                    'Create Event',
+                    passed,
+                    `New event created with ID: ${newEvent.id}. Total events: ${AppState.events.length}`
+                );
+            } catch (e) {
+                logResult('Create Event', false, e.message);
+            }
+
+            // Test 5: Update Event
+            try {
+                const event = AppState.events[0];
+                const originalTitle = event.title;
+                const updated = updateEvent(event.id, { title: 'Updated Event Title' });
+                const passed = updated && updated.title === 'Updated Event Title';
+                updateEvent(event.id, { title: originalTitle }); // Revert
+                logResult(
+                    'Update Event',
+                    passed,
+                    `Event ${event.id} updated from "${originalTitle}" to "${updated.title}"`
+                );
+            } catch (e) {
+                logResult('Update Event', false, e.message);
+            }
+
+            // Test 6: Register Attendee
+            try {
+                const attendee = AppState.users.find(u => u.role === 'attendee');
+                const event = AppState.events[0];
+                if (!attendee || !event) throw new Error('Missing test data');
+                
+                const initialRegs = AppState.registrations.length;
+                const reg = registerAttendee(attendee.id, event.id);
+                const passed = reg && AppState.registrations.length === initialRegs + 1;
+                logResult(
+                    'Register Attendee',
+                    passed,
+                    `Attendee registered for event. Registration ID: ${reg?.id}. Total regs: ${AppState.registrations.length}`
+                );
+            } catch (e) {
+                logResult('Register Attendee', false, e.message);
+            }
+
+            // Test 7: Check-in Attendee
+            try {
+                const reg = AppState.registrations[0];
+                if (!reg) throw new Error('No registrations found');
+                
+                const passed = checkInAttendee(reg.id);
+                const updated = AppState.registrations.find(r => r.id === reg.id);
+                logResult(
+                    'Check-in Attendee',
+                    passed && updated.checkedIn,
+                    `Attendee checked in for registration ${reg.id}`
+                );
+            } catch (e) {
+                logResult('Check-in Attendee', false, e.message);
+            }
+
+            // Test 8: Notifications
+            try {
+                const initialCount = AppState.notifications.length;
+                addNotification(null, 'Test notification', 'success');
+                const passed = AppState.notifications.length === initialCount + 1;
+                logResult(
+                    'Add Notification',
+                    passed,
+                    `Notification created. Total notifications: ${AppState.notifications.length}`
+                );
+            } catch (e) {
+                logResult('Add Notification', false, e.message);
+            }
+
+            // Test 9: LocalStorage Persistence
+            try {
+                saveState && saveState();
+                const saved = localStorage.getItem('eventflow_state_v2');
+                const parsed = JSON.parse(saved);
+                const passed = parsed && parsed.users && parsed.events;
+                logResult(
+                    'LocalStorage Persistence',
+                    passed,
+                    `State saved to localStorage. Size: ${Math.round(saved.length / 1024)} KB`
+                );
+            } catch (e) {
+                logResult('LocalStorage Persistence', false, e.message);
+            }
+
+            // Test 10: Delete User
+            try {
+                const testUser = AppState.users.find(u => u.email && u.email.includes('test'));
+                if (!testUser) throw new Error('No test user found');
+                
+                const initialCount = AppState.users.length;
+                const deleted = AppState.deleteUser(testUser.id);
+                const passed = deleted && AppState.users.length === initialCount - 1;
+                logResult(
+                    'Delete User',
+                    passed,
+                    `User ${testUser.id} deleted. Total users: ${AppState.users.length}`
+                );
+            } catch (e) {
+                logResult('Delete User', false, e.message);
+            }
+
+            // Test 11: Delete Event
+            try {
+                const testEvent = AppState.events.find(e => e.title === 'Test Event');
+                if (!testEvent) throw new Error('No test event found');
+                
+                const initialCount = AppState.events.length;
+                const deleted = AppState.deleteEvent(testEvent.id);
+                const passed = deleted && AppState.events.length === initialCount - 1;
+                logResult(
+                    'Delete Event',
+                    passed,
+                    `Event ${testEvent.id} deleted. Total events: ${AppState.events.length}`
+                );
+            } catch (e) {
+                logResult('Delete Event', false, e.message);
+            }
+
+            console.log('✓ All tests completed!');
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                logResult('🚀 Ready', true, 'AppState loaded and ready for testing. Click "Run All Tests" above.');
+            }, 500);
+        });
+    </script>
+</body>
+</html>
