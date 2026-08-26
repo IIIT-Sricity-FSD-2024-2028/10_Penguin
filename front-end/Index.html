@@ -3008,6 +3008,15 @@
         { id: 3, clientId: 3, title: 'Annual Client Appreciation Dinner', type: 'Corporate', date: '2026-07-10', guests: 120, budget: 18000, status: 'in_review', desc: 'Formal black-tie dinner for top 120 clients. Need premium venue, 5-course dinner, live entertainment.', created: '2026-03-25', organizer: 2, venue: 'Five Star Restaurant & Event Hall' },
         { id: 4, clientId: 3, title: 'Sales Training Conference', type: 'Conference', date: '2026-07-20', guests: 200, budget: 15000, status: 'rejected', desc: 'Two-day sales training conference with industry speakers and breakout sessions.', created: '2026-03-28', venue: 'City Conference Center' },
       ],
+      reports: [
+        { id: 'rpt-emp-001', eventId: 105, fileName: 'healthcare-biotech-final-report.pdf', submittedBy: 'usr-staff-001', submittedAt: '2026-03-26 16:45' },
+        { id: 'rpt-emp-002', eventId: 103, fileName: 'cybersecurity-workshop-summary.docx', submittedBy: 'usr-emp-001', submittedAt: '2026-07-06 11:20' },
+      ],
+      employeeChangeRequests: [
+        { id: 'chg-emp-001', type: 'event', targetId: 103, targetName: 'Cybersecurity & Zero Trust Workshop', requester: 'Michael Torres', requestedChange: 'Move the event date to 2026-07-12 and increase capacity to 100 attendees.', status: 'pending', submittedAt: 'Today, 9:20 AM' },
+        { id: 'chg-emp-002', type: 'user', targetId: 'usr-client-001', targetName: 'Michael Torres', requester: 'Michael Torres', requestedChange: 'Update phone number and company details on the user profile.', status: 'pending', submittedAt: 'Yesterday, 4:10 PM' },
+        { id: 'chg-emp-003', type: 'event', targetId: 105, targetName: 'Healthcare & Biotech Forum 2026', requester: 'James Wilson', requestedChange: 'Add the final attendance count to the event record.', status: 'approved', submittedAt: '2 days ago' },
+      ],
       registrations: [
         { id: 101, attendeeId: 'usr-attendee-001', eventId: 101, date: '2026-03-01', ticketId: 'TKT-EMP-101', status: 'confirmed', payment: 'paid', amount: 200, checkedIn: false, seat: 'VIP-12' },
         { id: 102, attendeeId: 'usr-client-001', eventId: 102, date: '2026-03-05', ticketId: 'TKT-EMP-102', status: 'confirmed', payment: 'paid', amount: 350, checkedIn: false, seat: 'A-01' },
@@ -3083,12 +3092,16 @@
           const initialRegs = [...DB.registrations];
           const initialAssigns = [...DB.staffAssignments];
           const initialNotifs = [...DB.notifications];
+          const initialReports = [...(DB.reports || [])];
+          const initialChangeRequests = [...(DB.employeeChangeRequests || [])];
           const initialStaffReqs = [...(DB.staffRequests || [])];
           
           Object.assign(DB, parsed);
 
           // Ensure optional arrays exist
           if (!DB.staffRequests) DB.staffRequests = [];
+          if (!DB.reports) DB.reports = [];
+          if (!DB.employeeChangeRequests) DB.employeeChangeRequests = [];
           if (!DB.attendanceReports) DB.attendanceReports = {};
 
           // Sync all demo/seed users and passwords from latest build
@@ -3149,6 +3162,19 @@
             }
           });
 
+          // Always restore missing mock event reports
+          initialReports.forEach(report => {
+            if (!DB.reports.find(r => String(r.id) === String(report.id))) {
+              DB.reports.push(report);
+            }
+          });
+
+          initialChangeRequests.forEach(request => {
+            if (!DB.employeeChangeRequests.find(r => String(r.id) === String(request.id))) {
+              DB.employeeChangeRequests.push(request);
+            }
+          });
+
           // SAFETY: Sync _nextId with actual data max IDs to prevent collisions
           const _maxId = (arr, key) => arr.length ? Math.max(0, ...arr.map(x => isNaN(x[key]) ? 0 : parseInt(x[key]))) : 0;
           DB._nextId.users = Math.max(DB._nextId.users || 0, _maxId(DB.users, 'id') + 1);
@@ -3205,6 +3231,10 @@
       attendee: { email: 'attendee@example.com', pw: 'Attendee@123' },
       superuser: { email: 'superadmin@example.com', pw: 'Admin@123' },
     };
+
+    function isEmployeeAccount() {
+      return (CU?.email || '').toLowerCase() === DEMO_CREDS.employee.email;
+    }
 
     // ════════════════════════════════════════════════
     //  PAGE SWITCHING
@@ -3405,6 +3435,7 @@
     // ════════════════════════════════════════════════
     const NAV = {
       superuser: [
+        { ic: '📊', lbl: 'Dashboard', pg: 'dashboard' },
         { ic: '👥', lbl: 'User Reports', pg: 'user-reports' },
         { ic: '🗓️', lbl: 'Event Reports', pg: 'event-reports' },
         { ic: '💰', lbl: 'Revenue Reports', pg: 'revenue-reports' },
@@ -3413,8 +3444,14 @@
         { ic: '📊', lbl: 'Dashboard', pg: 'dashboard' },
         { ic: '🗓️', lbl: 'Manage Events', pg: 'events' },
         { ic: '📋', lbl: 'Event Requests', pg: 'event-requests' },
-        { ic: '👷', lbl: 'Staff Management', pg: 'staff' },
-        { ic: '👥', lbl: 'Attendee Management', pg: 'attendees' },
+        { ic: '👥', lbl: 'User Management', pg: 'users' },
+        { ic: '📈', lbl: 'Event Reports', pg: 'reports' },
+      ],
+      employee: [
+        { ic: '📊', lbl: 'Dashboard', pg: 'dashboard' },
+        { ic: '🗓️', lbl: 'Manage Events', pg: 'events' },
+        { ic: '📋', lbl: 'Event Requests', pg: 'event-requests' },
+        { ic: '👥', lbl: 'User Management', pg: 'users' },
         { ic: '📈', lbl: 'Event Reports', pg: 'reports' },
       ],
       client: [
@@ -3459,11 +3496,11 @@
         <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%">
           <div style="display:flex;align-items:flex-end;gap:5px;width:100%;height:100%;justify-content:center">
             ${group.bars.map(bar => {
-              const pct = Math.max(6, Math.round(((bar.value || 0) / max) * 100));
+              const barHeight = Math.max(8, Math.round(((bar.value || 0) / max) * Math.max(chartHeight - 52, 40)));
               return `
               <div style="flex:1;max-width:26px;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;gap:4px">
                 <div style="font-size:10px;font-weight:700;color:var(--text3)">${bar.value}</div>
-                <div style="width:100%;height:${pct}%;border-radius:6px 6px 2px 2px;background:${bar.color};box-shadow:0 8px 16px rgba(15,23,42,.12)" title="${bar.label || ''}: ${bar.value}"></div>
+                <div style="width:100%;height:${barHeight}px;flex-shrink:0;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,var(--green),#15803d);box-shadow:0 8px 16px rgba(15,23,42,.12)" title="${bar.label || ''}: ${bar.value}"></div>
               </div>`;
             }).join('')}
           </div>
@@ -3479,11 +3516,11 @@
       return `
   <div style="display:flex;align-items:flex-end;gap:14px;height:${chartHeight}px;padding-top:12px">
     ${items.map(item => {
-          const pct = Math.max(12, Math.round(((item.value || 0) / max) * 100));
+          const barHeight = Math.max(8, Math.round(((item.value || 0) / max) * Math.max(chartHeight - 52, 40)));
           return `
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px">
         <div style="font-size:11px;color:var(--text3)">${item.value}</div>
-        <div style="width:100%;max-width:58px;height:${pct}%;border-radius:18px 18px 8px 8px;background:${item.color};box-shadow:0 16px 28px rgba(15,23,42,.18)"></div>
+        <div style="width:100%;max-width:58px;height:${barHeight}px;flex-shrink:0;border-radius:18px 18px 8px 8px;background:linear-gradient(180deg,var(--green),#15803d);box-shadow:0 16px 28px rgba(15,23,42,.18)"></div>
         <div style="font-size:11px;color:var(--text2);text-align:center;line-height:1.35">${item.label}</div>
       </div>`;
         }).join('')}
@@ -3589,13 +3626,15 @@
 
     function initApp() {
       const r = CU.role;
-      g('sb-role-sub').textContent = ROLE_LABELS[r] || r;
+      const navRole = isEmployeeAccount() ? 'employee' : r;
+      const displayRole = isEmployeeAccount() ? 'Employee' : (ROLE_LABELS[r] || r);
+      g('sb-role-sub').textContent = displayRole;
       g('sb-name').textContent = CU.name;
-      g('sb-role-lbl').textContent = ROLE_LABELS[r];
+      g('sb-role-lbl').textContent = displayRole;
       g('sb-av').textContent = CU.avatar || CU.name.charAt(0);
       updateNotifDot();
-      buildNav(r);
-      goNav(CU && CU.role === 'superuser' ? 'user-reports' : 'dashboard');
+      buildNav(navRole);
+      goNav('dashboard');
     }
 
     function sendContactMessage() {
@@ -3667,7 +3706,10 @@
 
       // Restrict superuser to only the 3 analytical subpages
       if (r === 'superuser') {
-        if (pg === 'event-reports' || pg === 'events') {
+        if (pg === 'dashboard') {
+          el.innerHTML = dashAdmin();
+          return;
+        } else if (pg === 'event-reports' || pg === 'events') {
           el.innerHTML = pageEventReports();
           return;
         } else if (pg === 'revenue-reports' || pg === 'reports' || pg === 'staff-reports' || pg === 'employee-stats') {
@@ -3681,7 +3723,9 @@
 
       switch (pg) {
         case 'dashboard':
-          el.innerHTML = ({ organizer: dashOrganizer, client: dashClient, staff: dashStaff, attendee: dashAttendee }[r] || dashAttendee)();
+          el.innerHTML = isEmployeeAccount()
+            ? dashEmployee()
+            : ({ organizer: dashOrganizer, client: dashClient, staff: dashStaff, attendee: dashAttendee }[r] || dashAttendee)();
           break;
         case 'events':
           el.innerHTML = pageEvents();
@@ -3814,7 +3858,7 @@
     <div class="stat-card"><div class="glow" style="background:var(--yellow)"></div><div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">🎟️</div><div class="stat-value" id="adm-stat-regs" style="color:var(--yellow)">${totalRegs}</div><div class="stat-label">Registrations</div><div class="stat-sub up">↑ 8% this week</div></div>
     <div class="stat-card"><div class="glow" style="background:var(--orange)"></div><div class="stat-icon" style="background:var(--orange-dim);color:var(--orange)">💰</div><div class="stat-value" id="adm-stat-rev" style="color:var(--orange)">₹${(revenue / 1000).toFixed(1)}K</div><div class="stat-label">Total Revenue</div><div class="stat-sub neutral" id="adm-stat-pending">${pendingReqs} req(s) pending</div></div>
   </div>
-  <div class="grid-2" style="gap:20px">
+  <div class="grid-2" style="gap:20px;align-items:start">
     <div class="card">
       <div class="flex justify-between items-center mb-16"><span class="h4">Platform Role Split</span><button class="btn btn-ghost btn-xs" onclick="goNav('users')">Open User Analytics</button></div>
       ${buildAnalyticsBars([
@@ -3823,10 +3867,10 @@
         { label: 'Clients', value: roleCounts.client, color: 'linear-gradient(180deg, #f59e0b, #d97706)' },
         { label: 'Employees', value: roleCounts.staff, color: 'linear-gradient(180deg, #22c55e, #15803d)' },
         { label: 'Attendees', value: roleCounts.attendee, color: 'linear-gradient(180deg, #8b5cf6, #7c3aed)' },
-      ], 220)}
+      ], 160)}
     </div>
-    <div class="card">
-      <div class="flex justify-between items-center mb-16"><span class="h4">Request Pipeline</span><button class="btn btn-ghost btn-xs" onclick="goNav('reports')">Open Reports</button></div>
+    <div class="card" style="padding:16px">
+      <div class="flex justify-between items-center mb-12"><span class="h4">Request Pipeline <span class="small" style="color:var(--text3);font-weight:500">(${requestStatusCounts.pending + requestStatusCounts.approved + requestStatusCounts.rejected} total)</span></span><button class="btn btn-ghost btn-xs" onclick="goNav('reports')">Open Reports</button></div>
       ${buildAnalyticsProgress([
         { label: 'Pending', value: requestStatusCounts.pending, color: 'linear-gradient(90deg, #f59e0b, #d97706)' },
         { label: 'Approved', value: requestStatusCounts.approved, color: 'linear-gradient(90deg, #22c55e, #15803d)' },
@@ -3834,25 +3878,83 @@
       ])}
     </div>
   </div>
-  <div class="grid-2 mt-20" style="gap:20px">
-    <div class="card">
-      <div class="h4 mb-12">Employee Capacity</div>
+  <div class="grid-2 mt-20" style="gap:20px;align-items:start">
+    <div class="card" style="padding:16px">
+      <div class="h4 mb-12">Employee Capacity <span class="small" style="color:var(--text3);font-weight:500">(${employeeAssignmentCounts.accepted + employeeAssignmentCounts.pending + employeeAssignmentCounts.declined} assignments)</span></div>
       ${buildAnalyticsProgress([
         { label: 'Accepted Assignments', value: employeeAssignmentCounts.accepted, color: 'linear-gradient(90deg, #22c55e, #16a34a)' },
         { label: 'Pending Assignments', value: employeeAssignmentCounts.pending, color: 'linear-gradient(90deg, #f59e0b, #d97706)' },
         { label: 'Declined Assignments', value: employeeAssignmentCounts.declined, color: 'linear-gradient(90deg, #ef4444, #dc2626)' },
       ])}
     </div>
-    <div class="card">
+    <div class="card" style="padding:16px">
       <div class="h4 mb-12">Event Coverage</div>
       ${buildAnalyticsBars([
         { label: 'Published', value: eventStatusCounts.upcoming, color: 'linear-gradient(180deg, #22c55e, #15803d)' },
         { label: 'Ongoing', value: eventStatusCounts.ongoing, color: 'linear-gradient(180deg, #3b82f6, #1d4ed8)' },
         { label: 'Completed', value: eventStatusCounts.completed, color: 'linear-gradient(180deg, #8b5cf6, #7c3aed)' },
         { label: 'Draft', value: eventStatusCounts.draft, color: 'linear-gradient(180deg, #64748b, #475569)' },
-      ], 220)}
+      ], 160)}
     </div>
   </div>`;
+    }
+
+    function dashEmployee() {
+      const changesQuery = (sessionStorage.getItem('employee_changes_search') || '').toLowerCase();
+      const changes = DB.notifications.filter(item => {
+        const text = `${item.title || ''} ${item.msg || ''} ${item.time || ''}`.toLowerCase();
+        return !changesQuery || text.includes(changesQuery);
+      }).slice(0, 12);
+      const requests = (DB.employeeChangeRequests || []).filter(request => request.status === 'pending');
+      return `
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">Employee Dashboard</div><div class="page-sub">Track recent changes and review requests from users.</div></div>
+  </div>
+  <div class="grid-3 mb-20">
+    <div class="stat-card"><div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">🔄</div><div class="stat-value" style="color:var(--accent)">${changes.length}</div><div class="stat-label">Recent Changes</div><div class="stat-sub neutral">Matching activity</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">📩</div><div class="stat-value" style="color:var(--yellow)">${requests.length}</div><div class="stat-label">Change Requests</div><div class="stat-sub neutral">Awaiting review</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--green-dim);color:var(--green)">👥</div><div class="stat-value" style="color:var(--green)">${DB.users.filter(user => user.role !== 'superuser').length}</div><div class="stat-label">Managed Users</div><div class="stat-sub neutral">Account records</div></div>
+  </div>
+  <div class="grid-2" style="gap:20px;align-items:start">
+    <div>
+      <div class="h4 mb-12">Recent Changes</div>
+      <div class="search-box input-group" style="margin-bottom:14px"><span class="input-icon">🔍</span><input class="form-control" id="employee-changes-search" placeholder="Search recent changes…" value="${changesQuery}" oninput="searchEmployeeChanges(this.value)"></div>
+      <div id="employee-recent-changes" style="display:flex;flex-direction:column;gap:10px;max-height:520px;overflow-y:auto;padding-right:6px">${buildEmployeeChanges(changes)}</div>
+    </div>
+    <div>
+      <div class="h4 mb-12">Requests To Change Details</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${requests.length === 0 ? `<div class="empty"><div class="empty-icon">✓</div><div class="empty-title">No pending requests</div><p class="empty-desc">Requests to change event or user details will appear here.</p></div>` : requests.map(request => `<div class="card" style="border-left:3px solid var(--yellow)">
+          <div class="flex justify-between items-start gap-8"><div><div style="font-weight:700;color:var(--text)">${request.type === 'event' ? '📅 Event Details' : '👤 User Details'}</div><div class="small" style="margin-top:4px">${request.targetName}</div></div><span class="badge badge-yellow">Pending</span></div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.6;margin:12px 0">${request.requestedChange}</div>
+          <div class="small" style="color:var(--text3);margin-bottom:12px">Requested by ${request.requester} · ${request.submittedAt}</div>
+          <button class="btn btn-success btn-sm" onclick="completeEmployeeChangeRequest('${request.id}')">✓ Mark Done</button>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+    }
+
+    function buildEmployeeChanges(changes) {
+      if (changes.length === 0) return `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No changes found</div><p class="empty-desc">Try a different search.</p></div>`;
+      return changes.map(item => `<div class="card" style="padding:14px 16px"><div class="flex justify-between items-start gap-8"><div style="display:flex;gap:10px;align-items:flex-start"><div class="stat-icon" style="width:30px;height:30px;min-width:30px;font-size:14px;margin:0;background:var(--accent-dim);color:var(--accent)">${item.icon || '•'}</div><div><div style="font-weight:700;color:var(--text);font-size:13.5px">${item.title || 'Activity update'}</div><div style="font-size:13px;color:var(--text2);line-height:1.5;margin-top:3px">${item.msg || 'A record was updated.'}</div></div></div><span class="small" style="white-space:nowrap;color:var(--text3)">${item.time || 'Recently'}</span></div></div>`).join('');
+    }
+
+    function searchEmployeeChanges(query) {
+      sessionStorage.setItem('employee_changes_search', query);
+      const changesQuery = query.toLowerCase();
+      const changes = DB.notifications.filter(item => `${item.title || ''} ${item.msg || ''} ${item.time || ''}`.toLowerCase().includes(changesQuery)).slice(0, 12);
+      g('employee-recent-changes').innerHTML = buildEmployeeChanges(changes);
+    }
+
+    function completeEmployeeChangeRequest(requestId) {
+      const request = (DB.employeeChangeRequests || []).find(item => String(item.id) === String(requestId));
+      if (!request) return;
+      request.status = 'completed';
+      request.completedAt = new Date().toLocaleString();
+      saveDB();
+      renderPage('dashboard');
+      toast('Change request marked as done', 'success');
     }
 
     function dashOrganizer() {
@@ -3864,8 +3966,8 @@
       const filteredEvents = myEv.filter(e => !searchQuery || e.title.toLowerCase().includes(searchQuery) || e.city.toLowerCase().includes(searchQuery));
       return `
   <div class="page-hd">
-    <div class="page-hd-left"><div class="page-title">Organizer Dashboard</div><div class="page-sub">Hello ${CU.name}, manage your events and staff.</div></div>
-    <div class="page-hd-right"><button class="btn btn-primary" onclick="openAddEventModal()">+ Create Event</button></div>
+    <div class="page-hd-left"><div class="page-title">${isEmployeeAccount() ? 'Employee Dashboard' : 'Organizer Dashboard'}</div><div class="page-sub">Hello ${CU.name}, manage your events and users.</div></div>
+    <div class="page-hd-right"></div>
   </div>
   <div class="grid-4 mb-20">
     <div class="stat-card"><div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">🗓️</div><div class="stat-value" style="color:var(--accent)">${myEv.length}</div><div class="stat-label">My Events</div><div class="stat-sub neutral">${upcoming.length} upcoming</div></div>
@@ -3876,8 +3978,7 @@
   <div class="mb-16">
     <div class="mb-12 flex justify-between items-center"><span class="h4">My Events</span></div>
     <div class="search-box input-group" style="margin-bottom:16px"><span class="input-icon">🔍</span><input class="form-control" id="org-events-search" placeholder="Search by event name or city..." value="${searchQuery}" oninput="searchOrganizerEvents(this.value)"></div>
-    <div class="events-grid">${filteredEvents.length > 0 ? filteredEvents.map(e => evCard(e, 'organizer')).join('') : myEv.length > 0 ? `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No events match</div><p>Try adjusting your search</p></div>` : `<div class="ev-card" style="display:flex;align-items:center;justify-content:center;min-height:240px;border-style:dashed;cursor:pointer" onclick="openAddEventModal()"><div class="text-center" style="color:var(--text3)"><div style="font-size:32px;margin-bottom:8px">➕</div><div style="font-size:13px">Create Your First Event</div></div></div>`}
-      ${myEv.length > 0 ? `<div class="ev-card" style="display:flex;align-items:center;justify-content:center;min-height:240px;border-style:dashed;cursor:pointer" onclick="openAddEventModal()"><div class="text-center" style="color:var(--text3)"><div style="font-size:32px;margin-bottom:8px">➕</div><div style="font-size:13px">Create New Event</div></div></div>` : ''}
+    <div class="events-grid">${filteredEvents.length > 0 ? filteredEvents.map(e => evCard(e, 'organizer')).join('') : `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No events match</div><p>Try adjusting your search</p></div>`}
     </div>
   </div>`;
     }
@@ -4112,14 +4213,14 @@
   </div>
 
   <!-- Bar Graphs Row 1: Monthly Joins & Active vs Inactive Grouped Bar Chart -->
-  <div class="grid-2 mb-20" style="gap:20px">
+  <div class="grid-2 mb-20" style="gap:20px;align-items:start">
     <div class="card">
-      <div class="h4 mb-12">📊 Monthly Users Joining (${selectedRole === 'all' ? 'All Roles' : ROLE_LABELS[selectedRole]})</div>
-      ${buildAnalyticsBars(monthBars, 215)}
+      <div class="h4 mb-12">📊 Monthly Users Joining</div>
+      ${buildAnalyticsBars(monthBars, 145)}
     </div>
     <div class="card">
       <div class="h4 mb-12">👥 Active vs Inactive Users by Role (Grouped Bar Graph)</div>
-      ${buildGroupedAnalyticsBars(activeInactiveGroups, 215, [
+      ${buildGroupedAnalyticsBars(activeInactiveGroups, 145, [
         { label: 'Active Users', color: 'linear-gradient(180deg, #22c55e, #15803d)' },
         { label: 'Inactive Users', color: 'linear-gradient(180deg, #ef4444, #b91c1c)' }
       ])}
@@ -4127,14 +4228,14 @@
   </div>
 
   <!-- Bar Graphs Row 2: Platform Role Breakdown & Activity Rate % -->
-  <div class="grid-2" style="gap:20px">
+  <div class="grid-2" style="gap:20px;align-items:start">
     <div class="card">
       <div class="h4 mb-12">🏷️ Total Users by Role (Bar Graph)</div>
-      ${buildAnalyticsBars(roleBars, 215)}
+      ${buildAnalyticsBars(roleBars, 145)}
     </div>
     <div class="card">
       <div class="h4 mb-12">📈 Activity Rate by Role (% Active Bar Graph)</div>
-      ${buildAnalyticsBars(activityRateBars, 215)}
+      ${buildAnalyticsBars(activityRateBars, 145)}
       <div style="margin-top:12px;text-align:center;font-size:11.5px;color:var(--text2)">
         Percentage of accounts actively participating in each role category.
       </div>
@@ -4494,7 +4595,103 @@
     //  NON-ADMIN PAGES (ORGANIZER / CLIENT / ATTENDEE)
     // ════════════════════════════════════════════════
     function pageUsers() {
-      return pageUserReports();
+      const users = DB.users.filter(u => u.role !== 'superuser');
+      return `
+  <div class="page-hd">
+    <div class="page-hd-left">
+      <div class="page-title">User Management</div>
+      <div class="page-sub">View users and their account details.</div>
+    </div>
+  </div>
+  <div class="filter-row">
+    <div class="search-box input-group">
+      <span class="input-icon">🔍</span>
+      <input class="form-control" id="um-q" placeholder="Search by name or email…" oninput="refreshUserManagement()">
+    </div>
+    <select class="form-control filter-select" id="um-role" onchange="refreshUserManagement()">
+      <option value="">All Users</option>
+      <option value="attendee">Attendee</option>
+      <option value="staff">Staff</option>
+      <option value="organizer">Event Manager</option>
+      <option value="client">Client</option>
+    </select>
+  </div>
+  <div class="table-wrap" id="user-management-table">${buildUserManagementTable(users)}</div>`;
+    }
+
+    function buildUserManagementTable(users) {
+      if (users.length === 0) {
+        return `<div class="empty"><div class="empty-icon">👥</div><div class="empty-title">No users found</div><p class="empty-desc">Try changing your search or role filter.</p></div>`;
+      }
+      return `<table>
+    <thead><tr><th>User</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+    <tbody>${users.map(u => `<tr>
+      <td><div class="flex items-center gap-8"><div class="av av-xs">${u.avatar || u.name?.[0] || '?'}</div><strong>${u.name || 'Unknown User'}</strong></div></td>
+      <td>${u.email || '—'}</td>
+      <td>${u.phone || '—'}</td>
+      <td><span class="badge badge-${ROLE_COLORS[u.role] || 'blue'}">${u.role === 'organizer' ? 'Event Manager' : ROLE_LABELS[u.role] || u.role}</span></td>
+      <td><span class="badge badge-${u.status === 'active' ? 'green' : 'red'}">${u.status || 'unknown'}</span></td>
+      <td>${u.joined || u.createdAt || '—'}</td>
+      <td><div class="actions"><button class="btn btn-ghost btn-xs" onclick="openEditUserModal('${u.id}')">Edit</button><button class="btn btn-xs btn-danger" onclick="removeUser('${u.id}')">Remove</button></div></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+    }
+
+    function refreshUserManagement() {
+      const query = (g('um-q')?.value || '').trim().toLowerCase();
+      const role = g('um-role')?.value || '';
+      const users = DB.users.filter(u => {
+        const matchesRole = !role || u.role === role;
+        const matchesQuery = !query || [u.name, u.email, u.phone].some(value => String(value || '').toLowerCase().includes(query));
+        return u.role !== 'superuser' && matchesRole && matchesQuery;
+      });
+      g('user-management-table').innerHTML = buildUserManagementTable(users);
+    }
+
+    function openEditUserModal(userId) {
+      const user = DB.users.find(u => String(u.id) === String(userId));
+      if (!user) return;
+      openModal('Edit User', `
+  <div class="form-group"><label class="form-label">Full Name *</label><input class="form-control" id="um-edit-name" value="${user.name || ''}"></div>
+  <div class="form-group"><label class="form-label">Email *</label><input class="form-control" id="um-edit-email" type="email" value="${user.email || ''}"></div>
+  <div class="form-group"><label class="form-label">Phone</label><input class="form-control" id="um-edit-phone" value="${user.phone || ''}"></div>
+  <div class="grid-2">
+    <div class="form-group"><label class="form-label">Role</label><select class="form-control" id="um-edit-role"><option value="attendee" ${user.role === 'attendee' ? 'selected' : ''}>Attendee</option><option value="staff" ${user.role === 'staff' ? 'selected' : ''}>Staff</option><option value="organizer" ${user.role === 'organizer' ? 'selected' : ''}>Event Manager</option><option value="client" ${user.role === 'client' ? 'selected' : ''}>Client</option></select></div>
+    <div class="form-group"><label class="form-label">Status</label><select class="form-control" id="um-edit-status"><option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option><option value="inactive" ${user.status !== 'active' ? 'selected' : ''}>Inactive</option></select></div>
+  </div>`, [{ lbl: 'Save Changes', cls: 'btn-primary', fn: `saveUser('${user.id}')` }]);
+    }
+
+    function saveUser(userId) {
+      const user = DB.users.find(u => String(u.id) === String(userId));
+      const name = v('um-edit-name'), email = v('um-edit-email');
+      if (!user) return;
+      if (!name) { toast('Name is required', 'error'); return; }
+      if (!email || !email.includes('@')) { toast('Valid email is required', 'error'); return; }
+      const duplicate = DB.users.find(u => u.email === email && String(u.id) !== String(userId));
+      if (duplicate) { toast('Email already registered', 'error'); return; }
+      user.name = name;
+      user.email = email;
+      user.phone = v('um-edit-phone');
+      user.role = v('um-edit-role');
+      user.status = v('um-edit-status');
+      user.avatar = name.split(' ').map(part => part[0]).join('').toUpperCase().slice(0, 2);
+      saveDB();
+      closeModal();
+      renderPage('users');
+      toast('User details updated', 'success');
+    }
+
+    function removeUser(userId) {
+      const user = DB.users.find(u => String(u.id) === String(userId));
+      if (!user) return;
+      confirm2('Remove User', `Remove ${user.name || 'this user'} from the user list?`, () => {
+        const index = DB.users.findIndex(u => String(u.id) === String(userId));
+        if (index === -1) return;
+        DB.users.splice(index, 1);
+        saveDB();
+        renderPage('users');
+        toast('User removed', 'info');
+      });
     }
     function pageEmployeeStats() {
       return pageStaffReportsAdmin();
@@ -4510,7 +4707,7 @@
   <div class="page-hd">
     <div class="page-hd-left"><div class="page-title">${isOrg ? 'My Events' : 'All Events'}</div><div class="page-sub">${list.length} event(s)</div></div>
     <div class="page-hd-right">
-      ${CU.role === 'organizer' ? `<button class="btn btn-primary" onclick="openAddEventModal()">+ Create Event</button>` : ''}
+      
     </div>
   </div>
   <div class="filter-row">
@@ -6192,7 +6389,7 @@
   </div>`;
     }
     function viewRequestDrawer(id) {
-      const r = DB.eventRequests.find(r => r.id === id); if (!r) return;
+      const r = DB.eventRequests.find(r => String(r.id) === String(id)); if (!r) return;
       const org = DB.users.find(u => u.id === r.organizer) || { name: 'Pending Assignment' };
       openDrawer(`Request: ${r.title}`, `
     <span class="badge badge-${reqBadge(r.status)} mb-16">${r.status}</span>
@@ -6211,7 +6408,7 @@
   `);
     }
     function approveReq(id) {
-      const r = DB.eventRequests.find(r => r.id === id);
+      const r = DB.eventRequests.find(r => String(r.id) === String(id));
       if (r) {
         r.status = 'approved';
         r.organizer = CU.id;
@@ -6246,7 +6443,7 @@
     }
     function rejectReq(id) {
       confirm2('Reject Request', 'Mark this event request as rejected?', () => {
-        const r = DB.eventRequests.find(r => r.id === id);
+        const r = DB.eventRequests.find(r => String(r.id) === String(id));
         if (r) { r.status = 'rejected'; renderPage(_currentPage); toast('Request rejected', 'info'); }
       });
     }
@@ -6353,7 +6550,7 @@
     }
 
     function viewRequestDetail(reqId) {
-      const r = DB.eventRequests.find(x => x.id === reqId); if (!r) return;
+      const r = DB.eventRequests.find(x => String(x.id) === String(reqId)); if (!r) return;
       const cl = DB.users.find(u => u.id === r.clientId) || { name: 'Client', email: '', phone: '' };
       const el = document.getElementById('page-content');
       if (!el) return;
@@ -6940,24 +7137,41 @@
     </div>
   `;
 
+      const employeeReportContent = `
+    <div class="page-hd">
+      <div class="page-hd-left"><div class="page-title">Submitted Event Reports</div><div class="page-sub">View who submitted each report. Reports cannot be submitted or edited here.</div></div>
+    </div>
+    <div class="table-wrap">
+      ${DB.reports.filter(report => myEvents.some(event => String(event.id) === String(report.eventId))).length === 0
+          ? `<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">No reports submitted</div><p class="empty-desc">Submitted event reports will appear here.</p></div>`
+          : `<table><thead><tr><th>Event</th><th>File</th><th>Submitted By</th><th>Submitted At</th><th>Actions</th></tr></thead><tbody>
+        ${DB.reports.filter(report => myEvents.some(event => String(event.id) === String(report.eventId))).map(report => {
+            const event = myEvents.find(item => String(item.id) === String(report.eventId));
+            const submitter = DB.users.find(user => String(user.id) === String(report.submittedBy));
+            return `<tr><td><strong>${event ? event.title : 'Unknown Event'}</strong></td><td>${report.fileName || 'Report file'}</td><td>${submitter ? `${submitter.name}<div class="small">${submitter.email || ''}</div>` : 'Unknown user'}</td><td>${report.submittedAt || '—'}</td><td><button class="btn btn-xs btn-danger" onclick="deleteEventReport('${report.id}')">Remove</button></td></tr>`;
+          }).join('')}
+      </tbody></table>`}
+    </div>
+  `;
+
       return `
   <div style="padding:24px;background:var(--bg);">
     <div class="page-hd" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start;">
       <div class="page-hd-left">
         <div class="page-title">Event Reports</div>
-        <div class="page-sub">Manage client reports and review staff submissions</div>
+        <div class="page-sub">${CU.role === 'organizer' ? 'Review submitted reports and remove them when needed' : 'Manage client reports and review staff submissions'}</div>
       </div>
       <div class="page-hd-right">
         <button class="btn" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-weight:600;padding:8px 16px;border-radius:8px;gap:8px" onclick="toast('${completedEvents} Completed Events','info')"><span style="font-size:16px;color:var(--accent)">📄</span> ${completedEvents} Completed Events</button>
       </div>
     </div>
     
-    <div style="display:flex;gap:24px;border-bottom:1px solid var(--border);margin-bottom:24px">
+    ${CU.role === 'organizer' ? employeeReportContent : `<div style="display:flex;gap:24px;border-bottom:1px solid var(--border);margin-bottom:24px">
       <div style="padding-bottom:12px;border-bottom:2px solid ${tab === 'client' ? 'var(--accent)' : 'transparent'};color:${tab === 'client' ? 'var(--accent)' : 'var(--text2)'};font-weight:${tab === 'client' ? '600' : '500'};cursor:pointer;font-size:14px;transition:all 0.2s" onclick="switchReportTab('client')">Client Reports</div>
       ${(CU.role === 'organizer' || CU.role === 'staff' || CU.role === 'superuser') ? `<div style="padding-bottom:12px;border-bottom:2px solid ${tab === 'staff' ? 'var(--accent)' : 'transparent'};color:${tab === 'staff' ? 'var(--accent)' : 'var(--text2)'};font-weight:${tab === 'staff' ? '600' : '500'};cursor:pointer;font-size:14px;transition:all 0.2s" onclick="switchReportTab('staff')">Staff Reports</div>` : ''}
     </div>
 
-    ${tab === 'client' ? clientReportContent : staffReportContent}
+    ${tab === 'client' ? clientReportContent : staffReportContent}`}
   </div>
   `;
     }
@@ -7011,6 +7225,19 @@
 
       renderPage(_currentPage);
       toast('Report file submitted successfully!', 'success');
+    }
+
+    function deleteEventReport(reportId) {
+      const report = DB.reports.find(item => String(item.id) === String(reportId));
+      if (!report) return;
+      confirm2('Remove Event Report', 'Remove this submitted report?', () => {
+        const index = DB.reports.findIndex(item => String(item.id) === String(reportId));
+        if (index === -1) return;
+        DB.reports.splice(index, 1);
+        saveDB();
+        renderPage('reports');
+        toast('Event report removed', 'info');
+      });
     }
 
     function openSubmitStaffReportModal(eventId) {
