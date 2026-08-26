@@ -2833,11 +2833,48 @@
           "analytics"
         ]
       }
+    },
+    "/api/uploads": {
+      "post": {
+        "operationId": "UploadsController_uploadFile",
+        "summary": "Upload an event-related file",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "File uploaded successfully"
+          },
+          "400": {
+            "description": "Missing file or invalid file type"
+          }
+        },
+        "tags": [
+          "uploads"
+        ]
+      }
     }
   },
   "info": {
     "title": "Event Management System API",
-    "description": "Complete REST API for Event Management & Coordination with RBAC\n\n**Required Headers:**\n\n- `x-role`: User role (super_admin, client, event_organizer, event_staff, attendee)\n- `x-user-id`: User ID (required for endpoints that check ownership)\n\n**Demo Users:**\n\n- SuperAdmin: superadmin@example.com / Admin@123\n- Client: client@example.com / Client@123\n- Organizer: organizer@example.com / Organizer@123\n- Staff: staff@example.com / Staff@123\n- Attendee: attendee@example.com / Attendee@123",
+    "description": "Complete REST API for Event Management & Coordination with RBAC\n\n**Authentication:**\n\nAuthenticated endpoints require `Authorization: Bearer <JWT>`.\n\n**Demo Users:**\n\n- SuperAdmin: superadmin@example.com / Admin@123\n- Client: client@example.com / Client@123\n- Organizer: organizer@example.com / Organizer@123\n- Staff: staff@example.com / Staff@123\n- Attendee: attendee@example.com / Attendee@123",
     "version": "1.0.0",
     "contact": {}
   },
@@ -2845,17 +2882,10 @@
   "servers": [],
   "components": {
     "securitySchemes": {
-      "x-role-header": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-role",
-        "description": "User role header. Values: super_admin, client, event_organizer, event_staff, attendee"
-      },
-      "x-user-id-header": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-user-id",
-        "description": "User ID header for ownership checks"
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
       }
     },
     "schemas": {

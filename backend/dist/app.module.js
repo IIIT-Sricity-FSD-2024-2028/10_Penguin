@@ -10,6 +10,8 @@ exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
+const request_logging_middleware_1 = require("./common/middleware/request-logging.middleware");
+const events_audit_middleware_1 = require("./common/middleware/events-audit.middleware");
 // Existing modules
 const events_module_1 = require("./modules/events/events.module");
 const attendees_module_1 = require("./modules/attendees/attendees.module");
@@ -28,7 +30,15 @@ const reports_module_1 = require("./modules/reports/reports.module");
 const reviews_module_1 = require("./modules/reviews/reviews.module");
 const notifications_module_1 = require("./modules/notifications/notifications.module");
 const analytics_module_1 = require("./modules/analytics/analytics.module");
+const uploads_module_1 = require("./modules/uploads/uploads.module");
 let AppModule = class AppModule {
+    configure(consumer) {
+        consumer.apply(request_logging_middleware_1.RequestLoggingMiddleware).forRoutes('*');
+        consumer.apply(events_audit_middleware_1.EventsAuditMiddleware).forRoutes({
+            path: 'api/events',
+            method: common_1.RequestMethod.ALL,
+        });
+    }
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
@@ -52,6 +62,7 @@ exports.AppModule = AppModule = __decorate([
             reviews_module_1.ReviewsModule,
             notifications_module_1.NotificationsModule,
             analytics_module_1.AnalyticsModule,
+            uploads_module_1.UploadsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

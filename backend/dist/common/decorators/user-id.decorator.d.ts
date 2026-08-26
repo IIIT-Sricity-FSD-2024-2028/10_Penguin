@@ -1,5 +1,5 @@
 /**
- * Custom decorator to extract user ID from x-user-id request header
+ * Custom decorator to extract user ID from the authenticated request.
  * Usage: @UserId() userId: string
  */
 export declare const UserId: (...dataOrPipes: unknown[]) => ParameterDecorator;

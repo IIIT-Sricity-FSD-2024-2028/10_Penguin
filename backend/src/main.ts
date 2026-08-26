@@ -2,11 +2,19 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import helmet from 'helmet';
 import * as fs from 'fs';
 import * as path from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
 
   // Enable CORS for frontend integration with specific origins
   app.enableCors({
@@ -25,7 +33,7 @@ async function bootstrap() {
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-role', 'x-user-id'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Global validation pipe with whitelist and transform
@@ -40,14 +48,15 @@ async function bootstrap() {
     }),
   );
 
+  app.useGlobalFilters(new HttpExceptionFilter());
+
   // Swagger Setup
   const config = new DocumentBuilder()
     .setTitle('Event Management System API')
     .setDescription(
       'Complete REST API for Event Management & Coordination with RBAC\n\n' +
-      '**Required Headers:**\n\n' +
-      '- `x-role`: User role (super_admin, client, event_organizer, event_staff, attendee)\n' +
-      '- `x-user-id`: User ID (required for endpoints that check ownership)\n\n' +
+      '**Authentication:**\n\n' +
+      'Authenticated endpoints require `Authorization: Bearer <JWT>`.\n\n' +
       '**Demo Users:**\n\n' +
       '- SuperAdmin: superadmin@example.com / Admin@123\n' +
       '- Client: client@example.com / Client@123\n' +
@@ -56,24 +65,13 @@ async function bootstrap() {
       '- Attendee: attendee@example.com / Attendee@123',
     )
     .setVersion('1.0.0')
-    .addApiKey(
+    .addBearerAuth(
       {
-        type: 'apiKey',
-        in: 'header',
-        name: 'x-role',
-        description:
-          'User role header. Values: super_admin, client, event_organizer, event_staff, attendee',
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
       },
-      'x-role-header',
-    )
-    .addApiKey(
-      {
-        type: 'apiKey',
-        in: 'header',
-        name: 'x-user-id',
-        description: 'User ID header for ownership checks',
-      },
-      'x-user-id-header',
+      'bearer',
     )
     .build();
 

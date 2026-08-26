@@ -5,33 +5,29 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { UserRole, normalizeRole } from '../constants';
+import { AuthGuard } from '@nestjs/passport';
+import { normalizeRole } from '../constants';
 
 /**
- * RoleGuard checks the user role from x-role request header
- * and validates access based on role permissions
+ * RoleGuard authenticates through Passport's JWT strategy, then reads the
+ * trusted role placed on the request by that strategy.
  */
 @Injectable()
-export class RoleGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
+export class RoleGuard extends AuthGuard('jwt') implements CanActivate {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    await super.canActivate(context);
     const request = context.switchToHttp().getRequest<Request>();
-    const roleHeader = (request.headers['x-role'] as string) || '';
-
-    // Validate role is provided
-    if (!roleHeader) {
-      throw new ForbiddenException('x-role header is required');
+    const authenticatedUser = (request as any).user;
+    const trustedRole = normalizeRole(authenticatedUser?.userRole);
+    if (!trustedRole) {
+      throw new ForbiddenException('Authenticated user role is invalid');
     }
 
-    // Normalize and validate role
-    const normalizedRole = normalizeRole(roleHeader);
-    if (!normalizedRole) {
-      throw new ForbiddenException(
-        `Invalid x-role "${roleHeader}". Valid roles: ${Object.values(UserRole).join(', ')}`,
-      );
-    }
-
-    // Attach role to request for later use
-    (request as any).userRole = normalizedRole;
+    (request as any).user = {
+      ...authenticatedUser,
+      userRole: trustedRole,
+    };
+    (request as any).userRole = trustedRole;
 
     return true;
   }

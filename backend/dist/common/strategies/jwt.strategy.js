@@ -30,14 +30,16 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
     }
     validate(payload) {
         const user = this.dataStore.findUserByEmail(payload.email);
-        if (!user || user.status !== 'active') {
+        if (!user ||
+            user.status !== 'active' ||
+            user.userId !== payload.userId) {
             throw new common_1.UnauthorizedException('User not found or inactive');
         }
         // Return user info to be attached to request
         return {
             userId: payload.userId,
             email: payload.email,
-            userRole: payload.userRole,
+            userRole: user.userRole,
         };
     }
 };

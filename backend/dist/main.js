@@ -32,15 +32,23 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const swagger_1 = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 const app_module_1 = require("./app.module");
+const http_exception_filter_1 = require("./common/filters/http-exception.filter");
+const helmet_1 = __importDefault(require("helmet"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    app.use((0, helmet_1.default)({
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }));
     // Enable CORS for frontend integration with specific origins
     app.enableCors({
         origin: [
@@ -58,7 +66,7 @@ async function bootstrap() {
         ],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'x-role', 'x-user-id'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
     });
     // Global validation pipe with whitelist and transform
     app.useGlobalPipes(new common_1.ValidationPipe({
@@ -69,13 +77,13 @@ async function bootstrap() {
             enableImplicitConversion: true,
         },
     }));
+    app.useGlobalFilters(new http_exception_filter_1.HttpExceptionFilter());
     // Swagger Setup
     const config = new swagger_1.DocumentBuilder()
         .setTitle('Event Management System API')
         .setDescription('Complete REST API for Event Management & Coordination with RBAC\n\n' +
-        '**Required Headers:**\n\n' +
-        '- `x-role`: User role (super_admin, client, event_organizer, event_staff, attendee)\n' +
-        '- `x-user-id`: User ID (required for endpoints that check ownership)\n\n' +
+        '**Authentication:**\n\n' +
+        'Authenticated endpoints require `Authorization: Bearer <JWT>`.\n\n' +
         '**Demo Users:**\n\n' +
         '- SuperAdmin: superadmin@example.com / Admin@123\n' +
         '- Client: client@example.com / Client@123\n' +
@@ -83,18 +91,11 @@ async function bootstrap() {
         '- Staff: staff@example.com / Staff@123\n' +
         '- Attendee: attendee@example.com / Attendee@123')
         .setVersion('1.0.0')
-        .addApiKey({
-        type: 'apiKey',
-        in: 'header',
-        name: 'x-role',
-        description: 'User role header. Values: super_admin, client, event_organizer, event_staff, attendee',
-    }, 'x-role-header')
-        .addApiKey({
-        type: 'apiKey',
-        in: 'header',
-        name: 'x-user-id',
-        description: 'User ID header for ownership checks',
-    }, 'x-user-id-header')
+        .addBearerAuth({
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+    }, 'bearer')
         .build();
     const document = swagger_1.SwaggerModule.createDocument(app, config);
     // Save Swagger JSON to docs/swagger.json

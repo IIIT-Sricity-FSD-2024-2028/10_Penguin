@@ -11,7 +11,7 @@ export declare class JwtStrategy extends JwtStrategy_base {
     validate(payload: JwtPayload): {
         userId: string;
         email: string;
-        userRole: string;
+        userRole: import("../constants").UserRole;
     };
 }
 export {};

@@ -1,5 +1,5 @@
 /**
- * Custom decorator to extract user role from request headers
+ * Custom decorator to extract the trusted user role from the authenticated request.
  * Usage: @UserRoleDecorator() role: UserRole
  */
 export declare const UserRoleDecorator: (...dataOrPipes: unknown[]) => ParameterDecorator;

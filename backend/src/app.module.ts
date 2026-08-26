@@ -1,6 +1,8 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
+import { EventsAuditMiddleware } from './common/middleware/events-audit.middleware';
 
 // Existing modules
 import { EventsModule } from './modules/events/events.module';
@@ -21,6 +23,7 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 
 @Module({
   imports: [
@@ -42,8 +45,17 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     ReviewsModule,
     NotificationsModule,
     AnalyticsModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestLoggingMiddleware).forRoutes('*');
+    consumer.apply(EventsAuditMiddleware).forRoutes({
+      path: 'api/events',
+      method: RequestMethod.ALL,
+    });
+  }
+}
