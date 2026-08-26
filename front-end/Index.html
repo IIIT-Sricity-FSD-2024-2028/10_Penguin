@@ -3273,7 +3273,7 @@
       const btn = document.querySelector('#login .btn-primary');
       if (btn) { btn.textContent = 'Signing in…'; btn.disabled = true; }
 
-      // Try backend first, with instant fallback to local DB if backend is offline
+      // Authentication must be handled by the backend.
       apiLogin(email, pass).then(function (userData) {
         const roleMap = {
           SUPER_ADMIN: 'superuser', super_admin: 'superuser',
@@ -3300,45 +3300,10 @@
         initApp();
         toast(`Welcome back, ${CU.name}! 👋`, 'success');
       }).catch(function (err) {
-        // Check local DB if offline or if password matches demo aliases
-        const localUser = DB.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-        const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        const inNorm = norm(pass);
-        const stNorm = localUser ? norm(localUser.password) : '';
-
-        const localMatches = localUser && (
-          localUser.password === pass ||
-          localUser.password.toLowerCase() === pass.toLowerCase() ||
-          inNorm === stNorm ||
-          inNorm === 'staff123' || inNorm === 'staff' ||
-          inNorm === 'employee123' || inNorm === 'employee' ||
-          inNorm === 'organizer123' || inNorm === 'org123' || inNorm === 'organizer' ||
-          inNorm === 'client123' || inNorm === 'client' ||
-          inNorm === 'attendee123' || inNorm === 'att123' || inNorm === 'attendee' ||
-          inNorm === 'admin123' || inNorm === 'admin'
-        );
-
-        if (localMatches) {
-          CU = {
-            id: localUser.id || localUser.userId,
-            userId: localUser.userId || localUser.id,
-            name: localUser.name,
-            email: localUser.email,
-            role: localUser.role,
-            userRole: localUser.userRole || localUser.role,
-            status: localUser.status || 'active',
-            avatar: (localUser.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
-          };
-          try { sessionStorage.setItem('ef_cu', JSON.stringify(CU)); } catch (e) { }
-          showPage('app');
-          initApp();
-          toast(`Welcome back, ${CU.name}! 👋`, 'success');
-        } else {
-          const msg = err.message || 'Invalid email or password';
-          toast(msg, 'error');
-          showErr('l-pass-err');
-          g('l-pass-err').textContent = msg;
-        }
+        const msg = err.message || 'Unable to sign in. Start the backend server on port 3001.';
+        toast(msg, 'error');
+        showErr('l-pass-err');
+        g('l-pass-err').textContent = msg;
       }).finally(function () {
         if (btn) { btn.textContent = 'Sign In →'; btn.disabled = false; }
       });
@@ -8427,12 +8392,18 @@
     }, 3000);
 
     // ════════════════════════════════════════════════
-    (function boot() {
+    (async function boot() {
       // Always load latest persisted data first
       loadDB();
       try {
         const saved = sessionStorage.getItem('ef_cu');
-        if (saved) { CU = JSON.parse(saved); showPage('app'); initApp(); return; }
+        if (saved) {
+          await fetch('http://localhost:3001/health', { cache: 'no-store' });
+          CU = JSON.parse(saved);
+          showPage('app');
+          initApp();
+          return;
+        }
       } catch (e) { }
       showPage('landing');
     })();
