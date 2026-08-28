@@ -3409,7 +3409,8 @@
         { ic: '📊', lbl: 'Dashboard', pg: 'dashboard' },
         { ic: '🗓️', lbl: 'Manage Events', pg: 'events' },
         { ic: '📋', lbl: 'Event Requests', pg: 'event-requests' },
-        { ic: '👥', lbl: 'User Management', pg: 'users' },
+        { ic: '👷', lbl: 'Staff Management', pg: 'staff' },
+        { ic: '👥', lbl: 'Attendee Management', pg: 'attendees' },
         { ic: '📈', lbl: 'Event Reports', pg: 'reports' },
       ],
       employee: [
@@ -3931,8 +3932,8 @@
       const filteredEvents = myEv.filter(e => !searchQuery || e.title.toLowerCase().includes(searchQuery) || e.city.toLowerCase().includes(searchQuery));
       return `
   <div class="page-hd">
-    <div class="page-hd-left"><div class="page-title">${isEmployeeAccount() ? 'Employee Dashboard' : 'Organizer Dashboard'}</div><div class="page-sub">Hello ${CU.name}, manage your events and users.</div></div>
-    <div class="page-hd-right"></div>
+    <div class="page-hd-left"><div class="page-title">${isEmployeeAccount() ? 'Employee Dashboard' : 'Organizer Dashboard'}</div><div class="page-sub">Hello ${CU.name}, manage your events and staff.</div></div>
+    <div class="page-hd-right">${isEmployeeAccount() ? '' : '<button class="btn btn-primary" onclick="openAddEventModal()">+ Create Event</button>'}</div>
   </div>
   <div class="grid-4 mb-20">
     <div class="stat-card"><div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">🗓️</div><div class="stat-value" style="color:var(--accent)">${myEv.length}</div><div class="stat-label">My Events</div><div class="stat-sub neutral">${upcoming.length} upcoming</div></div>
@@ -3943,11 +3944,11 @@
   <div class="mb-16">
     <div class="mb-12 flex justify-between items-center"><span class="h4">My Events</span></div>
     <div class="search-box input-group" style="margin-bottom:16px"><span class="input-icon">🔍</span><input class="form-control" id="org-events-search" placeholder="Search by event name or city..." value="${searchQuery}" oninput="searchOrganizerEvents(this.value)"></div>
-    <div class="events-grid">${filteredEvents.length > 0 ? filteredEvents.map(e => evCard(e, 'organizer')).join('') : `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No events match</div><p>Try adjusting your search</p></div>`}
+    <div class="events-grid">${filteredEvents.length > 0 ? filteredEvents.map(e => evCard(e, 'organizer')).join('') : myEv.length > 0 ? `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No events match</div><p>Try adjusting your search</p></div>` : isEmployeeAccount() ? `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📅</div><div class="empty-title">No events assigned</div><p>Assigned events will appear here.</p></div>` : `<div class="ev-card" style="display:flex;align-items:center;justify-content:center;min-height:240px;border-style:dashed;cursor:pointer" onclick="openAddEventModal()"><div class="text-center" style="color:var(--text3)"><div style="font-size:32px;margin-bottom:8px">➕</div><div style="font-size:13px">Create Your First Event</div></div></div>`}
+      ${myEv.length > 0 && !isEmployeeAccount() ? `<div class="ev-card" style="display:flex;align-items:center;justify-content:center;min-height:240px;border-style:dashed;cursor:pointer" onclick="openAddEventModal()"><div class="text-center" style="color:var(--text3)"><div style="font-size:32px;margin-bottom:8px">➕</div><div style="font-size:13px">Create New Event</div></div></div>` : ''}
     </div>
   </div>`;
     }
-
     function searchOrganizerEvents(query) {
       sessionStorage.setItem('org_events_search', query);
       renderPage('dashboard');
@@ -4671,9 +4672,7 @@
       return `
   <div class="page-hd">
     <div class="page-hd-left"><div class="page-title">${isOrg ? 'My Events' : 'All Events'}</div><div class="page-sub">${list.length} event(s)</div></div>
-    <div class="page-hd-right">
-      
-    </div>
+    <div class="page-hd-right">${CU.role === 'organizer' && !isEmployeeAccount() ? `<button class="btn btn-primary" onclick="openAddEventModal()">+ Create Event</button>` : ''}</div>
   </div>
   <div class="filter-row">
     <div class="search-box input-group"><span class="input-icon">🔍</span><input class="form-control" id="ev-q" placeholder="Search events…" oninput="refreshEvents()"></div>
@@ -7131,7 +7130,7 @@
       </div>
     </div>
     
-    ${CU.role === 'organizer' ? employeeReportContent : `<div style="display:flex;gap:24px;border-bottom:1px solid var(--border);margin-bottom:24px">
+    ${isEmployeeAccount() ? employeeReportContent : `<div style="display:flex;gap:24px;border-bottom:1px solid var(--border);margin-bottom:24px">
       <div style="padding-bottom:12px;border-bottom:2px solid ${tab === 'client' ? 'var(--accent)' : 'transparent'};color:${tab === 'client' ? 'var(--accent)' : 'var(--text2)'};font-weight:${tab === 'client' ? '600' : '500'};cursor:pointer;font-size:14px;transition:all 0.2s" onclick="switchReportTab('client')">Client Reports</div>
       ${(CU.role === 'organizer' || CU.role === 'staff' || CU.role === 'superuser') ? `<div style="padding-bottom:12px;border-bottom:2px solid ${tab === 'staff' ? 'var(--accent)' : 'transparent'};color:${tab === 'staff' ? 'var(--accent)' : 'var(--text2)'};font-weight:${tab === 'staff' ? '600' : '500'};cursor:pointer;font-size:14px;transition:all 0.2s" onclick="switchReportTab('staff')">Staff Reports</div>` : ''}
     </div>
@@ -7692,9 +7691,10 @@
     function submitEventRequest(organizerId) {
       const title = v('req-title'), type = v('req-type'), date = v('req-date'), guests = v('req-guests') || 0, budget = parseInt(v('req-budget')) || 0, desc = v('req-desc');
       if (!title || !date || budget < 1000) { toast('Please fill required fields', 'error'); return; }
-      DB.eventRequests.push({ id: DB._nextId.reqs++, clientId: CU.id, organizer: organizerId, title, type, date, guests, budget, desc, status: 'pending' });
+      DB.eventRequests.push({ id: DB._nextId.reqs++, clientId: CU.id, organizer: organizerId, title, type, date, guests, budget, desc, status: 'pending', created: today() });
       saveDB();
       closeModal();
+      renderPage(_currentPage);
       toast('Request sent to organizer!', 'success');
     }
 
@@ -8366,20 +8366,24 @@
         const parsed = JSON.parse(saved);
         // Compare a lightweight fingerprint to detect changes
         const fingerprint = [
-          (parsed.eventRequests || []).length,
-          (parsed.registrations || []).length,
-          (parsed.staffAssignments || []).map(a => a.id + ':' + a.status).join(','),
-          (parsed.events || []).length,
-          (parsed.users || []).length,
-          (parsed.notifications || []).length,
+          JSON.stringify(parsed.eventRequests || []),
+          JSON.stringify(parsed.registrations || []),
+          JSON.stringify(parsed.staffAssignments || []),
+          JSON.stringify(parsed.events || []),
+          JSON.stringify(parsed.users || []),
+          JSON.stringify(parsed.notifications || []),
+          JSON.stringify(parsed.reports || []),
+          JSON.stringify(parsed.employeeChangeRequests || []),
         ].join('|');
         const currentFingerprint = [
-          DB.eventRequests.length,
-          DB.registrations.length,
-          DB.staffAssignments.map(a => a.id + ':' + a.status).join(','),
-          DB.events.length,
-          DB.users.length,
-          DB.notifications.length,
+          JSON.stringify(DB.eventRequests || []),
+          JSON.stringify(DB.registrations || []),
+          JSON.stringify(DB.staffAssignments || []),
+          JSON.stringify(DB.events || []),
+          JSON.stringify(DB.users || []),
+          JSON.stringify(DB.notifications || []),
+          JSON.stringify(DB.reports || []),
+          JSON.stringify(DB.employeeChangeRequests || []),
         ].join('|');
         if (fingerprint !== currentFingerprint) {
           loadDB();
