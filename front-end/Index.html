@@ -2499,13 +2499,44 @@
     </footer>
   </div>
 
+  <div id="employee-portal" style="display:none;min-height:100vh;padding:80px 20px;background:var(--bg)">
+    <div style="max-width:980px;margin:0 auto">
+      <div class="text-center" style="margin-bottom:42px">
+        <div class="l-eyebrow">Internal Access</div>
+        <h1 class="l-heading">Employee Portal</h1>
+        <p class="l-desc" style="margin:0 auto">Select your department to continue</p>
+      </div>
+      <div class="grid-3">
+        <div class="role-card" onclick="selectEmployeeType('REGISTRATION_VERIFICATION')">
+          <div class="role-card-emoji">✅</div>
+          <div class="role-card-title">Employee 1</div>
+          <p class="role-card-desc">Manage attendee registrations and verify tickets at the event entrance.<br>Track check-ins and prepare attendance reports.</p>
+          <button class="btn btn-primary btn-sm">Continue →</button>
+        </div>
+        <div class="role-card" onclick="selectEmployeeType('EVENT_OPERATIONS')">
+          <div class="role-card-emoji">🗓️</div>
+          <div class="role-card-title">Employee 2</div>
+          <p class="role-card-desc">Manage event information, schedules, statuses, and operational requests.<br>Keep each event ready for smooth execution.</p>
+          <button class="btn btn-primary btn-sm">Continue →</button>
+        </div>
+        <div class="role-card" onclick="selectEmployeeType('SUPPORT_FINANCE')">
+          <div class="role-card-emoji">💳</div>
+          <div class="role-card-title">Employee 3</div>
+          <p class="role-card-desc">Handle customer support requests and resolve event-related issues.<br>Review payments, transactions, and finance reports.</p>
+          <button class="btn btn-primary btn-sm">Continue →</button>
+        </div>
+      </div>
+      <p style="text-align:center;margin-top:28px"><a href="javascript:showPage('landing')" style="color:var(--text2)">← Back to Home</a></p>
+    </div>
+  </div>
+
   <!-- ╔══════════════════════════════════════
      LOGIN PAGE
 ╚══════════════════════════════════════ -->
   <div id="login">
     <div class="login-card">
       <div class="login-logo">⚡ EventFlow</div>
-      <p class="login-sub">Sign in to your dashboard</p>
+      <p class="login-sub" id="login-subtitle">Sign in to your dashboard</p>
 
       <div class="login-hint" id="login-hint">📝 Demo credentials available below</div>
 
@@ -2534,9 +2565,9 @@
           <span><span class="badge badge-green" style="margin-right:4px">Staff</span> <strong>James Wilson:</strong> staff@example.com</span>
           <span style="color:var(--accent);font-family:monospace;font-size:11px">Staff@123</span>
         </div>
-        <div style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)" onclick="fillLogin('employee@example.com', 'Employee@123')">
-          <span><span class="badge badge-purple" style="margin-right:4px">CRUD</span> <strong>Employee:</strong> employee@example.com</span>
-          <span style="color:var(--accent);font-family:monospace;font-size:11px">Employee@123</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)">
+          <span><span class="badge badge-purple" style="margin-right:4px">Employee</span> <strong>Employee access:</strong> choose your work area</span>
+          <button class="btn btn-primary btn-sm" type="button" onclick="gotoLogin('employee')">Employee Login →</button>
         </div>
         <div style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)" onclick="fillLogin('organizer@example.com', 'Organizer@123')">
           <span><span class="badge badge-purple" style="margin-right:4px">Organizer</span> <strong>Sarah Chen:</strong> organizer@example.com</span>
@@ -2888,13 +2919,13 @@
         </div>
         <nav class="sb-nav" id="sb-nav"></nav>
         <div class="sb-bottom">
-          <div class="sb-user" onclick="goNav('settings')">
+          <div class="sb-user" onclick="goNav('profile')" title="View Profile">
             <div class="av" id="sb-av">?</div>
             <div class="sb-user-info">
               <div class="sb-user-name" id="sb-name">User</div>
               <div class="sb-user-role" id="sb-role-lbl">Role</div>
             </div>
-            <span style="color:var(--text3);font-size:12px">⚙</span>
+            <span style="color:var(--text3);font-size:13px;opacity:0.6">›</span>
           </div>
         </div>
       </aside>
@@ -2968,14 +2999,15 @@
       users: [
         { id: 'usr-admin-001', name: 'Alex Johnson', email: 'superadmin@example.com', password: 'Admin@123', role: 'superuser', phone: '+91 9876543201', avatar: 'AJ', status: 'active', joined: '2024-01-15', bio: 'Platform administrator with full system access.' },
         { id: 'usr-org-001', name: 'Sarah Chen', email: 'organizer@example.com', password: 'Organizer@123', role: 'organizer', phone: '+91 9876543202', avatar: 'SC', status: 'active', joined: '2024-02-01', bio: 'Senior event organizer specializing in corporate events.', service: 'Corporate Events & Conferences', city: 'Bangalore', rating: 4.8, color: '#7c6ff7' },
-        { id: 'usr-emp-001', userId: 'usr-emp-001', name: 'Marcus Vance', email: 'employee@example.com', password: 'Employee@123', role: 'organizer', phone: '+91 9876543220', avatar: 'MV', status: 'active', joined: '2024-01-18', bio: 'Senior event operations employee managing end-to-end event planning, full CRUD lifecycle, vendor allocation, and live execution.', service: 'Corporate Conferences & Tech Summits', city: 'Bangalore', rating: 4.9, color: '#3b82f6' },
-        { id: 'usr-emp-001c', userId: 'usr-emp-001', name: 'Marcus Vance', email: 'marcus.ops@eventflow.com', password: 'Employee@123', role: 'organizer', phone: '+91 9876543220', avatar: 'MV', status: 'active', joined: '2024-01-18', bio: 'Senior event operations employee managing end-to-end event planning, full CRUD lifecycle, vendor allocation, and live execution.', service: 'Corporate Conferences & Tech Summits', city: 'Bangalore', rating: 4.9, color: '#3b82f6' },
-        { id: 'usr-emp-002', userId: 'usr-emp-002', name: 'Elena Rostova', email: 'elena.coordinator@eventflow.com', password: 'Employee@123', role: 'organizer', phone: '+91 9876543221', avatar: 'ER', status: 'active', joined: '2024-02-12', bio: 'Event coordinator employee in charge of event request processing, budget oversight, and event schedule management.', service: 'Weddings & Social Galas', city: 'Mumbai', rating: 4.8, color: '#ec4899' },
-        { id: 'usr-emp-003', userId: 'usr-emp-003', name: 'Arjun Kapoor', email: 'arjun.events@eventflow.com', password: 'Employee@123', role: 'organizer', phone: '+91 9876543222', avatar: 'AK', status: 'active', joined: '2024-03-08', bio: 'Operations lead managing event inventory, ticket pricing tiers, staff deployments, and stage production CRUD.', service: 'Music Festivals & Product Launches', city: 'Delhi NCR', rating: 4.9, color: '#8b5cf6' },
-        { id: 'usr-emp-004', userId: 'usr-emp-004', name: 'Maya Lin', email: 'maya.ops@eventflow.com', password: 'Employee@123', role: 'organizer', phone: '+91 9876543223', avatar: 'ML', status: 'active', joined: '2024-03-22', bio: 'Specialist managing venue logistics, attendee capacity thresholds, and event timeline publishing.', service: 'Exhibitions & Trade Shows', city: 'Hyderabad', rating: 4.7, color: '#10b981' },
+        { id: 'usr-emp-001', userId: 'usr-emp-001', name: 'Marcus Vance', email: 'employee@example.com', password: 'Employee@123', role: 'staff', employeeType: 'EVENT_OPERATIONS', phone: '+91 9876543220', avatar: 'MV', status: 'active', joined: '2024-01-18', bio: 'Senior event operations employee managing event information and live execution.', service: 'Corporate Conferences & Tech Summits', city: 'Bangalore', rating: 4.9, color: '#3b82f6' },
+        { id: 'usr-emp-001c', userId: 'usr-emp-001', name: 'Marcus Vance', email: 'marcus.ops@eventflow.com', password: 'Employee@123', role: 'staff', employeeType: 'SUPPORT_FINANCE', phone: '+91 9876543220', avatar: 'MV', status: 'active', joined: '2024-01-18', bio: 'Customer support and finance operations executive.', service: 'Support & Finance', city: 'Bangalore', rating: 4.9, color: '#3b82f6' },
+        { id: 'usr-emp-002', userId: 'usr-emp-002', name: 'Elena Rostova', email: 'elena.coordinator@eventflow.com', password: 'Employee@123', role: 'staff', employeeType: 'EVENT_OPERATIONS', phone: '+91 9876543221', avatar: 'ER', status: 'active', joined: '2024-02-12', bio: 'Event operations executive.', service: 'Event Operations', city: 'Mumbai', rating: 4.8, color: '#ec4899' },
+        { id: 'usr-emp-003', userId: 'usr-emp-003', name: 'Arjun Kapoor', email: 'arjun.events@eventflow.com', password: 'Employee@123', role: 'staff', employeeType: 'REGISTRATION_VERIFICATION', phone: '+91 9876543222', avatar: 'AK', status: 'active', joined: '2024-03-08', bio: 'Registration and attendee verification executive.', service: 'Registration & Verification', city: 'Delhi NCR', rating: 4.9, color: '#8b5cf6' },
+        { id: 'usr-emp-004', userId: 'usr-emp-004', name: 'Maya Lin', email: 'maya.ops@eventflow.com', password: 'Employee@123', role: 'staff', employeeType: 'SUPPORT_FINANCE', phone: '+91 9876543223', avatar: 'ML', status: 'active', joined: '2024-03-22', bio: 'Customer support and finance operations executive.', service: 'Support & Finance', city: 'Hyderabad', rating: 4.7, color: '#10b981' },
         { id: 'usr-client-001', name: 'Michael Torres', email: 'client@example.com', password: 'Client@123', role: 'client', phone: '+91 9876543203', avatar: 'MT', status: 'active', joined: '2024-03-10', bio: 'Head of Events at TechCorp Ltd.', company: 'TechCorp Ltd' },
         { id: 'usr-staff-001', name: 'James Wilson', email: 'staff@example.com', password: 'Staff@123', role: 'staff', phone: '+91 9876543204', avatar: 'JW', status: 'active', joined: '2024-02-15', bio: 'Professional photographer and event videographer.', service: 'Photography & Videography', rate: 800 },
         { id: 'usr-attendee-001', name: 'Priya Patel', email: 'attendee@example.com', password: 'Attendee@123', role: 'attendee', phone: '+91 9876543205', avatar: 'PP', status: 'active', joined: '2024-04-01', bio: 'Tech enthusiast and frequent conference attendee.' },
+        { id: 'usr-dup-001', name: 'Priya Patel (Secondary)', email: 'attendee@example.com', password: 'Attendee@123', role: 'attendee', phone: '+91 9876543205', avatar: 'PP', status: 'active', joined: '2024-04-12', bio: 'Secondary registration under same email.' },
         { id: 6, name: 'Emma Brown', email: 'emma@eventflow.com', password: 'org123', role: 'organizer', phone: '+91 9876543206', avatar: 'EB', status: 'active', joined: '2024-02-20', service: 'Weddings & Social Events', city: 'Pune', rating: 4.7, color: '#f56565', bio: 'Expert in creating memorable wedding and social event experiences with meticulous attention to detail.' },
         { id: 7, name: 'David Kim', email: 'david@eventflow.com', password: 'staff123', role: 'staff', phone: '+91 9876543207', avatar: 'DK', status: 'inactive', joined: '2024-03-01', service: 'Catering & Hospitality', rate: 1200 },
         { id: 8, name: 'Lisa Zhang', email: 'lisa@eventflow.com', password: 'att123', role: 'attendee', phone: '+91 9876543208', avatar: 'LZ', status: 'active', joined: '2024-04-15' },
@@ -3018,19 +3050,26 @@
         { id: 'chg-emp-003', type: 'event', targetId: 105, targetName: 'Healthcare & Biotech Forum 2026', requester: 'James Wilson', requestedChange: 'Add the final attendance count to the event record.', status: 'approved', submittedAt: '2 days ago' },
       ],
       registrations: [
-        { id: 101, attendeeId: 'usr-attendee-001', eventId: 101, date: '2026-03-01', ticketId: 'TKT-EMP-101', status: 'confirmed', payment: 'paid', amount: 200, checkedIn: false, seat: 'VIP-12' },
-        { id: 102, attendeeId: 'usr-client-001', eventId: 102, date: '2026-03-05', ticketId: 'TKT-EMP-102', status: 'confirmed', payment: 'paid', amount: 350, checkedIn: false, seat: 'A-01' },
-        { id: 103, attendeeId: 'usr-attendee-001', eventId: 103, date: '2026-03-08', ticketId: 'TKT-EMP-103', status: 'confirmed', payment: 'paid', amount: 120, checkedIn: true, seat: 'Lab-04' },
-        { id: 104, attendeeId: 8, eventId: 104, date: '2026-03-12', ticketId: 'TKT-EMP-104', status: 'confirmed', payment: 'paid', amount: 0, checkedIn: false, seat: 'Desk-22' },
-        { id: 105, attendeeId: 9, eventId: 105, date: '2026-03-15', ticketId: 'TKT-EMP-105', status: 'confirmed', payment: 'paid', amount: 250, checkedIn: true, seat: 'Hall-55' },
-        { id: 1, attendeeId: 5, eventId: 1, date: '2026-03-01', ticketId: 'TKT-2026-001', status: 'confirmed', payment: 'paid', amount: 150, checkedIn: false, seat: 'A-042' },
-        { id: 2, attendeeId: 5, eventId: 2, date: '2026-03-05', ticketId: 'TKT-2026-002', status: 'confirmed', payment: 'paid', amount: 250, checkedIn: false, seat: 'T-015' },
-        { id: 3, attendeeId: 8, eventId: 1, date: '2026-03-02', ticketId: 'TKT-2026-003', status: 'confirmed', payment: 'paid', amount: 150, checkedIn: true, seat: 'A-043' },
-        { id: 4, attendeeId: 5, eventId: 3, date: '2026-03-10', ticketId: 'TKT-2026-004', status: 'confirmed', payment: 'paid', amount: 75, checkedIn: false, seat: 'GA' },
-        { id: 5, attendeeId: 9, eventId: 1, date: '2026-03-03', ticketId: 'TKT-2026-005', status: 'confirmed', payment: 'paid', amount: 150, checkedIn: true, seat: 'A-044' },
-        { id: 6, attendeeId: 8, eventId: 3, date: '2026-03-12', ticketId: 'TKT-2026-006', status: 'confirmed', payment: 'paid', amount: 75, checkedIn: false, seat: 'GA' },
-        { id: 7, attendeeId: 2, eventId: 1, date: '2026-03-14', ticketId: 'TKT-2026-007', status: 'confirmed', payment: 'paid', amount: 150, checkedIn: false, seat: 'A-045' },
-        { id: 8, attendeeId: 3, eventId: 1, date: '2026-03-15', ticketId: 'TKT-2026-008', status: 'confirmed', payment: 'paid', amount: 150, checkedIn: false, seat: 'A-046' },
+        { id: 101, attendeeId: 'usr-attendee-001', eventId: 101, date: '2026-03-01', ticketId: 'TKT-EMP-101', status: 'confirmed', payment: 'paid', amount: 200, checkedIn: false, seat: 'VIP-12', verificationStatus: 'Verified', verified: true, docType: 'Govt Aadhaar ID', docRef: 'ID-8849-XXXX-1029', notes: 'Verified via Govt ID submission.' },
+        { id: 102, attendeeId: 'usr-client-001', eventId: 102, date: '2026-03-05', ticketId: 'TKT-EMP-102', status: 'confirmed', payment: 'paid', amount: 350, checkedIn: false, seat: 'A-01', verificationStatus: 'Verified', verified: true, docType: 'Corporate Access Badge', docRef: 'CORP-TC-9941', notes: 'Executive corporate verification completed.' },
+        { id: 103, attendeeId: 'usr-attendee-001', eventId: 103, date: '2026-03-08', ticketId: 'TKT-EMP-103', status: 'confirmed', payment: 'paid', amount: 120, checkedIn: true, seat: 'Lab-04', verificationStatus: 'Verified', verified: true, docType: 'Passport Verification', docRef: 'PASS-Z992014', notes: 'Workshop credentials verified.' },
+        { id: 104, attendeeId: 8, eventId: 104, date: '2026-03-12', ticketId: 'TKT-EMP-104', status: 'pending', payment: 'paid', amount: 0, checkedIn: false, seat: 'Desk-22', verificationStatus: 'Pending Review', verified: false, docType: 'Student University ID', docRef: 'UNI-STU-4820', notes: 'Student ID photo blur — pending manual review.' },
+        { id: 105, attendeeId: 9, eventId: 105, date: '2026-03-15', ticketId: 'TKT-EMP-105', status: 'confirmed', payment: 'paid', amount: 250, checkedIn: true, seat: 'Hall-55', verificationStatus: 'Verified', verified: true, docType: 'Govt Driving License', docRef: 'DL-MH-04-2024009', notes: 'Healthcare delegate identity confirmed.' },
+        { id: 1, attendeeId: 5, eventId: 1, date: '2026-03-01', ticketId: 'TKT-2026-001', status: 'pending', payment: 'paid', amount: 150, checkedIn: false, seat: 'A-042', verificationStatus: 'Pending Review', verified: false, docType: 'Govt Aadhaar ID', docRef: 'ID-4421-XXXX-9912', notes: 'Identity proof uploaded, awaiting approval.' },
+        { id: 2, attendeeId: 5, eventId: 2, date: '2026-03-05', ticketId: 'TKT-2026-002', status: 'confirmed', payment: 'paid', amount: 250, checkedIn: false, seat: 'T-015', verificationStatus: 'Verified', verified: true, docType: 'Corporate Invite Pass', docRef: 'GALA-INV-0192', notes: 'Gala guest verification confirmed.' },
+        { id: 3, attendeeId: 8, eventId: 1, date: '2026-03-02', ticketId: 'TKT-2026-003', status: 'pending', payment: 'paid', amount: 150, checkedIn: true, seat: 'A-043', verificationStatus: 'Flagged', verified: false, docType: 'Company ID Card', docRef: 'EMP-ID-MISSING', flagReason: 'Company ID badge image missing back side.', notes: 'Flagged for re-upload.' },
+        { id: 4, attendeeId: 5, eventId: 3, date: '2026-03-10', ticketId: 'TKT-2026-004', status: 'confirmed', payment: 'paid', amount: 75, checkedIn: false, seat: 'GA', verificationStatus: 'Verified', verified: true, docType: 'E-Ticket Pass', docRef: 'TKT-FEST-8819', notes: 'Festival online registration verified.' },
+        { id: 5, attendeeId: 9, eventId: 1, date: '2026-03-03', ticketId: 'TKT-2026-005', status: 'pending', payment: 'paid', amount: 150, checkedIn: true, seat: 'A-044', verificationStatus: 'Pending Review', verified: false, docType: 'Govt Aadhaar ID', docRef: 'ID-1102-XXXX-7741', notes: 'Online verification pending.' },
+        { id: 6, attendeeId: 8, eventId: 3, date: '2026-03-12', ticketId: 'TKT-2026-006', status: 'confirmed', payment: 'paid', amount: 75, checkedIn: false, seat: 'GA', verificationStatus: 'Verified', verified: true, docType: 'E-Ticket Pass', docRef: 'TKT-FEST-8820', notes: 'Pass verified.' },
+        { id: 7, attendeeId: 2, eventId: 1, date: '2026-03-14', ticketId: 'TKT-2026-007', status: 'confirmed', payment: 'paid', amount: 150, checkedIn: false, seat: 'A-045', verificationStatus: 'Verified', verified: true, docType: 'Organizer VIP Access', docRef: 'ORG-VIP-002', notes: 'Organizer VIP pass verified.' },
+        { id: 8, attendeeId: 3, eventId: 1, date: '2026-03-15', ticketId: 'TKT-2026-008', status: 'confirmed', payment: 'paid', amount: 150, checkedIn: false, seat: 'A-046', verificationStatus: 'Verified', verified: true, docType: 'Client Pass', docRef: 'CLT-PASS-104', notes: 'Client registration verified.' },
+      ],
+      userQueries: [
+        { id: 'UQR-501', userId: 'usr-attendee-001', userName: 'Priya Patel', userEmail: 'attendee@example.com', type: 'Account Deletion', subject: 'Request to delete duplicate attendee account', detail: 'User requested deletion of duplicate account created during Summit registration.', source: 'User Request', status: 'Pending', date: 'Today, 10:30 AM' },
+        { id: 'UQR-502', userId: 'usr-client-001', userName: 'Michael Torres', userEmail: 'client@example.com', type: 'Email Change', subject: 'Update profile email address to corporate domain', detail: 'Requested email update from client@example.com to m.torres@techcorp.com.', source: 'User Request', status: 'In Progress', date: 'Yesterday, 4:15 PM' },
+        { id: 'UQR-503', userId: 8, userName: 'Lisa Zhang', userEmail: 'lisa@eventflow.com', type: 'Escalated Support', subject: 'Verification failed for Hackathon registration badge', detail: 'Escalated by Customer Support (Employee 3): Student ID upload unreadable, needs re-verification.', source: 'Employee 3 Escalation', status: 'Pending', date: '2 days ago' },
+        { id: 'UQR-504', userId: 9, userName: 'Robert Singh', userEmail: 'robert@eventflow.com', type: 'Profile Update', subject: 'Contact phone number correction & name spelling', detail: 'Requested phone update to +91 9876543209 and correction on badge name.', source: 'User Request', status: 'Resolved', date: '2026-08-26' },
+        { id: 'UQR-505', userId: 5, userName: 'Priya Patel (Secondary)', userEmail: 'attendee@example.com', type: 'Escalated Support', subject: 'Duplicate ticket registration merge inquiry', detail: 'Escalated by Employee 3: User registered twice for Tech Summit under different tickets.', source: 'Employee 3 Escalation', status: 'Pending', date: 'Today, 8:45 AM' }
       ],
       staffAssignments: [
         { id: 101, staffId: 'usr-staff-001', eventId: 101, role: 'Lead Event Photographer', status: 'accepted', fee: 1200, notes: 'Full photo coverage for keynote hall and exhibition pavilion.' },
@@ -3063,6 +3102,10 @@
         { id: 7, title: 'New Assignment', msg: 'Sarah Johnson assigned you as Photographer & Videographer for Corporate Annual Gala 2026 — $1,100 fee', time: '1 hr ago', read: false, type: 'warning', icon: '📸' },
         { id: 8, title: 'New Assignment', msg: 'Sarah Johnson assigned you as Stage Photographer for Spring Music Festival — $750 fee', time: '3 hrs ago', read: false, type: 'warning', icon: '🎵' },
         { id: 9, title: 'New Assignment', msg: 'Assigned as Event Documentarian for Startup Pitch Night — $500 fee', time: '5 hrs ago', read: false, type: 'warning', icon: '🚀' },
+        { id: 'sf-notif-001', employeeType: 'SUPPORT_FINANCE', title: 'New Support Request', msg: 'Michael Torres requested a payment receipt for Global AI & Cloud Summit 2026.', time: '12 mins ago', read: false, type: 'info', icon: '📩' },
+        { id: 'sf-notif-002', employeeType: 'SUPPORT_FINANCE', title: 'Refund Awaiting Review', msg: 'Refund REF-2026-001 for ₹350 is ready for finance review.', time: '28 mins ago', read: false, type: 'warning', icon: '↩️' },
+        { id: 'sf-notif-003', employeeType: 'SUPPORT_FINANCE', title: 'Transaction Completed', msg: 'Transaction TXN-2026-005 was completed successfully for Michael Torres.', time: '1 hr ago', read: true, type: 'success', icon: '💳' },
+        { id: 'sf-notif-004', employeeType: 'SUPPORT_FINANCE', title: 'Report Reviewed', msg: 'August service operations was reviewed by Super Admin.', time: 'Yesterday', read: true, type: 'success', icon: '📊' },
       ],
       staffAvailability: {
         "4": ["2026-04-02", "2026-04-03", "2026-04-05", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-12", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-19", "2026-04-22", "2026-04-23", "2026-04-26", "2026-04-28", "2026-04-30", "2026-05-02", "2026-05-05", "2026-05-07", "2026-05-09"],
@@ -3070,7 +3113,66 @@
         "10": ["2026-04-02", "2026-04-04", "2026-04-07", "2026-04-09", "2026-04-11", "2026-04-14", "2026-04-16", "2026-04-18", "2026-04-21", "2026-04-23", "2026-04-25", "2026-04-28", "2026-04-30", "2026-05-02", "2026-05-04", "2026-05-06", "2026-05-09", "2026-05-11"]
       }, // {staffId: [dates]} - e.g., {"4": ["2026-03-15", "2026-03-16"]}
       attendanceReports: {}, // {eventId: {total, checked, pending, report}}
-      _nextId: { users: 13, events: 9, reqs: 5, regs: 9, assignments: 5, staffReqs: 1, notifs: 10 },
+      supportRequests: [
+        { id: 'sup-001', userId: 'usr-client-001', eventId: 101, subject: 'Payment receipt needed', message: 'Please resend the receipt for my summit registration.', status: 'Pending', response: '', created: today(), updated: '10 mins ago' },
+        { id: 'sup-002', userId: 'usr-attendee-001', eventId: 103, subject: 'Unable to download ticket', message: 'My payment is complete but the ticket link is not opening.', status: 'In Progress', response: 'We are checking your ticket record now.', created: '2026-08-27', updated: '1 hr ago' },
+        { id: 'sup-003', userId: 'usr-client-001', eventId: 102, subject: 'Refund request', message: 'Two registrations were made by mistake. Please refund one.', status: 'Resolved', response: 'Your refund request has been forwarded to finance.', created: '2026-08-26', updated: 'Yesterday' },
+        { id: 'sup-004', userId: 'usr-attendee-001', eventId: 104, subject: 'Event location question', message: 'Could you confirm the venue entrance details?', status: 'Closed', response: 'Venue instructions were sent to your email.', created: '2026-08-25', updated: '2 days ago' },
+      ],
+      financeTransactions: [
+        { id: 'TXN-2026-001', userId: 'usr-attendee-001', eventId: 101, amount: 200, status: 'Successful', date: today() },
+        { id: 'TXN-2026-002', userId: 'usr-client-001', eventId: 102, amount: 350, status: 'Successful', date: today() },
+        { id: 'TXN-2026-005', userId: 'usr-client-001', eventId: 101, amount: 200, status: 'Successful', date: today() },
+        { id: 'TXN-2026-003', userId: 'usr-attendee-001', eventId: 103, amount: 120, status: 'Pending', date: '2026-08-27' },
+        { id: 'TXN-2026-004', userId: 'usr-client-001', eventId: 104, amount: 0, status: 'Failed', date: '2026-08-26' },
+      ],
+      financeRefunds: [
+        { id: 'REF-2026-001', userId: 'usr-client-001', eventId: 102, amount: 350, reason: 'Duplicate registration', status: 'Requested', date: today() },
+        { id: 'REF-2026-002', userId: 'usr-attendee-001', eventId: 103, amount: 120, reason: 'Event schedule conflict', status: 'Processing', date: '2026-08-27' },
+        { id: 'REF-2026-003', userId: 'usr-attendee-001', eventId: 101, amount: 200, reason: 'Cancelled attendance', status: 'Completed', date: '2026-08-25' },
+        { id: 'REF-2026-004', userId: 'usr-client-001', eventId: 104, amount: 0, reason: 'Invalid request', status: 'Rejected', date: '2026-08-24' },
+      ],
+      operationalReports: [
+        { id: 'OPR-001', type: 'Support Report', title: 'Weekly support queue', owner: 'Marcus Vance', status: 'Draft', updated: 'Today' },
+        { id: 'OPR-002', type: 'Finance Report', title: 'Transaction reconciliation', owner: 'Marcus Vance', status: 'Submitted', updated: 'Yesterday' },
+        { id: 'OPR-003', type: 'Combined Operational Report', title: 'August service operations', owner: 'Maya Lin', status: 'Reviewed', updated: '2026-08-25' },
+      ],
+      eventOperationsTasks: [
+        { id: 'EOP-101', eventId: 101, eventTitle: 'Global AI & Cloud Summit 2026', type: 'Venue & Capacity Review', priority: 'High', status: 'In Progress', description: 'Verify Hall A seating capacity for 600 attendees and check AV setup.', updated: '15 mins ago' },
+        { id: 'EOP-102', eventId: 102, eventTitle: 'FinTech Leaders Executive Conclave', type: 'Schedule Conflict', priority: 'Medium', status: 'Pending', description: 'Review ballroom entrance timeline to avoid setup overlap with hotel guest event.', updated: '1 hr ago' },
+        { id: 'EOP-103', eventId: 103, eventTitle: 'Cybersecurity & Zero Trust Workshop', type: 'Equipment & Tech Check', priority: 'Low', status: 'Resolved', description: 'Simulated threat modeling server and projector connection verified.', updated: 'Yesterday' },
+        { id: 'EOP-104', eventId: 104, eventTitle: 'National Web3 & AI Hackathon 2026', type: 'Security & Access Audit', priority: 'High', status: 'Pending', description: 'Confirm overnight security pass authorizations and 24-hour venue access.', updated: '3 hrs ago' },
+        { id: 'EOP-105', eventId: 105, eventTitle: 'Torres Tech Q3 Product Launch', type: 'Information Correction', priority: 'Medium', status: 'In Progress', description: 'Correct banner imagery resolution and VIP guest list count.', updated: 'Today' }
+      ],
+      eventOpsReports: [
+        { id: 'EOR-001', type: 'Event Performance Report', title: 'Event Performance Summary — Q2 Summit & Conclave', scope: 'Global AI & Cloud Summit 2026', period: 'Q2 2026', owner: 'Elena Rostova', status: 'Reviewed', fileName: 'Q2_Performance_Summary.pdf', updated: '2026-08-25' },
+        { id: 'EOR-002', type: 'Event Operations Report', title: 'Venue & Logistics Operations Report', scope: 'Main Convention Center', period: 'August 2026', owner: 'Elena Rostova', status: 'Pending Review', fileName: 'Logistics_Audit_Report.docx', updated: 'Yesterday' },
+        { id: 'EOR-003', type: 'Event Activity Report', title: 'Monthly Event Activity Report — August 2026', scope: 'Platform Wide', period: 'August 2026', owner: 'Elena Rostova', status: 'Reviewed', fileName: 'August_Activity_Log.xlsx', updated: '2026-08-22' },
+        { id: 'EOR-004', type: 'Event Operations Report', title: 'Schedule & Venue Audit Report', scope: 'FinTech Leaders Executive Conclave', period: 'August 2026', owner: 'Elena Rostova', status: 'Draft', fileName: null, updated: 'Today' },
+        { id: 'EOR-005', type: 'Event Performance Report', title: 'Event Issue Resolution & Operations Report', scope: 'All Q3 Events', period: 'Q3 2026', owner: 'Elena Rostova', status: 'Submitted', fileName: 'Issue_Resolution_Q3.pdf', updated: '2 days ago' },
+        { id: 'EOR-006', type: 'Event Activity Report', title: 'National Hackathon Operations & Equipment Log', scope: 'National Web3 & AI Hackathon 2026', period: 'August Week 4', owner: 'Elena Rostova', status: 'Submitted', fileName: 'Hackathon_Ops_Log.xlsx', updated: '3 days ago' },
+      ],
+      eventOpsRequests: [
+        { id: 'EOR-REQ-001', eventId: 101, eventTitle: 'Global AI & Cloud Summit 2026', issue: 'Venue capacity insufficient — attendee count exceeds Hall A limit by 85 seats. Requesting overflow arrangement.', source: 'User (Direct)', raisedBy: 'Priya Mehta', priority: 'High', status: 'In Progress', date: '2026-08-30 · 9:14 AM', notes: '' },
+        { id: 'EOR-REQ-002', eventId: 102, eventTitle: 'FinTech Leaders Executive Conclave', issue: 'Schedule conflict reported — keynote session overlaps with hotel ballroom booking. Attendees facing confusion.', source: 'Escalated by Emp 3', raisedBy: 'Customer Support', priority: 'High', status: 'Pending', date: '2026-08-30 · 8:45 AM', notes: '' },
+        { id: 'EOR-REQ-003', eventId: 103, eventTitle: 'Cybersecurity & Zero Trust Workshop', issue: 'Event banner shows wrong venue floor. Requesting information correction on registration confirmation emails.', source: 'User (Direct)', raisedBy: 'Ravi Kumar', priority: 'Medium', status: 'Pending', date: '2026-08-29 · 4:32 PM', notes: '' },
+        { id: 'EOR-REQ-004', eventId: 104, eventTitle: 'National Web3 & AI Hackathon 2026', issue: 'Cancellation request raised by team lead — team unable to attend due to visa delays. Refund and slot reallocation required.', source: 'Escalated by Emp 3', raisedBy: 'Customer Support', priority: 'High', status: 'Pending', date: '2026-08-29 · 2:10 PM', notes: '' },
+        { id: 'EOR-REQ-005', eventId: 105, eventTitle: 'Torres Tech Q3 Product Launch', issue: 'VIP seating arrangement request — 3 executives require reserved front-row access and separate registration check-in.', source: 'User (Direct)', raisedBy: 'Ananya Sharma', priority: 'Medium', status: 'Resolved', date: '2026-08-28 · 11:05 AM', notes: 'VIP arrangement confirmed with venue coordinator.' },
+        { id: 'EOR-REQ-006', eventId: 106, eventTitle: 'Global Health & MedTech Expo 2026', issue: 'AV equipment malfunction reported during rehearsal — projectors in Hall B not syncing with laptop output.', source: 'Escalated by Emp 3', raisedBy: 'Customer Support', priority: 'High', status: 'In Progress', date: '2026-08-28 · 9:30 AM', notes: '' },
+        { id: 'EOR-REQ-007', eventId: 107, eventTitle: 'Women in Leadership Summit', issue: 'Schedule update needed — opening ceremony moved 30 mins earlier. Attendees need updated confirmation with new timings.', source: 'User (Direct)', raisedBy: 'Meera Iyer', priority: 'Medium', status: 'Resolved', date: '2026-08-27 · 3:18 PM', notes: 'Updated schedule sent to all registered attendees.' },
+        { id: 'EOR-REQ-008', eventId: 108, eventTitle: 'Renewable Energy Innovation Forum', issue: 'Capacity oversubscription — event sold 20% over venue limit due to system error. Waiting list and capacity review needed.', source: 'Escalated by Emp 3', raisedBy: 'Customer Support', priority: 'High', status: 'Closed', date: '2026-08-26 · 10:50 AM', notes: 'Capacity expanded to secondary hall. Waitlisted attendees notified.' },
+        { id: 'EOR-REQ-009', eventId: 101, eventTitle: 'Global AI & Cloud Summit 2026', issue: 'Parking arrangement inquiry — group of 40 attendees from outstation require dedicated parking slots near venue entrance.', source: 'User (Direct)', raisedBy: 'Sameer Joshi', priority: 'Low', status: 'Pending', date: '2026-08-30 · 7:00 AM', notes: '' },
+        { id: 'EOR-REQ-010', eventId: 103, eventTitle: 'Cybersecurity & Zero Trust Workshop', issue: 'Speaker travel logistics — confirmed keynote speaker requires airport pickup and hotel arrangement from organizer side.', source: 'User (Direct)', raisedBy: 'Organizing Team', priority: 'Medium', status: 'In Progress', date: '2026-08-29 · 6:45 PM', notes: '' },
+      ],
+      regReports: [
+        { id: 'RVR-001', type: 'Registration Report', title: 'Monthly Online Registration & Conversion Audit — August 2026', owner: 'Arjun Kapoor', status: 'Reviewed', period: 'August 2026', fileName: 'Monthly_Registration_Audit_Aug2026.pdf', updated: '2026-08-25' },
+        { id: 'RVR-002', type: 'User Management Report', title: 'Duplicate Account Detection & Resolution Summary — Q2 2026', owner: 'Arjun Kapoor', status: 'Submitted', period: 'Q2 2026 (Apr–Jun)', fileName: 'Duplicate_Account_Resolution_Q2_2026.docx', updated: 'Yesterday' },
+        { id: 'RVR-003', type: 'Registration Activity Report', title: 'Q2 Attendee Registration Activity & Demographics Analysis', owner: 'Arjun Kapoor', status: 'Reviewed', period: 'Q2 2026 (Apr–Jun)', fileName: 'Q2_Registration_Activity_Demographics.xlsx', updated: '2026-08-20' },
+        { id: 'RVR-004', type: 'Registration Report', title: 'Tech Summit 2026 — Online Registration Status & Completion Report', owner: 'Arjun Kapoor', status: 'Submitted', period: 'July 2026', fileName: 'TechSummit_Registration_Report.pdf', updated: '2 days ago' },
+        { id: 'RVR-005', type: 'User Management Report', title: 'User Account Deactivation & Access Audit — July 2026', owner: 'Arjun Kapoor', status: 'Draft', period: 'July 2026', fileName: null, updated: 'Today' },
+        { id: 'RVR-006', type: 'Registration Activity Report', title: 'Pending & Flagged Registrations Weekly Summary — Wk 34', owner: 'Arjun Kapoor', status: 'Draft', period: 'August Week 4', fileName: null, updated: 'Today' },
+      ],
+      _nextId: { users: 14, events: 9, reqs: 5, regs: 9, assignments: 5, staffReqs: 1, notifs: 10 },
     };
 
     // ════════════════════════════════════════════════
@@ -3095,6 +3197,13 @@
           const initialReports = [...(DB.reports || [])];
           const initialChangeRequests = [...(DB.employeeChangeRequests || [])];
           const initialStaffReqs = [...(DB.staffRequests || [])];
+          const initialSupportRequests = [...(DB.supportRequests || [])];
+          const initialFinanceTransactions = [...(DB.financeTransactions || [])];
+          const initialFinanceRefunds = [...(DB.financeRefunds || [])];
+          const initialOperationalReports = [...(DB.operationalReports || [])];
+          const initialEventOperationsTasks = [...(DB.eventOperationsTasks || [])];
+          const initialEventOpsReports = [...(DB.eventOpsReports || [])];
+          const initialUserQueries = [...(DB.userQueries || [])];
           
           Object.assign(DB, parsed);
 
@@ -3103,6 +3212,15 @@
           if (!DB.reports) DB.reports = [];
           if (!DB.employeeChangeRequests) DB.employeeChangeRequests = [];
           if (!DB.attendanceReports) DB.attendanceReports = {};
+          if (!DB.supportRequests) DB.supportRequests = [];
+          if (!DB.financeTransactions) DB.financeTransactions = [];
+          if (!DB.financeRefunds) DB.financeRefunds = [];
+          if (!DB.operationalReports) DB.operationalReports = [];
+          if (!DB.eventOperationsTasks) DB.eventOperationsTasks = [];
+          if (!DB.eventOpsReports) DB.eventOpsReports = [];
+          if (!DB.eventOpsRequests) DB.eventOpsRequests = [];
+          if (!DB.userQueries) DB.userQueries = [];
+          if (!DB.routedRequests) DB.routedRequests = [];
 
           // Sync all demo/seed users and passwords from latest build
           initialUsers.forEach(initU => {
@@ -3131,11 +3249,22 @@
             }
           });
 
-          // Always restore missing mock registrations
+          // Always restore missing mock registrations and sync verification statuses
           initialRegs.forEach(reg => {
-            if (!DB.registrations.find(r => String(r.id) === String(reg.id))) {
+            const existing = DB.registrations.find(r => String(r.id) === String(reg.id));
+            if (!existing) {
               DB.registrations.push(reg);
+            } else {
+              if (reg.verificationStatus && !existing.verificationStatus) existing.verificationStatus = reg.verificationStatus;
+              if (reg.docType && !existing.docType) existing.docType = reg.docType;
+              if (reg.docRef && !existing.docRef) existing.docRef = reg.docRef;
             }
+          });
+
+          // Always restore userQueries
+          initialUserQueries.forEach(query => {
+            const existing = DB.userQueries.find(q => String(q.id) === String(query.id));
+            if (!existing) DB.userQueries.push(query);
           });
 
           // Always restore missing mock staff assignments
@@ -3174,6 +3303,37 @@
               DB.employeeChangeRequests.push(request);
             }
           });
+
+          initialSupportRequests.forEach(request => {
+            const existing = DB.supportRequests.find(r => String(r.id) === String(request.id));
+            if (!existing) DB.supportRequests.push(request);
+          });
+          initialFinanceTransactions.forEach(transaction => {
+            const existing = DB.financeTransactions.find(item => String(item.id) === String(transaction.id));
+            if (!existing) DB.financeTransactions.push(transaction);
+            else if (['TXN-2026-001', 'TXN-2026-002', 'TXN-2026-005'].includes(transaction.id)) existing.date = transaction.date;
+          });
+          initialFinanceRefunds.forEach(refund => {
+            const existing = DB.financeRefunds.find(item => String(item.id) === String(refund.id));
+            if (!existing) DB.financeRefunds.push(refund);
+            else if (['REF-2026-001'].includes(refund.id)) existing.date = refund.date;
+          });
+          initialOperationalReports.forEach(report => {
+            if (!DB.operationalReports.find(item => String(item.id) === String(report.id))) DB.operationalReports.push(report);
+          });
+          initialEventOperationsTasks.forEach(task => {
+            if (!DB.eventOperationsTasks.find(item => String(item.id) === String(task.id))) DB.eventOperationsTasks.push(task);
+          });
+          initialEventOpsReports.forEach(report => {
+            if (!DB.eventOpsReports.find(item => String(item.id) === String(report.id))) DB.eventOpsReports.push(report);
+          });
+          (DB._initialEventOpsRequests || DB.eventOpsRequests.slice()).forEach(() => {});
+          // Restore event ops requests from seed
+          if (typeof initialEventOpsRequests !== 'undefined') {
+            initialEventOpsRequests.forEach(req => {
+              if (!DB.eventOpsRequests.find(item => String(item.id) === String(req.id))) DB.eventOpsRequests.push(req);
+            });
+          }
 
           // SAFETY: Sync _nextId with actual data max IDs to prevent collisions
           const _maxId = (arr, key) => arr.length ? Math.max(0, ...arr.map(x => isNaN(x[key]) ? 0 : parseInt(x[key]))) : 0;
@@ -3242,6 +3402,7 @@
     function showPage(p) {
       document.getElementById('landing').style.display = p === 'landing' ? 'block' : 'none';
       document.getElementById('login').style.display = p === 'login' ? 'flex' : 'none';
+      document.getElementById('employee-portal').style.display = p === 'employee-portal' ? 'block' : 'none';
       document.getElementById('login-admin').style.display = p === 'login-admin' ? 'flex' : 'none';
       document.getElementById('find-events').style.display = p === 'find-events' ? 'block' : 'none';
       document.getElementById('gallery').style.display = p === 'gallery' ? 'block' : 'none';
@@ -3250,6 +3411,29 @@
       document.getElementById('app').style.display = p === 'app' ? 'block' : 'none';
     }
     function gotoLogin(role) {
+      if (role === 'employee') {
+        showPage('employee-portal');
+        return;
+      }
+      showPage('login');
+    }
+
+    let selectedEmployeeType = null;
+    const EMPLOYEE_TYPE_LABELS = {
+      REGISTRATION_VERIFICATION: 'Registration & Verification',
+      EVENT_OPERATIONS: 'Event Operations',
+      SUPPORT_FINANCE: 'Customer Support & Finance',
+    };
+    function selectEmployeeType(employeeType) {
+      selectedEmployeeType = employeeType;
+      g('login-subtitle').textContent = `${EMPLOYEE_TYPE_LABELS[employeeType]} Login`;
+      g('login-hint').textContent = 'Use your department credentials to continue.';
+      const demoAccounts = {
+        REGISTRATION_VERIFICATION: ['arjun.events@eventflow.com', 'Employee@123'],
+        EVENT_OPERATIONS: ['employee@example.com', 'Employee@123'],
+        SUPPORT_FINANCE: ['marcus.ops@eventflow.com', 'Employee@123'],
+      };
+      fillLogin(...demoAccounts[employeeType]);
       showPage('login');
     }
 
@@ -3282,7 +3466,9 @@
           EVENT_STAFF: 'staff', event_staff: 'staff',
           ATTENDEE: 'attendee', attendee: 'attendee',
         };
-        const frontendRole = roleMap[userData.role || userData.userRole] || (userData.role || '').toLowerCase();
+        const frontendRole = selectedEmployeeType
+          ? 'staff'
+          : (roleMap[userData.role || userData.userRole] || (userData.role || '').toLowerCase());
 
         CU = {
           id: userData.userId,
@@ -3290,7 +3476,8 @@
           name: userData.name,
           email: userData.email,
           role: frontendRole,
-          userRole: userData.role || userData.userRole,
+          userRole: selectedEmployeeType ? 'event_staff' : (userData.role || userData.userRole),
+          employeeType: userData.employeeType || selectedEmployeeType,
           status: userData.status,
           avatar: (userData.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
         };
@@ -3326,6 +3513,7 @@
             email: localUser.email,
             role: localUser.role,
             userRole: localUser.userRole || localUser.role,
+            employeeType: localUser.employeeType || selectedEmployeeType,
             status: localUser.status || 'active',
             avatar: (localUser.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
           };
@@ -3449,10 +3637,8 @@
       ],
       employee: [
         { ic: '📊', lbl: 'Dashboard', pg: 'dashboard' },
-        { ic: '🗓️', lbl: 'Manage Events', pg: 'events' },
-        { ic: '📋', lbl: 'Event Requests', pg: 'event-requests' },
-        { ic: '👥', lbl: 'User Management', pg: 'users' },
-        { ic: '📈', lbl: 'Event Reports', pg: 'reports' },
+        { ic: '📈', lbl: 'Reports', pg: 'reports' },
+        { ic: '👤', lbl: 'Profile', pg: 'profile' },
       ],
       client: [
         { ic: '📊', lbl: 'Dashboard', pg: 'dashboard' },
@@ -3626,15 +3812,37 @@
 
     function initApp() {
       const r = CU.role;
-      const navRole = isEmployeeAccount() ? 'employee' : r;
-      const displayRole = isEmployeeAccount() ? 'Employee' : (ROLE_LABELS[r] || r);
+      const navRole = r === 'staff' ? 'employee' : r;
+      const displayRole = r === 'staff' ? (EMPLOYEE_TYPE_LABELS[CU.employeeType] || 'Employee') : (ROLE_LABELS[r] || r);
       g('sb-role-sub').textContent = displayRole;
       g('sb-name').textContent = CU.name;
       g('sb-role-lbl').textContent = displayRole;
       g('sb-av').textContent = CU.avatar || CU.name.charAt(0);
       updateNotifDot();
       buildNav(navRole);
+      if (r === 'staff') buildEmployeeNav(CU.employeeType);
       goNav('dashboard');
+    }
+
+    function buildEmployeeNav(employeeType) {
+      const nav = {
+        REGISTRATION_VERIFICATION: [
+          { ic: '📊', lbl: 'Dashboard', pg: 'dashboard' },
+          { ic: '📝', lbl: 'Registrations', pg: 'registrations' },
+          { ic: '👥', lbl: 'User Management', pg: 'attendees' },
+          { ic: '📄', lbl: 'Reports', pg: 'reports' },
+        ],
+        EVENT_OPERATIONS: [
+          { ic: '📊', lbl: 'Dashboard', pg: 'dashboard' }, { ic: '📅', lbl: 'Events', pg: 'events' },
+          { ic: '⚙️', lbl: 'Event Operations', pg: 'event-requests' }, { ic: '📄', lbl: 'Reports', pg: 'reports' },
+        ],
+        SUPPORT_FINANCE: [
+          { ic: '📊', lbl: 'Dashboard', pg: 'dashboard' }, { ic: '📩', lbl: 'Support Center', pg: 'support-center' },
+          { ic: '💳', lbl: 'Finance', pg: 'finance' }, { ic: '📋', lbl: 'Reports', pg: 'reports' },
+        ],
+      }[employeeType] || [];
+      const unread = visibleNotifications().filter(n => !n.read).length;
+      g('sb-nav').innerHTML = `<div class="sb-section-lbl">Menu</div>` + nav.map(i => `<div class="sb-item" data-pg="${i.pg}" onclick="goNav('${i.pg}')"><span class="ic">${i.ic}</span><span>${i.lbl}</span>${i.badge && unread > 0 ? '<span class="badge-dot"></span>' : ''}</div>`).join('');
     }
 
     function sendContactMessage() {
@@ -3669,7 +3877,7 @@
     </div>`).join('');
     }
     function updateNotifDot() {
-      const unread = DB.notifications.filter(n => !n.read).length;
+      const unread = visibleNotifications().filter(n => !n.read).length;
       const dot = g('notif-count-dot');
       if (dot) dot.style.display = unread > 0 ? 'block' : 'none';
     }
@@ -3680,11 +3888,13 @@
       'revenue-reports': 'Revenue Reports & Analytics',
       dashboard: 'Dashboard', 'users': 'User Statistics', 'events': 'Events', 'browse-events': 'Browse Events',
       'my-tickets': 'My Tickets', 'assignments': 'Manage Events', 'staff': 'Staff Management', 'staff-admin': 'Staff Overview', 'staff-availability': 'My Availability', 'staff-event-requests': 'Event Requests',
-      attendees: 'Attendee Management', 'reports': 'Reports & Analytics', 'notifications': 'Notifications', 'attendeeVerification': 'Attendee Verification',
+      attendees: 'User Management', 'reports': 'Reports & Analytics', 'notifications': 'Notifications', 'attendeeVerification': 'Verification',
       'employee-stats': 'Employee Statistics',
+      registrations: 'Registrations',
       'find-organizers': 'Find Event Organisers', 'upcoming-events': 'Upcoming Events', 'completed-events': 'Completed Events', 'ongoing-events': 'Ongoing Events',
       settings: 'Account Settings', 'pending-plans': 'Pending Plans', 'request-status': 'Request Status',
       'new-request': 'New Event Request', 'profile': 'My Profile', 'event-requests': 'Event Requests',
+      'support-center': 'Support Center', 'finance': 'Finance',
     };
     function goNav(pg) {
       _currentPage = pg;
@@ -3703,6 +3913,15 @@
       _currentPage = pg;
       const el = g('page-content');
       const r = CU.role;
+
+      if (r === 'staff') {
+        const allowed = {
+          REGISTRATION_VERIFICATION: ['dashboard', 'registrations', 'attendees', 'attendeeVerification', 'reports', 'profile', 'notifications'],
+          EVENT_OPERATIONS: ['dashboard', 'events', 'event-requests', 'reports', 'profile', 'notifications'],
+          SUPPORT_FINANCE: ['dashboard', 'support-center', 'finance', 'reports', 'profile', 'notifications'],
+        }[CU.employeeType] || [];
+        if (!allowed.includes(pg)) { el.innerHTML = `<div class="empty"><div class="empty-title">Access restricted</div><p class="empty-desc">This department does not have access to this area.</p></div>`; return; }
+      }
 
       // Restrict superuser to only the 3 analytical subpages
       if (r === 'superuser') {
@@ -3723,15 +3942,24 @@
 
       switch (pg) {
         case 'dashboard':
-          el.innerHTML = isEmployeeAccount()
-            ? dashEmployee()
+          el.innerHTML = r === 'staff'
+            ? dashDepartmentEmployee()
             : ({ organizer: dashOrganizer, client: dashClient, staff: dashStaff, attendee: dashAttendee }[r] || dashAttendee)();
           break;
+        case 'registrations':
+          el.innerHTML = pageRegistrationsForEmployee();
+          break;
         case 'events':
-          el.innerHTML = pageEvents();
+          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'EVENT_OPERATIONS' ? pageEventOpsEvents() : pageEvents();
           break;
         case 'event-requests':
-          el.innerHTML = pageEventRequests();
+          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'EVENT_OPERATIONS' ? pageEventOperationsWorkspace() : pageEventRequests();
+          break;
+        case 'support-center':
+          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'SUPPORT_FINANCE' ? pageSupportCenter() : pageEventRequests();
+          break;
+        case 'finance':
+          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'SUPPORT_FINANCE' ? pageFinanceCenter() : pageRevenueReports();
           break;
         case 'request-status':
           el.innerHTML = pageRequestStatus();
@@ -3741,13 +3969,13 @@
           el.innerHTML = pageStaffCombined();
           break;
         case 'attendees':
-          el.innerHTML = pageAttendees();
+          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'REGISTRATION_VERIFICATION' ? pageUserManagement() : pageUserManagement();
           break;
         case 'attendeeVerification':
-          el.innerHTML = pageAttendeeVerification();
+          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'REGISTRATION_VERIFICATION' ? pageAttendeeVerification() : pageAttendeeVerification();
           break;
         case 'reports':
-          el.innerHTML = pageReports();
+          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'REGISTRATION_VERIFICATION' ? pageRegVerificationReports() : (CU.role === 'staff' && CU.employeeType === 'EVENT_OPERATIONS' ? pageEventOpsReports() : (CU.role === 'staff' && CU.employeeType === 'SUPPORT_FINANCE' ? pageOperationalReports() : pageReports()));
           break;
         case 'staff-reports':
           el.innerHTML = pageStaffReports();
@@ -3933,6 +4161,1914 @@
       </div>
     </div>
   </div>`;
+    }
+
+    function dashDepartmentEmployee() {
+      const type = CU.employeeType;
+      if (type === 'SUPPORT_FINANCE') return dashSupportFinance();
+      if (type === 'EVENT_OPERATIONS') return dashEventOperations();
+      if (type === 'REGISTRATION_VERIFICATION') return dashRegistrationVerification();
+      return `<div class="page-hd"><div class="page-hd-left"><div class="page-title">Employee Dashboard</div></div></div>`;
+    }
+
+    // ════════════════════════════════════════════════
+    //  EMPLOYEE 1: REGISTRATION & VERIFICATION EXECUTIVE
+    // ════════════════════════════════════════════════
+
+    function dashRegistrationVerification() {
+      const regs = DB.registrations || [];
+      const users = DB.users || [];
+      const userQueries = DB.userQueries || [];
+
+      const totalRegs = regs.length;
+      const pendingRegs = regs.filter(r => r.status === 'pending' || r.verificationStatus === 'Pending Review' || r.verificationStatus === 'Pending' || !r.verified).length;
+      const confirmedRegs = regs.filter(r => r.status === 'confirmed' || r.verificationStatus === 'Verified').length;
+      const registeredUsers = users.filter(u => u.role !== 'superuser').length;
+
+      return `
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Registration &amp; User Management Dashboard</div>
+            <div class="page-sub">Online attendee registration, user account management, and support request tracking for ${CU.name}.</div>
+          </div>
+        </div>
+
+        <div class="grid-4 mb-20">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">📝</div>
+            <div class="stat-value" style="color:var(--accent)">${totalRegs}</div>
+            <div class="stat-label">Total Registrations</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">⏳</div>
+            <div class="stat-value" style="color:var(--yellow)">${pendingRegs}</div>
+            <div class="stat-label">Pending Registrations</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">✅</div>
+            <div class="stat-value" style="color:var(--green)">${confirmedRegs}</div>
+            <div class="stat-label">Confirmed Registrations</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--blue-dim);color:var(--blue)">👥</div>
+            <div class="stat-value" style="color:var(--blue)">${registeredUsers}</div>
+            <div class="stat-label">Registered Users</div>
+          </div>
+        </div>
+
+        <div class="grid-2 gap-20">
+          <div class="card">
+            <div class="flex justify-between items-center mb-14">
+              <div class="h4">Recent Online Registrations</div>
+              <button class="btn btn-ghost btn-xs" onclick="goNav('registrations')">View All →</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              ${regs.slice(0, 5).map(r => {
+                const u = users.find(user => String(user.id) === String(r.attendeeId)) || { name: 'Attendee' };
+                const e = DB.events.find(ev => String(ev.id) === String(r.eventId)) || { title: 'Event' };
+                const verifStatus = r.verificationStatus || (r.status === 'confirmed' ? 'Verified' : 'Pending Review');
+                return `
+                  <div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2)" class="flex justify-between items-center">
+                    <div>
+                      <div style="font-weight:700;font-size:13.5px;color:var(--text)">${u.name}</div>
+                      <div class="small muted">${e.title} · ${r.ticketId || r.id}</div>
+                    </div>
+                    <span class="badge badge-${verifStatus === 'Verified' ? 'green' : verifStatus === 'Flagged' ? 'yellow' : 'purple'}">${verifStatus}</span>
+                  </div>
+                `;
+              }).join('') || '<div class="empty">No registrations found</div>'}
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="flex justify-between items-center mb-14">
+              <div class="h4">User Queries &amp; Support Escalations</div>
+              <button class="btn btn-ghost btn-xs" onclick="openUserQueriesModal()">Manage Requests →</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              ${userQueries.slice(0, 5).map(q => `
+                <div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2)" class="flex justify-between items-center gap-10">
+                  <div class="flex items-center gap-10" style="flex:1;min-width:0">
+                    <span style="font-size:18px">${q.type === 'Account Deletion' ? '🗑️' : q.type === 'Email Change' ? '✉️' : q.type === 'Escalated Support' ? '🎧' : '👤'}</span>
+                    <div style="flex:1;min-width:0">
+                      <div class="flex items-center gap-6 mb-2">
+                        <span style="font-weight:700;font-size:13px;color:var(--text)" class="truncate">${q.userName}</span>
+                        <span class="badge badge-${q.type === 'Account Deletion' ? 'red' : q.type === 'Email Change' ? 'blue' : q.type === 'Escalated Support' ? 'purple' : 'gray'}" style="font-size:10px;padding:1px 6px">${q.type}</span>
+                      </div>
+                      <div class="small muted truncate">${q.subject}</div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-8" style="flex-shrink:0">
+                    <span class="badge badge-${q.status === 'Resolved' ? 'green' : q.status === 'In Progress' ? 'purple' : 'yellow'}">${q.status}</span>
+                    <button class="btn btn-ghost btn-xs" onclick="openQueryActionModal('${q.id}')">Review</button>
+                  </div>
+                </div>
+              `).join('') || '<div class="empty">No user queries or support escalations</div>'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openUserQueriesModal() {
+      const userQueries = DB.userQueries || [];
+      openModal('Manage User Requests & Support Escalations', `
+        <div class="small muted mb-14">Review user profile queries, account modification/deletion requests, and escalated tickets from Employee 3 (Customer Support).</div>
+        <div style="display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;padding-right:4px">
+          ${userQueries.map(q => `
+            <div style="padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface2)">
+              <div class="flex justify-between items-start mb-6">
+                <div>
+                  <div style="font-weight:700;font-size:14px;color:var(--text)">${q.userName} <span class="small muted">(${q.userEmail})</span></div>
+                  <div class="small muted">Source: <strong>${q.source}</strong> · ${q.date}</div>
+                </div>
+                <span class="badge badge-${q.status === 'Resolved' ? 'green' : q.status === 'In Progress' ? 'purple' : 'yellow'}">${q.status}</span>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:4px">🏷️ ${q.type}: ${q.subject}</div>
+              <p style="font-size:12.5px;color:var(--text2);margin-bottom:10px;line-height:1.5">${q.detail}</p>
+              <div class="flex justify-between items-center">
+                <div class="small mono muted">ID: ${q.id}</div>
+                <div class="flex gap-6">
+                  ${q.status !== 'Resolved' ? `
+                    <button class="btn btn-success btn-xs" onclick="closeModal();resolveQueryDirect('${q.id}')">✓ Mark Solved</button>
+                    <button class="btn btn-danger btn-xs" onclick="closeModal();rejectQueryDirect('${q.id}')">✕ Reject</button>
+                  ` : '<span class="small muted">Resolved</span>'}
+                </div>
+              </div>
+            </div>
+          `).join('') || '<div class="empty">No user queries found.</div>'}
+        </div>
+      `, []);
+    }
+
+    function openQueryActionModal(queryId) {
+      const q = (DB.userQueries || []).find(item => item.id === queryId);
+      if (!q) return;
+      openModal(`Request ${q.id}: ${q.type}`, `
+        <div class="info-row"><span class="info-label">User Name</span><span class="info-value"><strong>${q.userName}</strong></span></div>
+        <div class="info-row"><span class="info-label">Email Address</span><span class="info-value">${q.userEmail}</span></div>
+        <div class="info-row"><span class="info-label">Source</span><span class="info-value">${q.source}</span></div>
+        <div class="info-row"><span class="info-label">Request Type</span><span class="info-value"><span class="badge badge-purple">${q.type}</span></span></div>
+        <div class="info-row"><span class="info-label">Current Status</span><span class="info-value"><span class="badge badge-${q.status === 'Resolved' ? 'green' : 'yellow'}">${q.status}</span></span></div>
+        <div class="info-row"><span class="info-label">Submitted On</span><span class="info-value">${q.date}</span></div>
+        <div class="mt-14">
+          <div class="label mb-6">Request Description / Escalation Notes</div>
+          <p style="font-size:13.5px;color:var(--text2);line-height:1.6;background:var(--surface2);padding:12px;border-radius:8px;border:1px solid var(--border)">
+            ${q.detail}
+          </p>
+        </div>
+      `, q.status !== 'Resolved' ? [
+        { lbl: 'Mark Solved / Resolve', cls: 'btn-success', fn: `closeModal();resolveQueryDirect('${q.id}')` },
+        { lbl: 'Reject Request', cls: 'btn-danger', fn: `closeModal();rejectQueryDirect('${q.id}')` }
+      ] : []);
+    }
+
+    function resolveQueryDirect(queryId) {
+      const q = (DB.userQueries || []).find(item => item.id === queryId);
+      if (!q) return;
+      q.status = 'Resolved';
+      saveDB();
+      renderPage('dashboard');
+      toast('User request marked as solved and resolved!', 'success');
+    }
+
+    function rejectQueryDirect(queryId) {
+      confirm2('Reject Request', 'Are you sure you want to reject this request?', () => {
+        const q = (DB.userQueries || []).find(item => item.id === queryId);
+        if (!q) return;
+        q.status = 'Rejected';
+        saveDB();
+        renderPage('dashboard');
+        toast('User request rejected.', 'info');
+      });
+    }
+
+    // ════════════════════════════════════════════════
+    //  EVENT OPERATIONS EXECUTIVE (EMPLOYEE 2)
+    // ════════════════════════════════════════════════
+
+    function dashEventOperations() {
+      const events = DB.events || [];
+      const tasks = DB.eventOperationsTasks || [];
+      const reports = DB.eventOpsReports || [];
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      const totalEvents = events.length;
+
+      // Active events: published/active/ongoing/upcoming AND not cancelled/completed
+      const activeEvents = events.filter(e => {
+        const st = (e.status || '').toLowerCase();
+        return ['published', 'active', 'ongoing', 'upcoming'].includes(st);
+      }).length;
+
+      // Pending events: pending or draft
+      const pendingEvents = events.filter(e => {
+        const st = (e.status || '').toLowerCase();
+        return st === 'pending' || st === 'draft';
+      }).length;
+
+      // Upcoming events list: active/upcoming events sorted by date
+      const upcomingEventsList = events.filter(e => {
+        const st = (e.status || '').toLowerCase();
+        return ['upcoming', 'published', 'active', 'ongoing'].includes(st);
+      });
+
+      // Realistic mix of activities
+      const eventActivities = events.map(e => ({
+        title: `Event Approved / Status: ${formatEventStatus(e.status)}`,
+        detail: `${e.title || e.name} · Category: ${e.category || 'General'} · Date: ${e.date}`,
+        icon: '🗓️',
+        time: 'Recently'
+      }));
+
+      const taskActivities = tasks.map(t => ({
+        title: `Operational Issue ${t.id}: ${t.type}`,
+        detail: `${t.eventTitle} · Status: ${t.status} · Priority: ${t.priority}`,
+        icon: '⚙️',
+        time: t.updated
+      }));
+
+      const reportActivities = reports.map(r => ({
+        title: `Report Submitted: ${r.title}`,
+        detail: `${r.type} · Status: ${r.status} · File: ${r.fileName || 'Report.pdf'}`,
+        icon: '📄',
+        time: r.updated
+      }));
+
+      const recentActivity = [
+        eventActivities[0],
+        taskActivities[0],
+        reportActivities[0],
+        taskActivities[1],
+        eventActivities[1]
+      ].filter(Boolean);
+
+      return `
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Event Operations Dashboard</div>
+            <div class="page-sub">Operational overview and event management for ${CU.name}.</div>
+          </div>
+        </div>
+        
+        <div class="grid-4 mb-20">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">🗓️</div>
+            <div class="stat-value" style="color:var(--accent)">${totalEvents}</div>
+            <div class="stat-label">Total Events</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">▶️</div>
+            <div class="stat-value" style="color:var(--green)">${activeEvents}</div>
+            <div class="stat-label">Active Events</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">⏳</div>
+            <div class="stat-value" style="color:var(--yellow)">${pendingEvents}</div>
+            <div class="stat-label">Pending Events</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--blue-dim);color:var(--blue)">📅</div>
+            <div class="stat-value" style="color:var(--blue)">${upcomingEventsList.length}</div>
+            <div class="stat-label">Upcoming Events</div>
+          </div>
+        </div>
+
+        <div class="grid-2 gap-20">
+          <div class="card">
+            <div class="flex justify-between items-center mb-14">
+              <div class="h4">Upcoming Events (${upcomingEventsList.length})</div>
+              <button class="btn btn-ghost btn-xs" onclick="goNav('events')">View All Events →</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;padding-right:4px">
+              ${upcomingEventsList.slice(0, 6).map(e => {
+                const isFull = (e.registered || 0) >= (e.capacity || 100);
+                return `
+                  <div style="padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface2)">
+                    <div class="flex justify-between items-start mb-6">
+                      <div style="font-weight:700;font-size:14px;color:var(--text)">${e.title || e.name}</div>
+                      <span class="badge badge-${eventOpsStatusBadge(e.status)}">${formatEventStatus(e.status)}</span>
+                    </div>
+                    <div class="small muted mb-8">📍 ${e.venue || e.location || 'TBD'} (${e.city || 'Main Hall'}) · 📅 ${e.date} · 🏷️ ${e.category || 'General'}</div>
+                    <div class="flex justify-between items-center">
+                      <div class="small">Capacity: <strong>${e.registered || 0}/${e.capacity || 100}</strong> ${isFull ? '<span class="badge badge-yellow" style="font-size:10px;padding:2px 6px;margin-left:4px">Registration Full</span>' : ''}</div>
+                      <button class="btn btn-ghost btn-xs" onclick="openViewEventDrawer('${e.id}')">View Details</button>
+                    </div>
+                  </div>
+                `;
+              }).join('') || '<div class="empty">No upcoming events found</div>'}
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="h4 mb-14">Recent Event Activity</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              ${recentActivity.map(act => `
+                <div class="flex items-center gap-10" style="padding:10px 0;border-bottom:1px solid var(--border)">
+                  <span style="font-size:20px">${act.icon}</span>
+                  <div style="flex:1">
+                    <div style="font-weight:600;font-size:13px">${act.title}</div>
+                    <div class="small muted">${act.detail}</div>
+                  </div>
+                  <span class="small muted" style="white-space:nowrap">${act.time}</span>
+                </div>
+              `).join('') || '<div class="empty">No recent activity</div>'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function pageEventOpsEvents() {
+      const query = (sessionStorage.getItem('eventops_events_query') || '').toLowerCase();
+      const statusFilter = sessionStorage.getItem('eventops_events_status') || '';
+      const categoryFilter = sessionStorage.getItem('eventops_events_category') || '';
+
+      const events = DB.events || [];
+
+      const filtered = events.filter(e => {
+        const title = (e.title || e.name || '').toLowerCase();
+        const venue = (e.venue || e.location || '').toLowerCase();
+        const city = (e.city || '').toLowerCase();
+        const cat = (e.category || '').toLowerCase();
+        const matchesQuery = !query || title.includes(query) || venue.includes(query) || city.includes(query) || cat.includes(query);
+        
+        let st = formatEventStatus(e.status).toLowerCase();
+        let normFilter = statusFilter.toLowerCase();
+        let matchesStatus = !normFilter || st === normFilter;
+
+        const matchesCat = !categoryFilter || e.category === categoryFilter;
+
+        return matchesQuery && matchesStatus && matchesCat;
+      });
+
+      return `
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Events Management</div>
+            <div class="page-sub">Review pending events, edit details, and update operational statuses.</div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="eventops-q" placeholder="Search events by title, venue, city..." value="${query}" oninput="refreshEventOpsEvents()">
+          </div>
+          <select class="form-control filter-select" id="eventops-st" onchange="refreshEventOpsEvents()">
+            <option value="">All Statuses</option>
+            <option value="Pending" ${statusFilter === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option value="Active" ${statusFilter === 'Active' ? 'selected' : ''}>Active</option>
+            <option value="Completed" ${statusFilter === 'Completed' ? 'selected' : ''}>Completed</option>
+            <option value="Cancelled" ${statusFilter === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+          </select>
+          <select class="form-control filter-select" id="eventops-cat" onchange="refreshEventOpsEvents()">
+            <option value="">All Categories</option>
+            <option value="Technology" ${categoryFilter === 'Technology' ? 'selected' : ''}>Technology</option>
+            <option value="Conference" ${categoryFilter === 'Conference' ? 'selected' : ''}>Conference</option>
+            <option value="Corporate" ${categoryFilter === 'Corporate' ? 'selected' : ''}>Corporate</option>
+            <option value="Finance" ${categoryFilter === 'Finance' ? 'selected' : ''}>Finance</option>
+            <option value="Workshop" ${categoryFilter === 'Workshop' ? 'selected' : ''}>Workshop</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Category</th>
+                  <th>Date &amp; Venue</th>
+                  <th>Capacity</th>
+                  <th>Status</th>
+                  <th>Change Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filtered.map(e => {
+                  const currentStatus = formatEventStatus(e.status);
+                  const isPending = currentStatus === 'Pending';
+                  const isFull = (e.registered || 0) >= (e.capacity || 100);
+
+                  return `
+                    <tr>
+                      <td>
+                        <div style="font-weight:700;font-size:14px;color:var(--text)">${e.title || e.name}</div>
+                        <div class="small muted">ID: ${e.id}</div>
+                      </td>
+                      <td><span class="badge badge-purple">${e.category || 'General'}</span></td>
+                      <td>
+                        <div>📅 ${e.date || 'TBD'}</div>
+                        <div class="small muted">📍 ${e.venue || e.location || 'TBD'} (${e.city || 'India'})</div>
+                      </td>
+                      <td>
+                        <div><strong>${e.registered || 0}</strong> / ${e.capacity || 100}</div>
+                        <div class="small muted">${isFull ? '<span style="color:var(--yellow);font-weight:600">Registration Full</span>' : (e.price ? '₹' + e.price : 'Free')}</div>
+                      </td>
+                      <td>
+                        <span class="badge badge-${eventOpsStatusBadge(e.status)}">${currentStatus}</span>
+                      </td>
+                      <td>
+                        <select class="form-control form-control-sm" style="padding:4px 8px;font-size:12px" onchange="setEventOpsStatus('${e.id}', this.value)">
+                          <option value="Pending" ${currentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
+                          <option value="Active" ${currentStatus === 'Active' ? 'selected' : ''}>Active</option>
+                          <option value="Completed" ${currentStatus === 'Completed' ? 'selected' : ''}>Completed</option>
+                          <option value="Cancelled" ${currentStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-6">
+                          <button class="btn btn-ghost btn-xs" onclick="openViewEventDrawer('${e.id}')" title="View Details">👁️</button>
+                          <button class="btn btn-ghost btn-xs" onclick="openEditEventModal('${e.id}')" title="Edit Event">✏️</button>
+                          <button class="btn btn-xs btn-danger" onclick="deleteEventOps('${e.id}')" title="Delete Event">🗑️</button>
+                          ${isPending ? `
+                            <button class="btn btn-success btn-xs" onclick="approveEventOpsDirect('${e.id}')" title="Approve Event">✓</button>
+                            <button class="btn btn-danger btn-xs" onclick="rejectEventOpsDirect('${e.id}')" title="Reject Event">✕</button>
+                          ` : ''}
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="7" class="text-center py-20">No matching events found.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function deleteEventOps(eventId) {
+      confirm2('Delete Event', 'Are you sure you want to delete this event record?', () => {
+        DB.events = DB.events.filter(e => String(e.id) !== String(eventId));
+        saveDB();
+        renderPage('events');
+        toast('Event deleted successfully', 'info');
+      });
+    }
+
+    function refreshEventOpsEvents() {
+      sessionStorage.setItem('eventops_events_query', v('eventops-q'));
+      sessionStorage.setItem('eventops_events_status', v('eventops-st'));
+      sessionStorage.setItem('eventops_events_category', v('eventops-cat'));
+      renderPage('events');
+    }
+
+    function eventOpsStatusBadge(status) {
+      const st = (status || '').toLowerCase();
+      if (st === 'pending' || st === 'draft') return 'yellow';
+      if (st === 'active' || st === 'ongoing' || st === 'published' || st === 'upcoming') return 'green';
+      if (st === 'completed') return 'purple';
+      if (st === 'cancelled') return 'red';
+      return 'gray';
+    }
+
+    function formatEventStatus(status) {
+      const st = (status || '').toLowerCase();
+      if (st === 'pending' || st === 'draft') return 'Pending';
+      if (st === 'active' || st === 'ongoing' || st === 'published' || st === 'upcoming') return 'Active';
+      if (st === 'completed') return 'Completed';
+      if (st === 'cancelled') return 'Cancelled';
+      return 'Active';
+    }
+
+    function setEventOpsStatus(eventId, newStatus) {
+      const e = DB.events.find(ev => String(ev.id) === String(eventId));
+      if (!e) return;
+      const statusMap = {
+        'Pending': 'pending',
+        'Active': 'published',
+        'Completed': 'completed',
+        'Cancelled': 'cancelled'
+      };
+      e.status = statusMap[newStatus] || newStatus.toLowerCase();
+      saveDB();
+      renderPage('events');
+      toast(`Event status updated to ${newStatus}`, 'success');
+    }
+
+    function approveEventOpsDirect(eventId) {
+      const e = DB.events.find(ev => String(ev.id) === String(eventId));
+      if (!e) return;
+      e.status = 'published';
+      saveDB();
+      renderPage('events');
+      toast('Event approved and set to Active!', 'success');
+    }
+
+    function rejectEventOpsDirect(eventId) {
+      confirm2('Reject Event', 'Are you sure you want to cancel/reject this pending event?', () => {
+        const e = DB.events.find(ev => String(ev.id) === String(eventId));
+        if (!e) return;
+        e.status = 'cancelled';
+        saveDB();
+        renderPage('events');
+        toast('Event has been rejected/cancelled.', 'info');
+      });
+    }
+
+    function pageEventOperationsWorkspace() {
+      const query = (sessionStorage.getItem('eventops_tasks_query') || '').toLowerCase();
+      const statusFilter = sessionStorage.getItem('eventops_tasks_status') || '';
+      const priorityFilter = sessionStorage.getItem('eventops_tasks_priority') || '';
+
+      const tasks = DB.eventOperationsTasks || [];
+
+      const filtered = tasks.filter(t => {
+        const matchesQuery = !query || t.eventTitle.toLowerCase().includes(query) || t.type.toLowerCase().includes(query) || t.id.toLowerCase().includes(query) || t.description.toLowerCase().includes(query);
+        const matchesStatus = !statusFilter || t.status === statusFilter;
+        const matchesPriority = !priorityFilter || t.priority === priorityFilter;
+        return matchesQuery && matchesStatus && matchesPriority;
+      });
+
+      const pendingCount = tasks.filter(t => t.status === 'Pending').length;
+      const inProgressCount = tasks.filter(t => t.status === 'In Progress').length;
+      const resolvedCount = tasks.filter(t => t.status === 'Resolved').length;
+
+      return `
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Event Operations Workspace</div>
+            <div class="page-sub">Review venue issues, schedule conflicts, info corrections, and operational tasks.</div>
+          </div>
+          <div class="page-hd-right">
+            <button class="btn btn-primary" onclick="openCreateEventOpTaskModal()">➕ Add Operational Issue</button>
+          </div>
+        </div>
+
+        <div class="grid-4 mb-20">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">⚙️</div>
+            <div class="stat-value" style="color:var(--accent)">${tasks.length}</div>
+            <div class="stat-label">Total Issues</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">⏳</div>
+            <div class="stat-value" style="color:var(--yellow)">${pendingCount}</div>
+            <div class="stat-label">Pending Reviews</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--purple-dim);color:var(--purple)">🔄</div>
+            <div class="stat-value" style="color:var(--purple)">${inProgressCount}</div>
+            <div class="stat-label">In Progress</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">✅</div>
+            <div class="stat-value" style="color:var(--green)">${resolvedCount}</div>
+            <div class="stat-label">Resolved Issues</div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="taskops-q" placeholder="Search operational issues or events..." value="${query}" oninput="refreshEventOpTasks()">
+          </div>
+          <select class="form-control filter-select" id="taskops-st" onchange="refreshEventOpTasks()">
+            <option value="">All Statuses</option>
+            <option value="Pending" ${statusFilter === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option value="In Progress" ${statusFilter === 'In Progress' ? 'selected' : ''}>In Progress</option>
+            <option value="Resolved" ${statusFilter === 'Resolved' ? 'selected' : ''}>Resolved</option>
+          </select>
+          <select class="form-control filter-select" id="taskops-pr" onchange="refreshEventOpTasks()">
+            <option value="">All Priorities</option>
+            <option value="High" ${priorityFilter === 'High' ? 'selected' : ''}>High</option>
+            <option value="Medium" ${priorityFilter === 'Medium' ? 'selected' : ''}>Medium</option>
+            <option value="Low" ${priorityFilter === 'Low' ? 'selected' : ''}>Low</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Issue ID</th>
+                  <th>Event Title</th>
+                  <th>Issue Type</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filtered.map(t => `
+                  <tr>
+                    <td class="mono"><strong>${t.id}</strong></td>
+                    <td>
+                      <div style="font-weight:700;font-size:13.5px;color:var(--text)">${t.eventTitle}</div>
+                      <div class="small muted">${t.description}</div>
+                    </td>
+                    <td><span class="badge badge-blue">${t.type}</span></td>
+                    <td>
+                      <span class="badge badge-${t.priority === 'High' ? 'red' : t.priority === 'Medium' ? 'yellow' : 'gray'}">${t.priority}</span>
+                    </td>
+                    <td>
+                      <span class="badge badge-${t.status === 'Pending' ? 'yellow' : t.status === 'In Progress' ? 'purple' : 'green'}">${t.status}</span>
+                    </td>
+                    <td class="small muted">${t.updated}</td>
+                    <td>
+                      <div class="flex items-center gap-6">
+                        <button class="btn btn-ghost btn-xs" onclick="openEventOpTaskModal('${t.id}')">Review &amp; Update</button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('') || '<tr><td colspan="7" class="text-center py-20">No operational issues found.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function refreshEventOpTasks() {
+      sessionStorage.setItem('eventops_tasks_query', v('taskops-q'));
+      sessionStorage.setItem('eventops_tasks_status', v('taskops-st'));
+      sessionStorage.setItem('eventops_tasks_priority', v('taskops-pr'));
+      renderPage('event-requests');
+    }
+
+    function openEventOpTaskModal(taskId) {
+      const t = DB.eventOperationsTasks.find(item => item.id === taskId);
+      if (!t) return;
+      openModal(`Operational Issue: ${t.id}`, `
+        <div class="info-row"><span class="info-label">Event</span><span class="info-value"><strong>${t.eventTitle}</strong></span></div>
+        <div class="info-row"><span class="info-label">Issue Type</span><span class="info-value">${t.type}</span></div>
+        <div class="info-row"><span class="info-label">Priority</span><span class="info-value">${t.priority}</span></div>
+        <div class="form-group mt-12">
+          <label class="form-label">Issue Status</label>
+          <select class="form-control" id="task-edit-status">
+            <option ${t.status === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+            <option ${t.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description / Operational Notes</label>
+          <textarea class="form-control" id="task-edit-desc" rows="4">${t.description}</textarea>
+        </div>
+      `, [
+        { lbl: 'Save Changes', cls: 'btn-primary', fn: `saveEventOpTask('${t.id}')` }
+      ]);
+    }
+
+    function saveEventOpTask(taskId) {
+      const t = DB.eventOperationsTasks.find(item => item.id === taskId);
+      if (!t) return;
+      t.status = v('task-edit-status');
+      t.description = v('task-edit-desc');
+      t.updated = 'Just now';
+      saveDB();
+      closeModal();
+      renderPage('event-requests');
+      toast('Operational issue updated successfully!', 'success');
+    }
+
+    function openCreateEventOpTaskModal() {
+      const eventsOptions = DB.events.map(e => `<option value="${e.id}">${e.title || e.name}</option>`).join('');
+      openModal('Add Operational Issue', `
+        <div class="form-group">
+          <label class="form-label">Select Event *</label>
+          <select class="form-control" id="newtask-eventid">${eventsOptions}</select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Issue Type *</label>
+          <select class="form-control" id="newtask-type">
+            <option>Venue &amp; Capacity Review</option>
+            <option>Schedule Conflict</option>
+            <option>Equipment &amp; Tech Check</option>
+            <option>Information Correction</option>
+            <option>Security &amp; Access Audit</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select class="form-control" id="newtask-priority">
+            <option>High</option>
+            <option selected>Medium</option>
+            <option>Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description / Issue Details *</label>
+          <textarea class="form-control" id="newtask-desc" placeholder="Describe the operational issue..."></textarea>
+        </div>
+      `, [
+        { lbl: 'Add Issue', cls: 'btn-primary', fn: 'saveNewEventOpTask()' }
+      ]);
+    }
+
+    function saveNewEventOpTask() {
+      const eventId = v('newtask-eventid');
+      const type = v('newtask-type');
+      const priority = v('newtask-priority');
+      const desc = v('newtask-desc');
+
+      if (!desc) { toast('Please enter issue description', 'error'); return; }
+
+      const ev = DB.events.find(e => String(e.id) === String(eventId)) || { title: 'General Event' };
+      const newTask = {
+        id: `EOP-${Date.now().toString().slice(-4)}`,
+        eventId: eventId,
+        eventTitle: ev.title || ev.name,
+        type: type,
+        priority: priority,
+        status: 'Pending',
+        description: desc,
+        updated: 'Just now'
+      };
+
+      if (!DB.eventOperationsTasks) DB.eventOperationsTasks = [];
+      DB.eventOperationsTasks.unshift(newTask);
+      saveDB();
+      closeModal();
+      renderPage('event-requests');
+      toast('Operational issue created!', 'success');
+    }
+
+    function supportUser(request) { return DB.users.find(user => String(user.id) === String(request.userId)) || { name: 'Unknown User', email: '—', phone: '—' }; }
+    function supportEvent(request) { return DB.events.find(event => String(event.id) === String(request.eventId)) || { title: 'Unknown Event', date: '—' }; }
+    function supportStatusBadge(status) { return { Pending: 'yellow', 'In Progress': 'purple', Resolved: 'green', Closed: 'gray' }[status] || 'gray'; }
+    function dashSupportFinance() {
+      const requests = DB.supportRequests || [], transactions = DB.financeTransactions || [], refunds = DB.financeRefunds || [], reports = DB.operationalReports || [];
+      const todayStr = today();
+      const todayTransactions = transactions.filter(item => item.date === todayStr).length;
+      const totalTransactions = transactions.length;
+      const displayTxnCount = todayTransactions > 0 ? todayTransactions : totalTransactions;
+      const txnLabel = todayTransactions > 0 ? "Today's Transactions" : 'Total Transactions';
+
+      // Build balanced activity feed: 1 item per category first, then fill from remaining
+      const reqActivities = requests.map(item => ({
+        label: item.subject,
+        detail: `Support Request (${item.id}) · ${item.status} · ${item.updated || item.created}`,
+        icon: '📩',
+        sortKey: 0
+      }));
+      const refActivities = refunds.map(item => ({
+        label: `Refund ${item.id}`,
+        detail: `Refund · ${item.status} · ₹${item.amount.toLocaleString('en-IN')} · ${item.reason}`,
+        icon: '↩️',
+        sortKey: 1
+      }));
+      const txnActivities = transactions.map(item => ({
+        label: `Transaction ${item.id}`,
+        detail: `Payment · ${item.status} · ₹${item.amount.toLocaleString('en-IN')} · ${item.date === todayStr ? 'Today' : item.date}`,
+        icon: '💳',
+        sortKey: 2
+      }));
+      const rptActivities = reports.map(item => ({
+        label: `Report: ${item.title}`,
+        detail: `${item.type} · ${item.status} · ${item.updated}`,
+        icon: '📊',
+        sortKey: 3
+      }));
+
+      // Take 1 from each category first (balanced), then fill up to 6 with remaining
+      const activity = [
+        reqActivities[0], refActivities[0], txnActivities[0], rptActivities[0],
+        reqActivities[1], refActivities[1]
+      ].filter(Boolean).slice(0, 6);
+
+      return `<div class="page-hd"><div class="page-hd-left"><div class="page-title">Customer Support &amp; Finance Dashboard</div><div class="page-sub">Operational overview for ${CU.name}.</div></div></div><div class="grid-4 mb-20">${[
+        ['📩', requests.filter(item => !['Resolved', 'Closed'].includes(item.status)).length, 'Open Support Requests', 'var(--accent)'],
+        ['⚠️', requests.filter(item => item.status === 'Pending').length, 'Pending Issues', 'var(--yellow)'],
+        ['💳', displayTxnCount, txnLabel, 'var(--green)'],
+        ['↩️', refunds.filter(item => item.status === 'Requested' || item.status === 'Processing').length, 'Pending Refunds', 'var(--blue)']
+      ].map(card => `<div class="stat-card"><div class="stat-icon">${card[0]}</div><div class="stat-value" style="color:${card[3]}">${card[1]}</div><div class="stat-label">${card[2]}</div></div>`).join('')}</div><div class="card"><div class="h4 mb-12">Recent Support &amp; Finance Activity</div><div style="display:flex;flex-direction:column;gap:10px">${activity.map(item => `<div class="flex items-center gap-10" style="padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:20px">${item.icon}</span><div><div style="font-weight:600;font-size:13px">${item.label}</div><div class="small">${item.detail}</div></div></div>`).join('') || '<div class="empty">No recent activity</div>'}</div></div>`;
+    }
+
+    function pageSupportCenter() {
+      const query = (sessionStorage.getItem('support_query') || '').toLowerCase();
+      const status = sessionStorage.getItem('support_status') || '';
+      const requests = (DB.supportRequests || []).filter(item => {
+        const user = supportUser(item), event = supportEvent(item);
+        return (!status || item.status === status) && (!query || `${item.id} ${item.subject} ${item.message} ${user.name} ${user.email} ${event.title}`.toLowerCase().includes(query));
+      });
+
+      return `
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Support Center</div>
+            <div class="page-sub">Manage user support requests with event and payment context. Route unresolvable issues to the appropriate department.</div>
+          </div>
+          <div class="page-hd-right">
+            <button class="btn btn-primary" onclick="openRouteRequestModal()">🔀 Route Request</button>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="support-query" placeholder="Search requests, users, or events..." value="${query}" oninput="refreshSupportCenter()">
+          </div>
+          <select class="form-control filter-select" id="support-status" onchange="refreshSupportCenter()">
+            <option value="">All Statuses</option>
+            ${['Pending', 'In Progress', 'Resolved', 'Closed'].map(item => `<option ${status === item ? 'selected' : ''}>${item}</option>`).join('')}
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Request</th>
+                  <th>User</th>
+                  <th>Event / Payment</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${requests.map(item => {
+                  const user = supportUser(item), event = supportEvent(item);
+                  return `
+                    <tr>
+                      <td>
+                        <div style="font-weight:700;font-size:13.5px;color:var(--text)">${item.subject}</div>
+                        <div class="small muted">${item.message}</div>
+                      </td>
+                      <td>
+                        <div style="font-weight:600">${user.name}</div>
+                        <div class="small muted">${user.email}</div>
+                      </td>
+                      <td>
+                        <div style="font-weight:600">${event.title}</div>
+                        <div class="small muted">${event.date} · Related transaction available</div>
+                      </td>
+                      <td><span class="badge badge-${supportStatusBadge(item.status)}">${item.status}</span></td>
+                      <td class="small muted">${item.updated}</td>
+                      <td>
+                        <div class="flex gap-6">
+                          <button class="btn btn-ghost btn-xs" onclick="openSupportRequest('${item.id}')">View / Respond</button>
+                          <button class="btn btn-ghost btn-xs" style="border-color:var(--purple);color:var(--purple)" onclick="openRouteRequestModal('${item.id}')">🔀 Route</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="6" class="text-center py-20 muted">No support requests found.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function openRouteRequestModal(prefillId) {
+      const supportReqs = DB.supportRequests || [];
+      const reqOptions = supportReqs.map(r => {
+        const u = supportUser(r);
+        return `<option value="${r.id}" ${prefillId === r.id ? 'selected' : ''}>${r.id} — ${r.subject} (${u.name})</option>`;
+      }).join('');
+
+      // Determine prefill values if a request ID was passed
+      let prefillUser = '', prefillEmail = '', prefillDesc = '', prefillEvent = '';
+      let autoRouteTo = '';
+      if (prefillId) {
+        const item = supportReqs.find(r => r.id === prefillId);
+        if (item) {
+          const u = supportUser(item);
+          const e = supportEvent(item);
+          prefillUser = u.name || '';
+          prefillEmail = u.email || '';
+          prefillDesc = item.message || '';
+          prefillEvent = e.title && e.title !== 'Unknown Event' ? e.title : '';
+          // Auto-suggest route based on subject keywords
+          const subjectLow = (item.subject || '').toLowerCase() + ' ' + (item.message || '').toLowerCase();
+          const emp1Keywords = ['registration', 'account', 'duplicate', 'verification', 'user', 'profile', 'email', 'login', 'password', 'access'];
+          const emp2Keywords = ['event', 'venue', 'schedule', 'location', 'capacity', 'slot', 'cancel', 'speaker', 'av', 'equipment'];
+          if (emp2Keywords.some(k => subjectLow.includes(k))) autoRouteTo = 'Employee 2 – Event Operations Executive';
+          else if (emp1Keywords.some(k => subjectLow.includes(k))) autoRouteTo = 'Employee 1 – Registration & Verification Executive';
+        }
+      }
+
+      openModal('🔀 Route Support Request', `
+        <div style="background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--text2);border-left:3px solid var(--purple)">
+          <strong style="color:var(--purple)">Routing Policy:</strong> Route <strong>user/account/registration/verification</strong> issues to Employee 1. Route <strong>event/venue/schedule/operational</strong> issues to Employee 2. Finance/payment issues are handled directly by you.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Select Request ID (optional)</label>
+          <select class="form-control" id="route-req-id" onchange="prefillRouteForm(this.value)">
+            <option value="">— New / Manual Route —</option>
+            ${reqOptions}
+          </select>
+        </div>
+
+        <div class="grid-2 gap-12">
+          <div class="form-group">
+            <label class="form-label">User Name *</label>
+            <input class="form-control" id="route-user-name" placeholder="Full name" value="${prefillUser}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">User Email *</label>
+            <input class="form-control" id="route-user-email" placeholder="user@email.com" value="${prefillEmail}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Request Category *</label>
+          <select class="form-control" id="route-category">
+            <option>User Account Issue</option>
+            <option>Duplicate Account / Merge</option>
+            <option>Registration Problem</option>
+            <option>Identity Verification Issue</option>
+            <option>Event Information Query</option>
+            <option>Venue / Location Issue</option>
+            <option>Schedule Conflict / Change</option>
+            <option>Event Capacity / Slot Issue</option>
+            <option>Event Cancellation / Update Request</option>
+            <option>Operational Issue</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Request Description *</label>
+          <textarea class="form-control" id="route-description" rows="3" placeholder="Describe the issue in detail...">${prefillDesc}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Related Event (if applicable)</label>
+          <input class="form-control" id="route-event" placeholder="Event name or ID" value="${prefillEvent}">
+        </div>
+
+        <div class="grid-2 gap-12">
+          <div class="form-group">
+            <label class="form-label">Priority *</label>
+            <select class="form-control" id="route-priority">
+              <option value="Low">🟢 Low</option>
+              <option value="Medium" selected>🟡 Medium</option>
+              <option value="High">🔴 High</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Route To *</label>
+            <select class="form-control" id="route-to">
+              <option value="Employee 1 – Registration &amp; Verification Executive" ${autoRouteTo === 'Employee 1 – Registration & Verification Executive' ? 'selected' : ''}>Employee 1 – Registration &amp; Verification Executive</option>
+              <option value="Employee 2 – Event Operations Executive" ${autoRouteTo === 'Employee 2 – Event Operations Executive' ? 'selected' : ''}>Employee 2 – Event Operations Executive</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Internal Note (visible to recipient)</label>
+          <textarea class="form-control" id="route-note" rows="2" placeholder="Add context for the receiving department..."></textarea>
+        </div>
+      `, [
+        { lbl: 'Cancel', cls: 'btn-ghost', fn: 'closeModal()' },
+        { lbl: '🔀 Route Request', cls: 'btn-primary', fn: 'saveRouteRequest()' }
+      ]);
+    }
+
+    window.prefillRouteForm = function(reqId) {
+      if (!reqId) return;
+      const item = (DB.supportRequests || []).find(r => r.id === reqId);
+      if (!item) return;
+      const u = supportUser(item);
+      const e = supportEvent(item);
+      const nameEl = document.getElementById('route-user-name');
+      const emailEl = document.getElementById('route-user-email');
+      const descEl = document.getElementById('route-description');
+      const eventEl = document.getElementById('route-event');
+      const routeToEl = document.getElementById('route-to');
+      if (nameEl) nameEl.value = u.name || '';
+      if (emailEl) emailEl.value = u.email || '';
+      if (descEl) descEl.value = item.message || '';
+      if (eventEl && e.title && e.title !== 'Unknown Event') eventEl.value = e.title;
+      // Auto-suggest routing
+      if (routeToEl) {
+        const subjectLow = (item.subject || '').toLowerCase() + ' ' + (item.message || '').toLowerCase();
+        const emp2Keywords = ['event', 'venue', 'schedule', 'location', 'capacity', 'slot', 'cancel', 'speaker', 'av', 'equipment'];
+        const emp1Keywords = ['registration', 'account', 'duplicate', 'verification', 'user', 'profile', 'email', 'login', 'password'];
+        if (emp2Keywords.some(k => subjectLow.includes(k))) routeToEl.value = 'Employee 2 – Event Operations Executive';
+        else if (emp1Keywords.some(k => subjectLow.includes(k))) routeToEl.value = 'Employee 1 – Registration & Verification Executive';
+      }
+    };
+
+    function saveRouteRequest() {
+      const userName = v('route-user-name');
+      const userEmail = v('route-user-email');
+      const category = v('route-category');
+      const description = v('route-description');
+      const priority = v('route-priority');
+      const routeTo = v('route-to');
+      const note = v('route-note');
+      const relatedEvent = v('route-event');
+      const reqId = v('route-req-id');
+
+      if (!userName) { toast('Please enter the user name', 'error'); return; }
+      if (!description) { toast('Please enter a request description', 'error'); return; }
+
+      const routedId = 'RT-' + Date.now().toString().slice(-6);
+      const isEmp2 = routeTo.includes('Employee 2');
+      const isEmp1 = routeTo.includes('Employee 1');
+
+      // Build the routed request record
+      const routedReq = {
+        id: routedId,
+        linkedRequestId: reqId || null,
+        userName: userName,
+        userEmail: userEmail,
+        category: category,
+        description: description,
+        relatedEvent: relatedEvent || null,
+        priority: priority,
+        routeTo: routeTo,
+        note: note,
+        source: 'Escalated by Emp 3',
+        raisedBy: 'Customer Support (Emp 3)',
+        status: 'Pending',
+        date: new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: '2-digit' }) + ' · ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        routedAt: 'Just now'
+      };
+
+      if (!DB.routedRequests) DB.routedRequests = [];
+      DB.routedRequests.unshift(routedReq);
+
+      // Make visible to Employee 1 (userQueries) if routed to Emp 1
+      if (isEmp1) {
+        if (!DB.userQueries) DB.userQueries = [];
+        DB.userQueries.unshift({
+          id: routedId,
+          userId: null,
+          userName: userName,
+          userEmail: userEmail,
+          type: category,
+          subject: `[Routed by Emp 3] ${category}`,
+          detail: description + (note ? '\n\nInternal Note: ' + note : '') + (relatedEvent ? '\nRelated Event: ' + relatedEvent : ''),
+          source: 'Employee 3 Escalation',
+          status: 'Pending',
+          priority: priority,
+          date: routedReq.date
+        });
+      }
+
+      // Make visible to Employee 2 (eventOpsRequests) if routed to Emp 2
+      if (isEmp2) {
+        if (!DB.eventOpsRequests) DB.eventOpsRequests = [];
+        // find matching eventId if possible
+        const matchedEvent = relatedEvent ? (DB.events || []).find(e => (e.title || e.name || '').toLowerCase().includes(relatedEvent.toLowerCase())) : null;
+        DB.eventOpsRequests.unshift({
+          id: routedId,
+          eventId: matchedEvent ? matchedEvent.id : null,
+          eventTitle: relatedEvent || 'N/A',
+          issue: description + (note ? '\n\nInternal Note: ' + note : ''),
+          source: 'Escalated by Emp 3',
+          raisedBy: `${userName} (via Customer Support)`,
+          priority: priority,
+          status: 'Pending',
+          date: routedReq.date,
+          notes: note || ''
+        });
+      }
+
+      // Mark linked support request as In Progress if selected
+      if (reqId) {
+        const linked = (DB.supportRequests || []).find(r => r.id === reqId);
+        if (linked && linked.status === 'Pending') {
+          linked.status = 'In Progress';
+          linked.response = `Routed to ${routeTo} on ${routedReq.date}. Awaiting resolution.`;
+          linked.updated = 'Just now';
+        }
+      }
+
+      saveDB();
+      closeModal();
+      renderPage('support-center');
+      toast(`Request routed to ${isEmp2 ? 'Employee 2 (Event Operations)' : 'Employee 1 (Registration & Verification)'} successfully!`, 'success');
+    }
+
+    function refreshSupportCenter() {
+      sessionStorage.setItem('support_query', v('support-query'));
+      sessionStorage.setItem('support_status', v('support-status'));
+      renderPage('support-center');
+    }
+    function openSupportRequest(id) {
+      const item = DB.supportRequests.find(request => request.id === id);
+      if (!item) return;
+      const user = supportUser(item), event = supportEvent(item), transaction = (DB.financeTransactions || []).find(record => String(record.userId) === String(item.userId) && String(record.eventId) === String(item.eventId));
+      openModal(`Support Request ${item.id}`, `
+        <div class="info-row"><span class="info-label">User</span><span class="info-value">${user.name} · ${user.email}</span></div>
+        <div class="info-row"><span class="info-label">Event</span><span class="info-value">${event.title} · ${event.date}</span></div>
+        <div class="info-row"><span class="info-label">Payment</span><span class="info-value">${transaction ? `${transaction.id} · ₹${transaction.amount} · ${transaction.status}` : 'No matching transaction'}</span></div>
+        <div class="info-row"><span class="info-label">Request</span><span class="info-value">${item.subject}</span></div>
+        <p class="muted" style="line-height:1.6;margin:16px 0">${item.message}</p>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-control" id="support-edit-status">
+            ${['Pending', 'In Progress', 'Resolved', 'Closed'].map(value => `<option ${value === item.status ? 'selected' : ''}>${value}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Response</label>
+          <textarea class="form-control" id="support-response" rows="4">${item.response || ''}</textarea>
+        </div>
+      `, [
+        { lbl: '🔀 Route This Request', cls: 'btn-ghost', fn: `closeModal();openRouteRequestModal('${id}')` },
+        { lbl: 'Save Response', cls: 'btn-primary', fn: `saveSupportRequest('${id}')` }
+      ]);
+    }
+    function saveSupportRequest(id) {
+      const item = DB.supportRequests.find(request => request.id === id);
+      if (!item) return;
+      item.status = v('support-edit-status');
+      item.response = v('support-response');
+      item.updated = 'Just now';
+      saveDB();
+      closeModal();
+      renderPage('support-center');
+      toast('Support request updated', 'success');
+    }
+
+    function financeStatusBadge(status) { return { Successful: 'green', Pending: 'yellow', Failed: 'red', Requested: 'yellow', Processing: 'purple', Completed: 'green', Rejected: 'red' }[status] || 'gray'; }
+    function pageFinanceCenter() { const tab = sessionStorage.getItem('finance_tab') || 'transactions'; const query = (sessionStorage.getItem('finance_query') || '').toLowerCase(); const records = tab === 'transactions' ? DB.financeTransactions : DB.financeRefunds; const filtered = records.filter(item => { const user = DB.users.find(u => String(u.id) === String(item.userId)) || {}; const event = DB.events.find(e => String(e.id) === String(item.eventId)) || {}; return !query || `${item.id} ${user.name} ${user.email} ${event.title} ${item.status}`.toLowerCase().includes(query); }); return `<div class="page-hd"><div class="page-hd-left"><div class="page-title">Finance</div><div class="page-sub">Review transactions and manage refund requests.</div></div></div><div style="display:flex;gap:6px;margin-bottom:16px"><button class="btn ${tab === 'transactions' ? 'btn-primary' : 'btn-ghost'}" onclick="switchFinanceTab('transactions')">💳 Transactions</button><button class="btn ${tab === 'refunds' ? 'btn-primary' : 'btn-ghost'}" onclick="switchFinanceTab('refunds')">↩️ Refunds</button></div><div class="filter-row"><div class="search-box input-group"><span class="input-icon">🔍</span><input class="form-control" id="finance-query" placeholder="Search finance records..." value="${query}" oninput="refreshFinanceCenter()"></div></div><div class="card"><div class="table-wrap"><table><thead>${tab === 'transactions' ? '<tr><th>Transaction ID</th><th>User</th><th>Event</th><th>Amount</th><th>Payment Status</th><th>Date</th></tr>' : '<tr><th>Refund ID</th><th>User</th><th>Event</th><th>Amount</th><th>Reason</th><th>Status</th><th>Date</th></tr>'}</thead><tbody>${filtered.map(item => { const user = DB.users.find(u => String(u.id) === String(item.userId)) || { name: 'Unknown' }, event = DB.events.find(e => String(e.id) === String(item.eventId)) || { title: 'Unknown Event' }; return tab === 'transactions' ? `<tr><td class="mono">${item.id}</td><td>${user.name}</td><td>${event.title}</td><td style="color:var(--green);font-weight:700">₹${item.amount}</td><td><span class="badge badge-${financeStatusBadge(item.status)}">${item.status}</span></td><td>${item.date}</td></tr>` : `<tr><td class="mono">${item.id}</td><td>${user.name}</td><td>${event.title}</td><td style="color:var(--green);font-weight:700">₹${item.amount}</td><td>${item.reason}</td><td><span class="badge badge-${financeStatusBadge(item.status)}">${item.status}</span></td><td>${item.date}</td></tr>`; }).join('') || `<tr><td colspan="${tab === 'transactions' ? 6 : 7}">No finance records found.</td></tr>`}</tbody></table></div></div>`; }
+    function switchFinanceTab(tab) { sessionStorage.setItem('finance_tab', tab); renderPage('finance'); }
+    function refreshFinanceCenter() { sessionStorage.setItem('finance_query', v('finance-query')); renderPage('finance'); }
+
+    function pageRegistrationsForEmployee() {
+      const query = (sessionStorage.getItem('emp_reg_query') || '').toLowerCase();
+      const statusFilter = sessionStorage.getItem('emp_reg_status') || '';
+
+      const regs = DB.registrations || [];
+
+      const filtered = regs.filter(r => {
+        const attendee = DB.users.find(u => String(u.id) === String(r.attendeeId)) || { name: '', email: '' };
+        const event = DB.events.find(e => String(e.id) === String(r.eventId)) || { title: '' };
+
+        const searchStr = `${r.id} ${r.ticketId || ''} ${attendee.name} ${attendee.email} ${event.title}`.toLowerCase();
+        const matchesQuery = !query || searchStr.includes(query);
+
+        const st = (r.status || 'confirmed').toLowerCase();
+        let matchesStatus = true;
+        if (statusFilter === 'pending') matchesStatus = st === 'pending';
+        else if (statusFilter === 'confirmed') matchesStatus = st === 'confirmed' || st === 'verified';
+        else if (statusFilter === 'rejected') matchesStatus = st === 'rejected';
+
+        return matchesQuery && matchesStatus;
+      });
+
+      return `
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Registrations Management</div>
+            <div class="page-sub">View, search, filter, and manage online event registrations.</div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="emp-reg-q" placeholder="Search by Ticket ID, Attendee, or Event..." value="${query}" oninput="refreshEmpRegistrations()">
+          </div>
+          <select class="form-control filter-select" id="emp-reg-st" onchange="refreshEmpRegistrations()">
+            <option value="">All Statuses</option>
+            <option value="confirmed" ${statusFilter === 'confirmed' ? 'selected' : ''}>Confirmed / Verified</option>
+            <option value="pending" ${statusFilter === 'pending' ? 'selected' : ''}>Pending</option>
+            <option value="rejected" ${statusFilter === 'rejected' ? 'selected' : ''}>Rejected</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ticket / Reg ID</th>
+                  <th>Attendee</th>
+                  <th>Event</th>
+                  <th>Registration Date</th>
+                  <th>Payment Status</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filtered.map(reg => {
+                  const attendee = DB.users.find(u => String(u.id) === String(reg.attendeeId)) || { name: 'Unknown User', email: '—' };
+                  const event = DB.events.find(e => String(e.id) === String(reg.eventId)) || { title: 'Unknown Event' };
+                  const isPending = reg.status === 'pending';
+
+                  return `
+                    <tr>
+                      <td class="mono"><strong>${reg.ticketId || reg.id}</strong></td>
+                      <td>
+                        <div style="font-weight:700;font-size:13.5px;color:var(--text)">${attendee.name}</div>
+                        <div class="small muted">${attendee.email}</div>
+                      </td>
+                      <td>${event.title}</td>
+                      <td>${reg.date || 'Today'}</td>
+                      <td>
+                        <span class="badge badge-${reg.payment === 'paid' ? 'green' : 'yellow'}">${reg.payment === 'paid' ? 'Paid (₹' + (reg.amount || 0) + ')' : 'Pending'}</span>
+                      </td>
+                      <td>
+                        <span class="badge badge-${reg.status === 'confirmed' ? 'green' : reg.status === 'pending' ? 'yellow' : 'red'}">${reg.status || 'confirmed'}</span>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-6">
+                          <button class="btn btn-ghost btn-xs" onclick="openRegistrationDetailModal('${reg.id}')">Review</button>
+                          ${isPending ? `
+                            <button class="btn btn-success btn-xs" onclick="approveRegistrationDirect('${reg.id}')" title="Approve">✓</button>
+                            <button class="btn btn-danger btn-xs" onclick="rejectRegistrationDirect('${reg.id}')" title="Reject">✕</button>
+                          ` : ''}
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="7" class="text-center py-20">No matching registrations found.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function refreshEmpRegistrations() {
+      sessionStorage.setItem('emp_reg_query', v('emp-reg-q'));
+      sessionStorage.setItem('emp_reg_status', v('emp-reg-st'));
+      renderPage('registrations');
+    }
+
+    function approveRegistrationDirect(regId) {
+      const r = DB.registrations.find(item => String(item.id) === String(regId));
+      if (!r) return;
+      r.status = 'confirmed';
+      r.verificationStatus = 'Verified';
+      r.verified = true;
+      saveDB();
+      renderPage('registrations');
+      toast('Registration approved successfully!', 'success');
+    }
+
+    function rejectRegistrationDirect(regId) {
+      confirm2('Reject Registration', 'Are you sure you want to reject this online registration?', () => {
+        const r = DB.registrations.find(item => String(item.id) === String(regId));
+        if (!r) return;
+        r.status = 'rejected';
+        r.verificationStatus = 'Rejected';
+        saveDB();
+        renderPage('registrations');
+        toast('Registration rejected.', 'info');
+      });
+    }
+
+    function openRegistrationDetailModal(regId) {
+      const r = DB.registrations.find(item => String(item.id) === String(regId));
+      if (!r) return;
+      const attendee = DB.users.find(u => String(u.id) === String(r.attendeeId)) || { name: 'Unknown User', email: '—', phone: '—' };
+      const event = DB.events.find(e => String(e.id) === String(r.eventId)) || { title: 'Unknown Event' };
+
+      openModal(`Registration Details: ${r.ticketId || r.id}`, `
+        <div class="info-row"><span class="info-label">Ticket ID</span><span class="info-value mono">${r.ticketId || r.id}</span></div>
+        <div class="info-row"><span class="info-label">Attendee Name</span><span class="info-value"><strong>${attendee.name}</strong></span></div>
+        <div class="info-row"><span class="info-label">Attendee Email</span><span class="info-value">${attendee.email}</span></div>
+        <div class="info-row"><span class="info-label">Contact Phone</span><span class="info-value">${attendee.phone || '—'}</span></div>
+        <div class="info-row"><span class="info-label">Event</span><span class="info-value">${event.title}</span></div>
+        <div class="info-row"><span class="info-label">Registration Date</span><span class="info-value">${r.date || 'Today'}</span></div>
+        <div class="info-row"><span class="info-label">Payment Amount</span><span class="info-value" style="color:var(--green);font-weight:700">₹${r.amount || 0} (${r.payment || 'paid'})</span></div>
+        <div class="info-row"><span class="info-label">Verification Status</span><span class="info-value"><span class="badge badge-${r.status === 'confirmed' ? 'green' : 'yellow'}">${r.verificationStatus || r.status || 'confirmed'}</span></span></div>
+      `, [
+        { lbl: 'Approve', cls: 'btn-success', fn: `closeModal();approveRegistrationDirect('${r.id}')` },
+        { lbl: 'Reject', cls: 'btn-danger', fn: `closeModal();rejectRegistrationDirect('${r.id}')` }
+      ]);
+    }
+
+    function pageUserManagement() {
+      const query = (sessionStorage.getItem('usrmgt_query') || '').toLowerCase();
+      const roleFilter = sessionStorage.getItem('usrmgt_role') || '';
+
+      const users = DB.users || [];
+
+      // Detect Duplicate Users by email or phone
+      const emailCounts = {};
+      const phoneCounts = {};
+      users.forEach(u => {
+        if (u.email) {
+          const em = u.email.toLowerCase();
+          emailCounts[em] = (emailCounts[em] || 0) + 1;
+        }
+        if (u.phone && u.phone !== '—') {
+          phoneCounts[u.phone] = (phoneCounts[u.phone] || 0) + 1;
+        }
+      });
+
+      const duplicateUsers = users.filter(u => {
+        const em = (u.email || '').toLowerCase();
+        const ph = u.phone || '';
+        return (emailCounts[em] > 1) || (ph !== '—' && phoneCounts[ph] > 1);
+      });
+
+      const filtered = users.filter(u => {
+        const matchesQuery = !query || `${u.name} ${u.email} ${u.phone} ${u.role} ${u.id}`.toLowerCase().includes(query);
+        const matchesRole = !roleFilter || u.role === roleFilter;
+        return matchesQuery && matchesRole;
+      });
+
+      return `
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">User Management</div>
+            <div class="page-sub">View, update, detect duplicate accounts, and safely manage platform users.</div>
+          </div>
+        </div>
+
+        ${duplicateUsers.length > 0 ? `
+          <div style="padding:14px 18px;background:rgba(234,179,8,0.12);border:1px solid var(--yellow);border-radius:10px;margin-bottom:20px" class="flex justify-between items-center">
+            <div class="flex items-center gap-10">
+              <span style="font-size:22px">⚠️</span>
+              <div>
+                <div style="font-weight:700;color:var(--yellow);font-size:14px">Duplicate Accounts Detected</div>
+                <div class="small muted">${duplicateUsers.length} user records share matching email addresses or contact numbers.</div>
+              </div>
+            </div>
+            <button class="btn btn-warning btn-sm" onclick="openDuplicateUsersModal()">🔍 Review &amp; Resolve Duplicates</button>
+          </div>
+        ` : ''}
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="usrmgt-q" placeholder="Search users by name, email, phone, role..." value="${query}" oninput="refreshUserManagement()">
+          </div>
+          <select class="form-control filter-select" id="usrmgt-role" onchange="refreshUserManagement()">
+            <option value="">All Roles</option>
+            <option value="attendee" ${roleFilter === 'attendee' ? 'selected' : ''}>Attendee</option>
+            <option value="client" ${roleFilter === 'client' ? 'selected' : ''}>Client</option>
+            <option value="organizer" ${roleFilter === 'organizer' ? 'selected' : ''}>Organizer</option>
+            <option value="staff" ${roleFilter === 'staff' ? 'selected' : ''}>Staff</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>User ID &amp; Name</th>
+                  <th>Contact Info</th>
+                  <th>Role</th>
+                  <th>Verification</th>
+                  <th>Account Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filtered.map(u => {
+                  const em = (u.email || '').toLowerCase();
+                  const isDup = emailCounts[em] > 1 || (u.phone && phoneCounts[u.phone] > 1);
+                  const isDeactivated = u.status === 'deactivated' || u.status === 'inactive';
+
+                  return `
+                    <tr style="${isDup ? 'background:rgba(234,179,8,0.04)' : ''}">
+                      <td>
+                        <div class="flex items-center gap-10">
+                          <div class="av av-xs">${u.avatar || u.name[0]}</div>
+                          <div>
+                            <div style="font-weight:700;font-size:14px;color:var(--text)">${u.name} ${isDup ? '<span class="badge badge-yellow" style="font-size:10px;padding:1px 5px">Duplicate</span>' : ''}</div>
+                            <div class="small muted">ID: ${u.id}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div>${u.email}</div>
+                        <div class="small muted">📞 ${u.phone || '—'}</div>
+                      </td>
+                      <td><span class="badge badge-purple">${u.role}</span></td>
+                      <td>
+                        <span class="badge badge-${u.status === 'active' ? 'green' : 'yellow'}">${u.status === 'active' ? 'Verified' : 'Pending'}</span>
+                      </td>
+                      <td>
+                        <span class="badge badge-${isDeactivated ? 'red' : 'green'}">${isDeactivated ? 'Deactivated' : 'Active'}</span>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-6">
+                          <button class="btn btn-ghost btn-xs" onclick="openEditUserModal('${u.id}')" title="Edit Details">✏️ Edit</button>
+                          <button class="btn btn-ghost btn-xs" onclick="toggleUserStatus('${u.id}')" title="Deactivate/Activate">${isDeactivated ? '🔓 Activate' : '🔒 Deactivate'}</button>
+                          <button class="btn btn-xs btn-danger" onclick="deleteUserOps('${u.id}')" title="Delete User">🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="6" class="text-center py-20">No matching users found.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function refreshUserManagement() {
+      sessionStorage.setItem('usrmgt_query', v('usrmgt-q'));
+      sessionStorage.setItem('usrmgt_role', v('usrmgt-role'));
+      renderPage('attendees');
+    }
+
+    function openEditUserModal(userId) {
+      const u = DB.users.find(user => String(user.id) === String(userId));
+      if (!u) return;
+      openModal(`Edit User: ${u.name}`, `
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input class="form-control" id="edit-usr-name" value="${u.name}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input class="form-control" id="edit-usr-email" value="${u.email}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input class="form-control" id="edit-usr-phone" value="${u.phone || ''}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">User Role</label>
+          <select class="form-control" id="edit-usr-role">
+            <option value="attendee" ${u.role === 'attendee' ? 'selected' : ''}>Attendee</option>
+            <option value="client" ${u.role === 'client' ? 'selected' : ''}>Client</option>
+            <option value="organizer" ${u.role === 'organizer' ? 'selected' : ''}>Organizer</option>
+            <option value="staff" ${u.role === 'staff' ? 'selected' : ''}>Staff</option>
+          </select>
+        </div>
+      `, [
+        { lbl: 'Save Changes', cls: 'btn-primary', fn: `saveEditUser('${u.id}')` }
+      ]);
+    }
+
+    function saveEditUser(userId) {
+      const u = DB.users.find(user => String(user.id) === String(userId));
+      if (!u) return;
+      const name = v('edit-usr-name');
+      const email = v('edit-usr-email');
+      if (!name || !email) { toast('Name and email are required', 'error'); return; }
+      u.name = name;
+      u.email = email;
+      u.phone = v('edit-usr-phone');
+      u.role = v('edit-usr-role');
+      saveDB();
+      closeModal();
+      renderPage('attendees');
+      toast('User details updated!', 'success');
+    }
+
+    function toggleUserStatus(userId) {
+      const u = DB.users.find(user => String(user.id) === String(userId));
+      if (!u) return;
+      const newStatus = (u.status === 'deactivated' || u.status === 'inactive') ? 'active' : 'deactivated';
+      u.status = newStatus;
+      saveDB();
+      renderPage('attendees');
+      toast(`User status changed to ${newStatus}`, 'info');
+    }
+
+    function deleteUserOps(userId) {
+      confirm2('Delete User', 'Are you sure you want to permanently delete this user record?', () => {
+        DB.users = DB.users.filter(u => String(u.id) !== String(userId));
+        saveDB();
+        renderPage('attendees');
+        toast('User deleted successfully', 'info');
+      });
+    }
+
+    function openDuplicateUsersModal() {
+      const users = DB.users || [];
+      const emailCounts = {};
+      users.forEach(u => {
+        if (u.email) {
+          const em = u.email.toLowerCase();
+          emailCounts[em] = (emailCounts[em] || 0) + 1;
+        }
+      });
+      const dupes = users.filter(u => emailCounts[(u.email || '').toLowerCase()] > 1);
+
+      openModal('Review Duplicate Accounts', `
+        <div class="small muted mb-14">The following accounts share identical email addresses. You can deactivate secondary duplicate accounts to resolve conflicts.</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${dupes.map(u => `
+            <div style="padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface2)" class="flex justify-between items-center">
+              <div>
+                <div style="font-weight:700;font-size:13.5px">${u.name} <span class="mono small muted">(${u.id})</span></div>
+                <div class="small muted">${u.email} · Phone: ${u.phone || '—'}</div>
+              </div>
+              <button class="btn btn-warning btn-xs" onclick="closeModal();toggleUserStatus('${u.id}')">Deactivate Secondary</button>
+            </div>
+          `).join('') || '<div class="empty">No duplicate accounts found.</div>'}
+        </div>
+      `, []);
+    }
+
+    function pageAttendeeVerification() {
+      const query = (sessionStorage.getItem('verif_query') || '').toLowerCase();
+      const statusFilter = sessionStorage.getItem('verif_status') || '';
+
+      const regs = DB.registrations || [];
+
+      const filtered = regs.filter(r => {
+        const attendee = DB.users.find(u => String(u.id) === String(r.attendeeId)) || { name: '', email: '' };
+        const event = DB.events.find(e => String(e.id) === String(r.eventId)) || { title: '' };
+
+        const searchStr = `${r.id} ${r.ticketId || ''} ${attendee.name} ${attendee.email} ${event.title}`.toLowerCase();
+        const matchesQuery = !query || searchStr.includes(query);
+
+        const verifStatus = r.verificationStatus || (r.status === 'confirmed' ? 'Verified' : 'Pending Review');
+        let matchesStatus = !statusFilter || verifStatus === statusFilter;
+
+        return matchesQuery && matchesStatus;
+      });
+
+      return `
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Online Registration Verification</div>
+            <div class="page-sub">Review submitted registration details, approve identity verifications online, and flag incomplete submissions.</div>
+          </div>
+        </div>
+
+        <div style="padding:12px 16px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;margin-bottom:20px;font-size:13px;color:var(--text)" class="flex items-center gap-10">
+          <span>ℹ️</span>
+          <span>Online Admin Workspace: Focuses strictly on online identity and registration detail verification. Physical check-in and venue scanning are handled on-site.</span>
+        </div>
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="verif-q" placeholder="Search by Ticket ID, Attendee Name, or Event..." value="${query}" oninput="refreshVerificationPage()">
+          </div>
+          <select class="form-control filter-select" id="verif-st" onchange="refreshVerificationPage()">
+            <option value="">All Verification Statuses</option>
+            <option value="Pending Review" ${statusFilter === 'Pending Review' ? 'selected' : ''}>Pending Review</option>
+            <option value="Verified" ${statusFilter === 'Verified' ? 'selected' : ''}>Verified</option>
+            <option value="Flagged" ${statusFilter === 'Flagged' ? 'selected' : ''}>Flagged / Incomplete</option>
+            <option value="Rejected" ${statusFilter === 'Rejected' ? 'selected' : ''}>Rejected</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Registration ID</th>
+                  <th>Attendee Info</th>
+                  <th>Event</th>
+                  <th>Submitted Proof / ID Document</th>
+                  <th>Verification Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filtered.map(r => {
+                  const attendee = DB.users.find(u => String(u.id) === String(r.attendeeId)) || { name: 'Unknown User', email: '—', phone: '—' };
+                  const event = DB.events.find(e => String(e.id) === String(r.eventId)) || { title: 'Unknown Event' };
+                  const currentVerif = r.verificationStatus || (r.status === 'confirmed' ? 'Verified' : 'Pending Review');
+                  const isPending = currentVerif === 'Pending Review' || currentVerif === 'Pending';
+                  const docType = r.docType || 'Govt Aadhaar / Passport ID';
+                  const docRef = r.docRef || 'REF-' + String(r.id).padStart(4, '0');
+
+                  return `
+                    <tr>
+                      <td class="mono"><strong>${r.ticketId || r.id}</strong></td>
+                      <td>
+                        <div style="font-weight:700;font-size:13.5px;color:var(--text)">${attendee.name}</div>
+                        <div class="small muted">${attendee.email}</div>
+                      </td>
+                      <td>${event.title}</td>
+                      <td>
+                        <div style="font-weight:600;font-size:13px;color:var(--accent)">📄 ${docType}</div>
+                        <div class="small mono muted">Ref: ${docRef}</div>
+                      </td>
+                      <td>
+                        <span class="badge badge-${currentVerif === 'Verified' ? 'green' : currentVerif === 'Flagged' ? 'yellow' : currentVerif === 'Rejected' ? 'red' : 'purple'}">${currentVerif}</span>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-6">
+                          <button class="btn btn-ghost btn-xs" onclick="openVerificationReviewModal('${r.id}')">Review</button>
+                          ${isPending ? `
+                            <button class="btn btn-success btn-xs" onclick="approveVerificationDirect('${r.id}')" title="Verify Online">✓ Verify</button>
+                            <button class="btn btn-warning btn-xs" onclick="flagVerificationModal('${r.id}')" title="Flag Incomplete">🚩 Flag</button>
+                          ` : ''}
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="6" class="text-center py-20">No registration verification records found.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function refreshVerificationPage() {
+      sessionStorage.setItem('verif_query', v('verif-q'));
+      sessionStorage.setItem('verif_status', v('verif-st'));
+      renderPage('attendeeVerification');
+    }
+
+    function approveVerificationDirect(regId) {
+      const r = DB.registrations.find(item => String(item.id) === String(regId));
+      if (!r) return;
+      r.verificationStatus = 'Verified';
+      r.status = 'confirmed';
+      r.verified = true;
+      saveDB();
+      renderPage('attendeeVerification');
+      toast('Online registration verified successfully!', 'success');
+    }
+
+    function flagVerificationModal(regId) {
+      const r = DB.registrations.find(item => String(item.id) === String(regId));
+      if (!r) return;
+      openModal(`Flag Registration Details: ${r.ticketId || r.id}`, `
+        <div class="form-group">
+          <label class="form-label">Flag Reason / Missing Details *</label>
+          <textarea class="form-control" id="flag-reason" rows="4" placeholder="Specify incomplete or incorrect registration information..."></textarea>
+        </div>
+      `, [
+        { lbl: 'Submit Flag', cls: 'btn-warning', fn: `saveFlagVerification('${r.id}')` }
+      ]);
+    }
+
+    function saveFlagVerification(regId) {
+      const r = DB.registrations.find(item => String(item.id) === String(regId));
+      if (!r) return;
+      const reason = v('flag-reason');
+      if (!reason) { toast('Please enter a flag reason', 'error'); return; }
+      r.verificationStatus = 'Flagged';
+      r.flagReason = reason;
+      saveDB();
+      closeModal();
+      renderPage('attendeeVerification');
+      toast('Registration flagged for review!', 'warning');
+    }
+
+    function openVerificationReviewModal(regId) {
+      const r = DB.registrations.find(item => String(item.id) === String(regId));
+      if (!r) return;
+      const attendee = DB.users.find(u => String(u.id) === String(r.attendeeId)) || { name: 'Unknown User', email: '—', phone: '—' };
+      const event = DB.events.find(e => String(e.id) === String(r.eventId)) || { title: 'Unknown Event' };
+      const docType = r.docType || 'Govt Aadhaar / Passport ID';
+      const docRef = r.docRef || 'REF-' + String(r.id).padStart(4, '0');
+
+      openModal(`Verification Review: ${r.ticketId || r.id}`, `
+        <div class="info-row"><span class="info-label">Ticket ID</span><span class="info-value mono">${r.ticketId || r.id}</span></div>
+        <div class="info-row"><span class="info-label">Attendee Name</span><span class="info-value"><strong>${attendee.name}</strong></span></div>
+        <div class="info-row"><span class="info-label">Attendee Email</span><span class="info-value">${attendee.email}</span></div>
+        <div class="info-row"><span class="info-label">Contact Phone</span><span class="info-value">${attendee.phone || '—'}</span></div>
+        <div class="info-row"><span class="info-label">Event</span><span class="info-value">${event.title}</span></div>
+        <div class="info-row"><span class="info-label">Submitted Document</span><span class="info-value" style="color:var(--accent);font-weight:700">📄 ${docType} (${docRef})</span></div>
+        <div class="info-row"><span class="info-label">Verification Status</span><span class="info-value"><span class="badge badge-purple">${r.verificationStatus || 'Pending Review'}</span></span></div>
+        ${r.notes ? `<div class="mt-12"><div class="label mb-6">Verification Notes</div><div style="padding:10px;background:var(--surface2);border-radius:8px;font-size:13px">${r.notes}</div></div>` : ''}
+        ${r.flagReason ? `<div class="mt-12"><div class="label mb-6">Flag Reason / Missing Details</div><div style="padding:10px;background:var(--surface2);border-radius:8px;color:var(--yellow);font-size:13px">${r.flagReason}</div></div>` : ''}
+      `, [
+        { lbl: 'Approve & Verify', cls: 'btn-success', fn: `closeModal();approveVerificationDirect('${r.id}')` },
+        { lbl: 'Flag Information', cls: 'btn-warning', fn: `closeModal();flagVerificationModal('${r.id}')` }
+      ]);
+    }
+
+    function pageRegVerificationReports() {
+      const reports = DB.regReports || [];
+      const typeFilter = sessionStorage.getItem('rvr_type') || '';
+      const statusFilter = sessionStorage.getItem('rvr_status') || '';
+
+      const totalSubmitted = reports.filter(r => r.status === 'Submitted' || r.status === 'Reviewed').length;
+      const pendingReports = reports.filter(r => r.status === 'Draft').length;
+      const reviewedReports = reports.filter(r => r.status === 'Reviewed').length;
+
+      const filtered = reports.filter(r => {
+        const matchType = !typeFilter || r.type === typeFilter;
+        const matchStatus = !statusFilter || r.status === statusFilter;
+        return matchType && matchStatus;
+      });
+
+      return `
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Registration &amp; User Management Reports</div>
+            <div class="page-sub">Submit, view, and track registration and user management reports. Reports are submitted to Super Admin for review.</div>
+          </div>
+          <div class="page-hd-right">
+            <button class="btn btn-primary" onclick="openCreateRegReportModal()">📤 Submit Report</button>
+          </div>
+        </div>
+
+        <div class="grid-3 mb-20">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">📤</div>
+            <div class="stat-value" style="color:var(--green)">${totalSubmitted}</div>
+            <div class="stat-label">Reports Submitted</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">📝</div>
+            <div class="stat-value" style="color:var(--yellow)">${pendingReports}</div>
+            <div class="stat-label">Draft / Pending</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">✅</div>
+            <div class="stat-value" style="color:var(--accent)">${reviewedReports}</div>
+            <div class="stat-label">Reviewed by Admin</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="flex justify-between items-center mb-16">
+            <div class="h4">All Reports</div>
+            <div class="flex gap-8">
+              <select class="form-control filter-select" id="rvr-type" onchange="refreshRvrPage()" style="width:200px">
+                <option value="">All Report Types</option>
+                <option value="Registration Report" ${typeFilter === 'Registration Report' ? 'selected' : ''}>Registration Report</option>
+                <option value="User Management Report" ${typeFilter === 'User Management Report' ? 'selected' : ''}>User Management Report</option>
+                <option value="Registration Activity Report" ${typeFilter === 'Registration Activity Report' ? 'selected' : ''}>Registration Activity Report</option>
+              </select>
+              <select class="form-control filter-select" id="rvr-status" onchange="refreshRvrPage()" style="width:140px">
+                <option value="">All Statuses</option>
+                <option value="Draft" ${statusFilter === 'Draft' ? 'selected' : ''}>Draft</option>
+                <option value="Submitted" ${statusFilter === 'Submitted' ? 'selected' : ''}>Submitted</option>
+                <option value="Reviewed" ${statusFilter === 'Reviewed' ? 'selected' : ''}>Reviewed</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Report</th>
+                  <th>Type</th>
+                  <th>Period</th>
+                  <th>Attached File</th>
+                  <th>Status</th>
+                  <th>Last Updated</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filtered.length ? filtered.map(r => `
+                  <tr>
+                    <td>
+                      <div style="font-weight:700;font-size:13.5px;color:var(--text)">${r.title}</div>
+                      <div class="small muted">ID: ${r.id} · By: ${r.owner}</div>
+                    </td>
+                    <td>
+                      <span class="badge badge-${r.type === 'Registration Report' ? 'purple' : r.type === 'User Management Report' ? 'blue' : 'orange'}">${r.type}</span>
+                    </td>
+                    <td class="small">${r.period || '—'}</td>
+                    <td>
+                      ${r.fileName
+                        ? `<span style="font-weight:600;color:var(--accent);font-size:12.5px">📄 ${r.fileName}</span>`
+                        : `<span class="small muted">No file attached</span>`
+                      }
+                    </td>
+                    <td>
+                      <span class="badge badge-${r.status === 'Reviewed' ? 'green' : r.status === 'Submitted' ? 'purple' : 'yellow'}">${r.status}</span>
+                    </td>
+                    <td class="small muted">${r.updated}</td>
+                    <td>
+                      <div class="flex gap-6">
+                        <button class="btn btn-ghost btn-xs" onclick="viewRegReportModal('${r.id}')">View Details</button>
+                        ${r.status === 'Draft' ? `<button class="btn btn-primary btn-xs" onclick="submitDraftReport('${r.id}')">📤 Submit</button>` : ''}
+                      </div>
+                    </td>
+                  </tr>
+                `).join('') : '<tr><td colspan="7" class="text-center py-20 muted">No reports found matching your filters.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function refreshRvrPage() {
+      sessionStorage.setItem('rvr_type', v('rvr-type'));
+      sessionStorage.setItem('rvr_status', v('rvr-status'));
+      renderPage('reports');
+    }
+
+    function submitDraftReport(reportId) {
+      const r = (DB.regReports || []).find(item => item.id === reportId);
+      if (!r) return;
+      if (!r.fileName) {
+        toast('Please attach a file before submitting a draft report.', 'error');
+        return;
+      }
+      r.status = 'Submitted';
+      r.updated = 'Just now';
+      saveDB();
+      renderPage('reports');
+      toast('Draft report submitted successfully!', 'success');
+    }
+
+    function viewRegReportModal(reportId) {
+      const r = (DB.regReports || []).find(item => item.id === reportId);
+      if (!r) return;
+      openModal(`Report: ${r.title}`, `
+        <div class="info-row"><span class="info-label">Report ID</span><span class="info-value mono">${r.id}</span></div>
+        <div class="info-row"><span class="info-label">Report Type</span><span class="info-value"><span class="badge badge-purple">${r.type}</span></span></div>
+        <div class="info-row"><span class="info-label">Reporting Period</span><span class="info-value">${r.period || '—'}</span></div>
+        <div class="info-row"><span class="info-label">Submitted By</span><span class="info-value">${r.owner}</span></div>
+        <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="badge badge-${r.status === 'Reviewed' ? 'green' : r.status === 'Submitted' ? 'purple' : 'yellow'}">${r.status}</span></span></div>
+        <div class="info-row"><span class="info-label">Last Updated</span><span class="info-value">${r.updated}</span></div>
+        <div class="info-row"><span class="info-label">Attached File</span><span class="info-value" style="color:var(--accent);font-weight:700">${r.fileName ? '📄 ' + r.fileName : 'No file attached'}</span></div>
+      `, r.status === 'Draft' ? [
+        { lbl: '📤 Submit Report', cls: 'btn-primary', fn: `closeModal();submitDraftReport('${r.id}')` }
+      ] : []);
+    }
+
+    window.handleRegReportFileSelect = function(input) {
+      const preview = document.getElementById('rv-file-preview');
+      if (input.files && input.files[0]) {
+        const f = input.files[0];
+        if (preview) {
+          preview.innerHTML = `
+            <div class="flex items-center justify-between" style="background:var(--accent-dim);border-radius:8px;padding:10px 14px">
+              <div style="font-weight:600;color:var(--accent);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 ${f.name} (${(f.size/1024).toFixed(1)} KB)</div>
+              <button type="button" class="btn btn-danger btn-xs" onclick="event.stopPropagation();resetRegReportFileSelect()">✕ Remove</button>
+            </div>
+          `;
+        }
+      }
+    };
+
+    window.resetRegReportFileSelect = function() {
+      const input = document.getElementById('rv-file');
+      if (input) input.value = '';
+      const preview = document.getElementById('rv-file-preview');
+      if (preview) {
+        preview.innerHTML = `
+          <div style="font-size:24px;margin-bottom:6px">📁</div>
+          <div style="font-weight:600;font-size:13.5px">Click to browse or upload report file</div>
+          <div class="small muted">Supported formats: PDF, DOC, DOCX, XLS, XLSX</div>
+        `;
+      }
+    };
+
+    function openCreateRegReportModal() {
+      openModal('📤 Submit Registration & User Management Report', `
+        <div class="form-group">
+          <label class="form-label">Report Type *</label>
+          <select class="form-control" id="rv-type">
+            <option value="Registration Report">Registration Report</option>
+            <option value="User Management Report">User Management Report</option>
+            <option value="Registration Activity Report">Registration Activity Report</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Report Title *</label>
+          <input class="form-control" id="rv-title" placeholder="e.g. August 2026 Online Registration Completion Report">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reporting Period *</label>
+          <input class="form-control" id="rv-period" placeholder="e.g. August 2026, Q3 2026, Week 34">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Upload Report *</label>
+          <div class="file-upload-box" style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;background:var(--surface2);cursor:pointer" onclick="document.getElementById('rv-file').click()">
+            <input type="file" id="rv-file" accept=".pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handleRegReportFileSelect(this)">
+            <div id="rv-file-preview">
+              <div style="font-size:24px;margin-bottom:6px">📁</div>
+              <div style="font-weight:600;font-size:13.5px">Click to browse or upload report file</div>
+              <div class="small muted">Supported formats: PDF, DOC, DOCX, XLS, XLSX</div>
+            </div>
+          </div>
+        </div>
+      `, [
+        { lbl: 'Cancel', cls: 'btn-ghost', fn: 'closeModal()' },
+        { lbl: '📤 Submit Report', cls: 'btn-primary', fn: 'saveRegReportSubmit()' }
+      ]);
+    }
+
+    function saveRegReportSubmit() {
+      const type = v('rv-type');
+      const title = v('rv-title');
+      const period = v('rv-period');
+      const fileInput = document.getElementById('rv-file');
+
+      if (!title) { toast('Please enter a report title', 'error'); return; }
+      if (!period) { toast('Please specify a reporting period', 'error'); return; }
+      if (!fileInput || !fileInput.files || !fileInput.files.length) {
+        toast('Please upload a report file', 'error');
+        return;
+      }
+
+      const file = fileInput.files[0];
+
+      const newReport = {
+        id: `RVR-${Date.now().toString().slice(-4)}`,
+        type: type,
+        title: title,
+        period: period,
+        fileName: file.name,
+        owner: CU.name || 'Arjun Kapoor',
+        status: 'Submitted',
+        updated: 'Just now'
+      };
+
+      if (!DB.regReports) DB.regReports = [];
+      DB.regReports.unshift(newReport);
+      saveDB();
+      closeModal();
+      renderPage('reports');
+      toast('Report submitted successfully!', 'success');
     }
 
     function buildEmployeeChanges(changes) {
@@ -6712,8 +8848,318 @@
     // ════════════════════════════════════════════════
     //  REPORTS
     // ════════════════════════════════════════════════
+    function operationalReportBadge(status) { return { Draft: 'yellow', Submitted: 'purple', Reviewed: 'green' }[status] || 'gray'; }
+    function pageOperationalReports() { const reports = DB.operationalReports || []; return `<div class="page-hd"><div class="page-hd-left"><div class="page-title">Reports</div><div class="page-sub">Submit support, finance, and combined operational reports to Super Admin.</div></div><div class="page-hd-right"><button class="btn btn-primary" onclick="openSubmitOperationalReportModal()">📤 Submit Report</button></div></div><div class="grid-3 mb-20">${['Support Report', 'Finance Report', 'Combined Operational Report'].map(type => `<div class="stat-card"><div class="stat-icon">${type === 'Support Report' ? '📩' : type === 'Finance Report' ? '💳' : '📊'}</div><div class="stat-value">${reports.filter(item => item.type === type).length}</div><div class="stat-label">${type}s</div></div>`).join('')}</div><div class="card"><div class="h4 mb-12">Operational Reports</div><div class="table-wrap"><table><thead><tr><th>Report</th><th>Type</th><th>Owner</th><th>Status</th><th>Updated</th><th>Action</th></tr></thead><tbody>${reports.map(item => `<tr><td><strong>${item.title}</strong></td><td>${item.type}</td><td>${item.owner}</td><td><span class="badge badge-${operationalReportBadge(item.status)}">${item.status}</span></td><td>${item.updated}</td><td>${item.status === 'Draft' ? `<button class="btn btn-primary btn-xs" onclick="submitOperationalReport('${item.id}')">Submit</button>` : '<span class="small">Tracked</span>'}</td></tr>`).join('')}</tbody></table></div></div>`; }
+    function openOperationalReportModal() { openModal('Prepare Operational Report', `<div class="form-group"><label class="form-label">Report Type</label><select class="form-control" id="op-report-type"><option>Support Report</option><option>Finance Report</option><option>Combined Operational Report</option></select></div><div class="form-group"><label class="form-label">Report Title</label><input class="form-control" id="op-report-title" placeholder="e.g. September support review"></div>`, [{ lbl: 'Save Draft', cls: 'btn-primary', fn: 'saveOperationalReport()' }]); }
+    function saveOperationalReport() { const title = v('op-report-title'); if (!title) { toast('Enter a report title', 'error'); return; } DB.operationalReports.push({ id: `OPR-${Date.now()}`, type: v('op-report-type'), title, owner: CU.name, status: 'Draft', updated: 'Just now' }); saveDB(); closeModal(); renderPage('reports'); toast('Report saved as draft', 'success'); }
+    function openSubmitOperationalReportModal() { openModal('Submit Operational Report', `<div class="form-group"><label class="form-label">Report Type</label><select class="form-control" id="op-submit-type"><option>Support Report</option><option>Finance Report</option><option>Combined Operational Report</option></select></div><div class="form-group"><label class="form-label">Report Title</label><input class="form-control" id="op-submit-title" placeholder="e.g. September support review"></div>`, [{ lbl: 'Submit Report', cls: 'btn-primary', fn: 'submitNewOperationalReport()' }]); }
+    function submitNewOperationalReport() { const title = v('op-submit-title'); if (!title) { toast('Enter a report title', 'error'); return; } DB.operationalReports.push({ id: `OPR-${Date.now()}`, type: v('op-submit-type'), title, owner: CU.name, status: 'Submitted', updated: 'Just now' }); saveDB(); closeModal(); renderPage('reports'); toast('Report submitted to Super Admin', 'success'); }
+    function submitOperationalReport(id) { const report = DB.operationalReports.find(item => item.id === id); if (!report) return; report.status = 'Submitted'; report.updated = 'Just now'; saveDB(); renderPage('reports'); toast('Report submitted to Super Admin', 'success'); }
+    function eventOpsReportBadge(status) {
+      if (status === 'Submitted') return 'purple';
+      if (status === 'Pending Review' || status === 'Pending') return 'orange';
+      if (status === 'Reviewed') return 'green';
+      if (status === 'Draft') return 'yellow';
+      return 'gray';
+    }
+
+    function pageEventOpsReports() {
+      const reports = DB.eventOpsReports || [];
+      const searchQuery = (sessionStorage.getItem('eor_search') || '').toLowerCase();
+      const typeFilter = sessionStorage.getItem('eor_type') || '';
+      const statusFilter = sessionStorage.getItem('eor_status') || '';
+
+      const perfCount = reports.filter(r => r.type === 'Event Performance Report').length;
+      const opsCount = reports.filter(r => r.type === 'Event Operations Report').length;
+      const actCount = reports.filter(r => r.type === 'Event Activity Report').length;
+
+      const submittedCount = reports.filter(r => r.status === 'Submitted').length;
+      const pendingReviewCount = reports.filter(r => r.status === 'Pending Review' || r.status === 'Pending').length;
+      const reviewedCount = reports.filter(r => r.status === 'Reviewed').length;
+
+      const filtered = reports.filter(r => {
+        const titleStr = (r.title || '').toLowerCase();
+        const idStr = (r.id || '').toLowerCase();
+        const scopeStr = (r.scope || '').toLowerCase();
+        const matchesQuery = !searchQuery || titleStr.includes(searchQuery) || idStr.includes(searchQuery) || scopeStr.includes(searchQuery);
+        const matchesType = !typeFilter || r.type === typeFilter;
+        const matchesStatus = !statusFilter || r.status === statusFilter || (statusFilter === 'Pending Review' && r.status === 'Pending');
+        return matchesQuery && matchesType && matchesStatus;
+      });
+
+      return `
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Event Operations Reports</div>
+            <div class="page-sub">Submit, view, and track operational performance, logistics, and activity reports for Super Admin review.</div>
+          </div>
+          <div class="page-hd-right">
+            <button class="btn btn-primary" onclick="openCreateEventOpsReportModal()">📤 Submit Report</button>
+          </div>
+        </div>
+
+        <div class="grid-3 mb-20">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">📈</div>
+            <div class="stat-value" style="color:var(--accent)">${perfCount}</div>
+            <div class="stat-label">Performance Reports</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--purple-dim);color:var(--purple)">⚙️</div>
+            <div class="stat-value" style="color:var(--purple)">${opsCount}</div>
+            <div class="stat-label">Operations Reports</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--blue-dim);color:var(--blue)">📄</div>
+            <div class="stat-value" style="color:var(--blue)">${actCount}</div>
+            <div class="stat-label">Activity Reports</div>
+          </div>
+        </div>
+
+        <div class="grid-3 mb-20">
+          <div class="card" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;background:var(--surface2)">
+            <div>
+              <div class="small muted" style="font-weight:600">Submitted Reports</div>
+              <div style="font-size:20px;font-weight:800;color:var(--purple);margin-top:2px">${submittedCount}</div>
+            </div>
+            <span class="badge badge-purple">Submitted</span>
+          </div>
+          <div class="card" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;background:var(--surface2)">
+            <div>
+              <div class="small muted" style="font-weight:600">Pending Review</div>
+              <div style="font-size:20px;font-weight:800;color:var(--orange);margin-top:2px">${pendingReviewCount}</div>
+            </div>
+            <span class="badge badge-orange">In Review</span>
+          </div>
+          <div class="card" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;background:var(--surface2)">
+            <div>
+              <div class="small muted" style="font-weight:600">Reviewed Reports</div>
+              <div style="font-size:20px;font-weight:800;color:var(--green);margin-top:2px">${reviewedCount}</div>
+            </div>
+            <span class="badge badge-green">Approved</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="filter-row mb-16" style="display:flex;gap:12px;flex-wrap:wrap">
+            <div class="search-box input-group" style="flex:1;min-width:240px">
+              <span class="input-icon">🔍</span>
+              <input class="form-control" id="eor-search" placeholder="Search reports by title, scope, or ID..." value="${sessionStorage.getItem('eor_search') || ''}" oninput="refreshEorPage()">
+            </div>
+            <select class="form-control filter-select" id="eor-type-filter" onchange="refreshEorPage()" style="width:220px">
+              <option value="">All Report Types</option>
+              <option value="Event Performance Report" ${typeFilter === 'Event Performance Report' ? 'selected' : ''}>Event Performance Report</option>
+              <option value="Event Operations Report" ${typeFilter === 'Event Operations Report' ? 'selected' : ''}>Event Operations Report</option>
+              <option value="Event Activity Report" ${typeFilter === 'Event Activity Report' ? 'selected' : ''}>Event Activity Report</option>
+            </select>
+            <select class="form-control filter-select" id="eor-status-filter" onchange="refreshEorPage()" style="width:170px">
+              <option value="">All Statuses</option>
+              <option value="Draft" ${statusFilter === 'Draft' ? 'selected' : ''}>Draft</option>
+              <option value="Submitted" ${statusFilter === 'Submitted' ? 'selected' : ''}>Submitted</option>
+              <option value="Pending Review" ${statusFilter === 'Pending Review' ? 'selected' : ''}>Pending Review</option>
+              <option value="Reviewed" ${statusFilter === 'Reviewed' ? 'selected' : ''}>Reviewed</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Report</th>
+                  <th>Report Type</th>
+                  <th>Event / Scope</th>
+                  <th>Attached File</th>
+                  <th>Status</th>
+                  <th>Last Updated</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filtered.length ? filtered.map(r => `
+                  <tr>
+                    <td>
+                      <div style="font-weight:700;color:var(--text);font-size:13.5px">${r.title}</div>
+                      <div class="small muted">ID: ${r.id} · Submitted By: ${r.owner || 'Elena Rostova'}</div>
+                    </td>
+                    <td>
+                      <span class="badge badge-${r.type === 'Event Performance Report' ? 'purple' : r.type === 'Event Operations Report' ? 'blue' : 'orange'}">${r.type}</span>
+                    </td>
+                    <td class="small" style="font-weight:600;color:var(--text2)">${r.scope || '—'}</td>
+                    <td>
+                      ${r.fileName 
+                        ? `<span style="font-weight:600;color:var(--accent);font-size:12.5px">📄 ${r.fileName}</span>`
+                        : `<span class="small muted">No file attached</span>`
+                      }
+                    </td>
+                    <td>
+                      <span class="badge badge-${eventOpsReportBadge(r.status)}">${r.status}</span>
+                    </td>
+                    <td class="small muted">${r.updated}</td>
+                    <td>
+                      <div class="flex gap-6">
+                        <button class="btn btn-ghost btn-xs" onclick="viewEventOpsReportModal('${r.id}')">View Details</button>
+                        ${r.status === 'Draft' ? `<button class="btn btn-primary btn-xs" onclick="submitDraftEventOpsReport('${r.id}')">📤 Submit</button>` : ''}
+                      </div>
+                    </td>
+                  </tr>
+                `).join('') : '<tr><td colspan="7" class="text-center py-20 muted">No operational reports found matching your criteria.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function refreshEorPage() {
+      sessionStorage.setItem('eor_search', v('eor-search'));
+      sessionStorage.setItem('eor_type', v('eor-type-filter'));
+      sessionStorage.setItem('eor_status', v('eor-status-filter'));
+      renderPage('reports');
+    }
+
+    function submitDraftEventOpsReport(reportId) {
+      const r = (DB.eventOpsReports || []).find(item => item.id === reportId);
+      if (!r) return;
+      r.status = 'Submitted';
+      r.updated = 'Just now';
+      saveDB();
+      renderPage('reports');
+      toast('Report submitted to Super Admin for review!', 'success');
+    }
+
+    function viewEventOpsReportModal(reportId) {
+      const r = (DB.eventOpsReports || []).find(item => item.id === reportId);
+      if (!r) return;
+      openModal(`Report: ${r.title}`, `
+        <div class="info-row"><span class="info-label">Report ID</span><span class="info-value mono">${r.id}</span></div>
+        <div class="info-row"><span class="info-label">Report Type</span><span class="info-value"><span class="badge badge-purple">${r.type}</span></span></div>
+        <div class="info-row"><span class="info-label">Event / Scope</span><span class="info-value"><strong>${r.scope || '—'}</strong></span></div>
+        <div class="info-row"><span class="info-label">Reporting Period</span><span class="info-value">${r.period || '—'}</span></div>
+        <div class="info-row"><span class="info-label">Submitted By</span><span class="info-value">${r.owner || 'Elena Rostova'}</span></div>
+        <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="badge badge-${eventOpsReportBadge(r.status)}">${r.status}</span></span></div>
+        <div class="info-row"><span class="info-label">Last Updated</span><span class="info-value">${r.updated}</span></div>
+        <div class="info-row"><span class="info-label">Attached File</span><span class="info-value" style="color:var(--accent);font-weight:700">${r.fileName ? '📄 ' + r.fileName : 'No file attached'}</span></div>
+        <div class="mt-12" style="padding:12px;background:var(--surface2);border-radius:8px;font-size:12.5px;color:var(--text2)">
+          ℹ️ <strong>Workflow:</strong> Submitted reports are routed to Super Admin for review and operational audit.
+        </div>
+      `, r.status === 'Draft' ? [
+        { lbl: '📤 Submit to Super Admin', cls: 'btn-primary', fn: `closeModal();submitDraftEventOpsReport('${r.id}')` }
+      ] : []);
+    }
+
+    window.handleReportFileSelect = function(input) {
+      const preview = document.getElementById('eor-file-preview');
+      if (input.files && input.files[0]) {
+        const f = input.files[0];
+        if (preview) {
+          preview.innerHTML = `
+            <div class="flex items-center justify-between" style="background:var(--accent-dim);border-radius:8px;padding:10px 14px">
+              <div style="font-weight:600;color:var(--accent);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 ${f.name} (${(f.size/1024).toFixed(1)} KB)</div>
+              <button type="button" class="btn btn-danger btn-xs" onclick="event.stopPropagation();resetReportFileSelect()">✕ Remove</button>
+            </div>
+          `;
+        }
+      }
+    };
+
+    window.resetReportFileSelect = function() {
+      const input = document.getElementById('eor-file');
+      if (input) input.value = '';
+      const preview = document.getElementById('eor-file-preview');
+      if (preview) {
+        preview.innerHTML = `
+          <div style="font-size:24px;margin-bottom:6px">📁</div>
+          <div style="font-weight:600;font-size:13.5px">Click to browse or upload report file</div>
+          <div class="small muted">Supported formats: PDF, DOC, DOCX, XLS, XLSX</div>
+        `;
+      }
+    };
+
+    function openCreateEventOpsReportModal() {
+      const eventsOptions = (DB.events || []).map(e => `<option value="${e.title || e.name}">${e.title || e.name}</option>`).join('');
+      openModal('📤 Submit Operational Report', `
+        <div class="form-group">
+          <label class="form-label">Report Type *</label>
+          <select class="form-control" id="eor-type">
+            <option value="Event Performance Report">Event Performance Report</option>
+            <option value="Event Operations Report">Event Operations Report</option>
+            <option value="Event Activity Report">Event Activity Report</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Report Title *</label>
+          <input class="form-control" id="eor-title" placeholder="e.g. Event Performance Summary — Q3 2026">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Event / Scope *</label>
+          <select class="form-control" id="eor-scope">
+            <option value="Platform Wide">Platform Wide</option>
+            <option value="All Q3 Events">All Q3 Events</option>
+            <option value="Main Convention Center">Main Convention Center</option>
+            ${eventsOptions}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reporting Period *</label>
+          <input class="form-control" id="eor-period" placeholder="e.g. August 2026, Q3 2026, Week 34">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Upload Report *</label>
+          <div class="file-upload-box" style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;background:var(--surface2);cursor:pointer" onclick="document.getElementById('eor-file').click()">
+            <input type="file" id="eor-file" accept=".pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handleReportFileSelect(this)">
+            <div id="eor-file-preview">
+              <div style="font-size:24px;margin-bottom:6px">📁</div>
+              <div style="font-weight:600;font-size:13.5px">Click to browse or upload report file</div>
+              <div class="small muted">Supported formats: PDF, DOC, DOCX, XLS, XLSX</div>
+            </div>
+          </div>
+        </div>
+      `, [
+        { lbl: 'Cancel', cls: 'btn-ghost', fn: 'closeModal()' },
+        { lbl: '📤 Submit Report', cls: 'btn-primary', fn: 'saveEventOpsReportSubmit()' }
+      ]);
+    }
+
+    function saveEventOpsReportSubmit() {
+      const type = v('eor-type');
+      const title = v('eor-title');
+      const scope = v('eor-scope');
+      const period = v('eor-period');
+      const fileInput = document.getElementById('eor-file');
+
+      if (!title) { toast('Please enter a report title', 'error'); return; }
+      if (!period) { toast('Please specify a reporting period', 'error'); return; }
+      if (!fileInput || !fileInput.files || !fileInput.files.length) {
+        toast('Please upload a report file', 'error');
+        return;
+      }
+
+      const file = fileInput.files[0];
+
+      const newReport = {
+        id: `EOR-${Date.now().toString().slice(-4)}`,
+        type: type,
+        title: title,
+        scope: scope,
+        period: period,
+        fileName: file.name,
+        owner: CU.name || 'Elena Rostova',
+        status: 'Submitted',
+        updated: 'Just now'
+      };
+
+      if (!DB.eventOpsReports) DB.eventOpsReports = [];
+      DB.eventOpsReports.unshift(newReport);
+      saveDB();
+      closeModal();
+      renderPage('reports');
+      toast('Report submitted to Super Admin for review!', 'success');
+    }
+
     function pageReports() {
       if (!DB.reports) DB.reports = [];
+      if (CU.role === 'staff' && CU.employeeType === 'SUPPORT_FINANCE') return pageOperationalReports();
+      if (CU.role === 'staff' && CU.employeeType === 'EVENT_OPERATIONS') return pageEventOpsReports();
 
       // Super Admin gets dedicated analytics dashboard
       if (CU.role === 'superuser') {
@@ -7371,16 +9817,22 @@
     // ════════════════════════════════════════════════
     //  NOTIFICATIONS
     // ════════════════════════════════════════════════
+    function visibleNotifications() {
+      return CU?.role === 'staff' && CU.employeeType === 'SUPPORT_FINANCE'
+        ? DB.notifications.filter(notification => notification.employeeType === 'SUPPORT_FINANCE')
+        : DB.notifications;
+    }
     function pageNotifications() {
-      const unread = DB.notifications.filter(n => !n.read).length;
+      const notifications = visibleNotifications();
+      const unread = notifications.filter(n => !n.read).length;
       return `
   <div class="page-hd">
     <div class="page-hd-left"><div class="page-title">Notifications</div><div class="page-sub">${unread} unread notification${unread !== 1 ? 's' : ''}</div></div>
     <div class="page-hd-right"><button class="btn btn-ghost btn-sm" onclick="markAllRead()">✓ Mark All Read</button></div>
   </div>
   <div class="card p-0 notif-panel">
-    ${DB.notifications.length === 0 ? `<div class="empty"><div class="empty-icon">🔔</div><div class="empty-title">All caught up!</div></div>` : `
-    ${DB.notifications.map(n => `
+    ${notifications.length === 0 ? `<div class="empty"><div class="empty-icon">🔔</div><div class="empty-title">All caught up!</div></div>` : `
+    ${notifications.map(n => `
       <div class="notif-item${n.read ? '' : ' unread'}" onclick="markNotifRead('${n.id}')">
         <div class="notif-icon" style="background:${n.type === 'success' ? 'var(--green-dim)' : n.type === 'warning' ? 'var(--yellow-dim)' : n.type === 'error' ? 'var(--red-dim)' : 'var(--accent-dim)'}">${n.icon || '🔔'}</div>
         <div class="notif-content">
@@ -7398,7 +9850,7 @@
       n.read = true;
       saveDB();
       updateNotifDot();
-      buildNav(CU.role);
+      if (CU.role === 'staff') buildEmployeeNav(CU.employeeType); else buildNav(CU.role);
       // Smart redirect: assignment/event-request notifications go to Event Requests tab for staff
       if (CU.role === 'staff' &&
         (n.title === 'Staff Assignment Pending' || n.title === 'New Assignment' ||
@@ -7409,8 +9861,8 @@
       }
     }
     function markAllRead() {
-      DB.notifications.forEach(n => n.read = true);
-      renderPage('notifications'); updateNotifDot(); buildNav(CU.role); toast('All notifications marked as read', 'success');
+      visibleNotifications().forEach(n => n.read = true);
+      renderPage('notifications'); updateNotifDot(); if (CU.role === 'staff') buildEmployeeNav(CU.employeeType); else buildNav(CU.role); toast('All notifications marked as read', 'success');
     }
 
     // ════════════════════════════════════════════════
@@ -7420,13 +9872,18 @@
       const assigns = CU.role === 'staff' ? DB.staffAssignments.filter(a => a.staffId === CU.id) : [];
       const regs = CU.role === 'attendee' ? DB.registrations.filter(r => r.attendeeId === CU.id) : [];
       const myEvs = CU.role === 'organizer' ? DB.events.filter(e => e.organizer === CU.id) : [];
+      const isSF = CU.role === 'staff' && CU.employeeType === 'SUPPORT_FINANCE';
+      const sfSupportHandled = (DB.supportRequests || []).length;
+      const sfResolved = (DB.supportRequests || []).filter(r => r.status === 'Resolved' || r.status === 'Closed').length;
+      const sfTxnsReviewed = (DB.financeTransactions || []).length;
+      const sfReportsSubmitted = (DB.operationalReports || []).filter(r => r.status === 'Submitted' || r.status === 'Reviewed').length;
       return `
   <div class="page-hd"><div class="page-hd-left"><div class="page-title">My Profile</div></div><div class="page-hd-right"><button class="btn btn-ghost" onclick="goNav('settings')">✏️ Edit Profile</button></div></div>
   <div class="profile-banner">
     <div class="av av-xl">${CU.avatar || CU.name[0]}</div>
     <div class="profile-info">
       <div class="profile-name">${CU.name}</div>
-      <div class="profile-role-tag">${ROLE_LABELS[CU.role]}</div>
+      <div class="profile-role-tag">${isSF ? 'Customer Support &amp; Finance Executive' : ROLE_LABELS[CU.role]}</div>
       ${CU.company ? `<div class="small mt-4">${CU.company}</div>` : ''}
       ${CU.specialization ? `<div class="small mt-4">Specialization: ${CU.specialization}</div>` : ''}
       ${CU.service ? `<div class="small mt-4">Service: ${CU.service}</div>` : ''}
@@ -7439,11 +9896,17 @@
       <div class="info-row"><span class="info-label">Email</span><span class="info-value">${CU.email}</span></div>
       <div class="info-row"><span class="info-label">Phone</span><span class="info-value">${CU.phone || 'Not set'}</span></div>
       <div class="info-row"><span class="info-label">Member Since</span><span class="info-value">${CU.joined || '—'}</span></div>
-      <div class="info-row"><span class="info-label">Role</span><span class="info-value"><span class="badge badge-${ROLE_COLORS[CU.role]}">${CU.role}</span></span></div>
+      <div class="info-row"><span class="info-label">Role</span><span class="info-value"><span class="badge badge-${ROLE_COLORS[CU.role]}">${isSF ? 'Customer Support &amp; Finance Executive' : CU.role}</span></span></div>
       ${CU.bio ? `<div class="mt-14"><div class="label mb-8">Bio</div><p style="font-size:13.5px;color:var(--text2);line-height:1.7">${CU.bio}</p></div>` : ''}
     </div>
     <div>
-      ${CU.role === 'staff' ? `<div class="card mb-16">
+      ${isSF ? `<div class="card mb-16">
+        <div class="h4 mb-14">Work Summary</div>
+        <div class="info-row"><span class="info-label">Support Requests Handled</span><span class="info-value" style="color:var(--accent);font-weight:700">${sfSupportHandled}</span></div>
+        <div class="info-row"><span class="info-label">Issues Resolved</span><span class="info-value" style="color:var(--green);font-weight:700">${sfResolved}</span></div>
+        <div class="info-row"><span class="info-label">Transactions Reviewed</span><span class="info-value" style="color:var(--blue);font-weight:700">${sfTxnsReviewed}</span></div>
+        <div class="info-row"><span class="info-label">Reports Submitted</span><span class="info-value" style="color:var(--purple);font-weight:700">${sfReportsSubmitted}</span></div>
+      </div>` : CU.role === 'staff' ? `<div class="card mb-16">
         <div class="h4 mb-14">Assignment Summary</div>
         <div class="info-row"><span class="info-label">Total Assignments</span><span class="info-value">${assigns.length}</span></div>
         <div class="info-row"><span class="info-label">Accepted</span><span class="info-value" style="color:var(--green)">${assigns.filter(a => a.status === 'accepted').length}</span></div>
