@@ -98,3 +98,9 @@ export const ROLE_PERMISSIONS = {
     notifications: ['read'],
   },
 };
+
+export enum EmployeeType {
+  REGISTRATION_VERIFICATION = 'registration_verification',
+  EVENT_OPERATIONS = 'event_operations',
+  SUPPORT_FINANCE = 'support_finance',
+}
