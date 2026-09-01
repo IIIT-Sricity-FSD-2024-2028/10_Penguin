@@ -19,24 +19,15 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-        const inputPass = (loginDto.password || '').trim();
+    const inputPass = (loginDto.password || '').trim();
     const storedPass = (user.password || '').trim();
-    
-    // Normalize passwords for comparison (case-insensitive, remove special chars)
-    const norm = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const inNorm = norm(inputPass);
-    const stNorm = norm(storedPass);
 
-    const passMatches = storedPass === inputPass ||
+    // Compare passwords: exact, case-insensitive, or normalized alphanumeric
+    const norm = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const passMatches =
+      storedPass === inputPass ||
       storedPass.toLowerCase() === inputPass.toLowerCase() ||
-      inNorm === stNorm ||
-      inNorm === 'staff123' || inNorm === 'staff' ||
-      inNorm === 'employee123' || inNorm === 'employee' ||
-      inNorm === 'organizer123' || inNorm === 'org123' || inNorm === 'organizer' ||
-      inNorm === 'client123' || inNorm === 'client' ||
-      inNorm === 'attendee123' || inNorm === 'att123' || inNorm === 'attendee' ||
-      inNorm === 'admin123' || inNorm === 'admin' ||
-      inputPass === 'password' || inputPass === '123456';
+      norm(inputPass) === norm(storedPass);
 
     if (!passMatches) {
       throw new UnauthorizedException('Invalid email or password');

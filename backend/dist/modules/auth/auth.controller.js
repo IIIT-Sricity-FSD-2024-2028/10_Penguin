@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const throttler_1 = require("@nestjs/throttler");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
 let AuthController = class AuthController {
@@ -29,6 +30,8 @@ exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('login'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),
+    (0, throttler_1.Throttle)({ login: { ttl: 60000, limit: 5 } }),
     (0, swagger_1.ApiOperation)({
         summary: 'Login with email and password',
         description: 'Public endpoint. Returns user info and JWT token. Use token in Authorization header (Bearer token) for subsequent requests.',

@@ -1,4 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
@@ -27,6 +28,20 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 
 @Module({
   imports: [
+    // Rate limiting — protects login against brute-force (5 req/60s named 'login');
+    // default throttler is permissive (100 req/60s) and does not affect normal API usage.
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60000,
+        limit: 100,
+      },
+      {
+        name: 'login',
+        ttl: 60000,
+        limit: 5,
+      },
+    ]),
     // Existing
     EventsModule,
     AttendeesModule,

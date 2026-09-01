@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
+const throttler_1 = require("@nestjs/throttler");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const request_logging_middleware_1 = require("./common/middleware/request-logging.middleware");
@@ -44,6 +45,20 @@ exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            // Rate limiting — protects login against brute-force (5 req/60s named 'login');
+            // default throttler is permissive (100 req/60s) and does not affect normal API usage.
+            throttler_1.ThrottlerModule.forRoot([
+                {
+                    name: 'default',
+                    ttl: 60000,
+                    limit: 100,
+                },
+                {
+                    name: 'login',
+                    ttl: 60000,
+                    limit: 5,
+                },
+            ]),
             // Existing
             events_module_1.EventsModule,
             attendees_module_1.AttendeesModule,

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ROLE_PERMISSIONS = exports.ROLE_ALIASES = exports.UserRole = void 0;
+exports.EmployeeType = exports.ROLE_PERMISSIONS = exports.ROLE_ALIASES = exports.UserRole = void 0;
 exports.normalizeRole = normalizeRole;
 // Role enum for type safety - matches spec exactly
 var UserRole;
@@ -97,4 +97,10 @@ exports.ROLE_PERMISSIONS = {
         notifications: ['read'],
     },
 };
+var EmployeeType;
+(function (EmployeeType) {
+    EmployeeType["REGISTRATION_VERIFICATION"] = "registration_verification";
+    EmployeeType["EVENT_OPERATIONS"] = "event_operations";
+    EmployeeType["SUPPORT_FINANCE"] = "support_finance";
+})(EmployeeType || (exports.EmployeeType = EmployeeType = {}));
 //# sourceMappingURL=constants.js.map

@@ -149,6 +149,11 @@ function renderEventCards(containerId, events = null, isAttendee = false) {
         
         return `
           <div class="event-card">
+            ${e.image ? `
+              <div class="event-card-banner" style="height:130px;overflow:hidden;border-radius:8px 8px 0 0;margin:-16px -16px 12px -16px;position:relative">
+                <img src="${e.image}" alt="${escapeHtml(e.title)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'">
+              </div>
+            ` : ''}
             <div class="event-card-header">
               <h3>${escapeHtml(e.title)}</h3>
               <span class="badge badge-${(e.category || '').toLowerCase()}">${e.category}</span>
@@ -495,14 +500,8 @@ function getTimeAgo(isoString) {
   return Math.floor(seconds / 86400) + "d ago";
 }
 
-// Auto-update tables every 5 seconds in the background
-setInterval(() => {
-  try {
-    renderNotificationsPanel("notificationsPanel");
-  } catch (e) {
-    // Silently ignore if containers don't exist
-  }
-}, 5000);
+// Notifications are refreshed when their data changes. Replacing the panel on
+// a timer remounted its DOM every five seconds and made pages visibly blink.
 
 // Make functions global
 window.renderUsersTable = renderUsersTable;
