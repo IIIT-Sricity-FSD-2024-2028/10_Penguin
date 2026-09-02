@@ -11,7 +11,7 @@ const common_1 = require("@nestjs/common");
 const file_log_service_1 = require("../logging/file-log.service");
 let EventsAuditMiddleware = class EventsAuditMiddleware {
     use(req, res, next) {
-        const role = req.headers['x-role'] || 'anonymous';
+        const role = req.user?.userRole || 'anonymous';
         file_log_service_1.FileLogService.writeAccess(`${new Date().toISOString()} EVENT_ROUTE role=${role} ${req.method} ${req.originalUrl}`);
         next();
     }

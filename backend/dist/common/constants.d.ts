@@ -66,4 +66,9 @@ export declare const ROLE_PERMISSIONS: {
         notifications: string[];
     };
 };
+export declare enum EmployeeType {
+    REGISTRATION_VERIFICATION = "registration_verification",
+    EVENT_OPERATIONS = "event_operations",
+    SUPPORT_FINANCE = "support_finance"
+}
 //# sourceMappingURL=constants.d.ts.map

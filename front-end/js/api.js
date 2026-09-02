@@ -55,24 +55,26 @@ function getUserIdHeader() {
   return u ? (u.userId || u.id || '') : '';
 }
 
+function getAuthHeader() {
+  const u = getCurrentUser();
+  return u && u.token ? `Bearer ${u.token}` : '';
+}
+
 // ─── Core Fetch Wrapper ──────────────────────────────────────────
+// Authorization is handled entirely by JWT Bearer tokens.
+// No client-controlled identity headers (x-role, x-user-id) are sent.
 async function apiRequest(endpoint, options = {}) {
-  const role = options._role || getRoleHeader();
-  const userId = options._userId || getUserIdHeader();
+  const authorization = getAuthHeader();
 
   const headers = {
     'Content-Type': 'application/json',
-    ...(role ? { 'x-role': role } : {}),
-    ...(userId ? { 'x-user-id': String(userId) } : {}),
+    ...(authorization ? { Authorization: authorization } : {}),
     ...(options.headers || {}),
   };
 
-  // Remove internal private keys
-  const { _role, _userId, ...fetchOptions } = options;
-
   try {
     const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...fetchOptions,
+      ...options,
       headers,
     });
 
@@ -117,7 +119,6 @@ async function apiLogin(email, password) {
   const data = await apiRequest('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
-    _role: 'attendee', // public endpoint — any role header works
   });
   // Backend returns { success, message, data: { userId, name, email, userRole, status } }
   // Unwrap the envelope so the caller gets the flat user object
@@ -127,14 +128,13 @@ async function apiLogin(email, password) {
 
 // ─── USERS ───────────────────────────────────────────────────────
 async function apiGetUsers() {
-  return apiRequest('/users', { _role: 'super_admin' });
+  return apiRequest('/users');
 }
 
 async function apiCreateUser(userData) {
   return apiRequest('/users', {
     method: 'POST',
     body: JSON.stringify(userData),
-    _role: 'super_admin',
   });
 }
 
@@ -142,29 +142,24 @@ async function apiUpdateUser(userId, updates) {
   return apiRequest(`/users/${userId}`, {
     method: 'PATCH',
     body: JSON.stringify(updates),
-    _role: 'super_admin',
-    _userId: userId,
   });
 }
 
 async function apiDeleteUser(userId) {
   return apiRequest(`/users/${userId}`, {
     method: 'DELETE',
-    _role: 'super_admin',
-    _userId: userId,
   });
 }
 
 // ─── EVENTS ──────────────────────────────────────────────────────
 async function apiGetEvents() {
-  return apiRequest('/events', { _role: getRoleHeader() || 'attendee' });
+  return apiRequest('/events');
 }
 
 async function apiCreateEvent(eventData) {
   return apiRequest('/events', {
     method: 'POST',
     body: JSON.stringify(eventData),
-    _role: 'event_organizer',
   });
 }
 
@@ -172,53 +167,41 @@ async function apiUpdateEvent(eventId, updates) {
   return apiRequest(`/events/${eventId}`, {
     method: 'PUT',
     body: JSON.stringify(updates),
-    _role: 'event_organizer',
   });
 }
 
 async function apiDeleteEvent(eventId) {
   return apiRequest(`/events/${eventId}`, {
     method: 'DELETE',
-    _role: 'event_organizer',
   });
 }
 
 // ─── ANALYTICS ───────────────────────────────────────────────────
 async function apiGetDashboard() {
-  return apiRequest('/analytics/dashboard', { _role: 'super_admin' });
+  return apiRequest('/analytics/dashboard');
 }
 
 async function apiGetOrganizerDashboard(organizerId) {
-  return apiRequest('/analytics/organizer-dashboard', {
-    _role: 'event_organizer',
-    _userId: organizerId,
-  });
+  return apiRequest('/analytics/organizer-dashboard');
 }
 
 // ─── EVENT REQUESTS ──────────────────────────────────────────────
 async function apiGetEventRequests() {
-  return apiRequest('/event-requests', { _role: getRoleHeader() });
+  return apiRequest('/event-requests');
 }
 
 async function apiGetClientRequests(clientId) {
-  return apiRequest(`/event-requests/client/${clientId}`, {
-    _role: 'client',
-    _userId: clientId,
-  });
+  return apiRequest('/event-requests');
 }
 
 async function apiGetOrganizerRequests(organizerId) {
-  return apiRequest(`/event-requests/organizer/${organizerId}`, {
-    _role: 'event_organizer',
-    _userId: organizerId,
-  });
+  return apiRequest('/event-requests');
 }
 
 async function apiCreateEventRequest(reqData) {
   return apiRequest('/event-requests', {
     method: 'POST',
     body: JSON.stringify(reqData),
-    _role: 'client',
   });
 }
 
@@ -226,7 +209,6 @@ async function apiUpdateRequestStatus(requestId, status) {
   return apiRequest(`/event-requests/${requestId}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),
-    _role: 'event_organizer',
   });
 }
 
@@ -235,7 +217,6 @@ async function apiCreateEventPlan(planData) {
   return apiRequest('/event-plans', {
     method: 'POST',
     body: JSON.stringify(planData),
-    _role: 'event_organizer',
   });
 }
 
@@ -243,23 +224,18 @@ async function apiApproveEventPlan(planId, approvalStatus) {
   return apiRequest(`/event-plans/${planId}/approval`, {
     method: 'PATCH',
     body: JSON.stringify({ approvalStatus }),
-    _role: 'client',
   });
 }
 
 // ─── REGISTRATIONS ───────────────────────────────────────────────
 async function apiGetAttendeeRegistrations(attendeeId) {
-  return apiRequest(`/registrations/attendee/${attendeeId}`, {
-    _role: 'attendee',
-    _userId: attendeeId,
-  });
+  return apiRequest('/registrations');
 }
 
 async function apiRegisterForEvent(regData) {
   return apiRequest('/registrations', {
     method: 'POST',
     body: JSON.stringify(regData),
-    _role: 'attendee',
   });
 }
 
@@ -268,27 +244,22 @@ async function apiMakePayment(paymentData) {
   return apiRequest('/payments', {
     method: 'POST',
     body: JSON.stringify(paymentData),
-    _role: 'attendee',
   });
 }
 
 // ─── STAFF ASSIGNMENTS ───────────────────────────────────────────
 async function apiGetStaffAssignments(staffId) {
-  return apiRequest(`/staff-assignments/staff/${staffId}`, {
-    _role: 'event_staff',
-    _userId: staffId,
-  });
+  return apiRequest('/staff-assignments');
 }
 
 async function apiGetStaffStatistics() {
-  return apiRequest('/staff/statistics', { _role: getRoleHeader() || 'super_admin' });
+  return apiRequest('/staff/statistics');
 }
 
 async function apiCreateStaffAssignment(data) {
   return apiRequest('/staff-assignments', {
     method: 'POST',
     body: JSON.stringify(data),
-    _role: 'event_organizer',
   });
 }
 
@@ -296,7 +267,6 @@ async function apiUpdateAssignmentStatus(assignmentId, status) {
   return apiRequest(`/staff-assignments/${assignmentId}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),
-    _role: 'event_staff',
   });
 }
 
@@ -305,22 +275,17 @@ async function apiVerifyAttendance(verifyData) {
   return apiRequest('/attendance/verify', {
     method: 'POST',
     body: JSON.stringify(verifyData),
-    _role: 'event_staff',
   });
 }
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────
 async function apiGetNotifications(userId) {
-  return apiRequest(`/notifications/user/${userId}`, {
-    _role: getRoleHeader(),
-    _userId: userId,
-  });
+  return apiRequest('/notifications');
 }
 
 async function apiMarkAllNotificationsRead() {
   return apiRequest('/notifications/read-all', {
     method: 'PATCH',
-    _role: getRoleHeader(),
   });
 }
 
@@ -329,7 +294,6 @@ async function apiCreateStaffReport(reportData) {
   return apiRequest('/reports/staff', {
     method: 'POST',
     body: JSON.stringify(reportData),
-    _role: 'event_staff',
   });
 }
 
@@ -337,7 +301,6 @@ async function apiCreateEventReport(reportData) {
   return apiRequest('/reports/event', {
     method: 'POST',
     body: JSON.stringify(reportData),
-    _role: 'event_organizer',
   });
 }
 
@@ -346,7 +309,6 @@ async function apiSubmitEventReview(reviewData) {
   return apiRequest('/reviews/event', {
     method: 'POST',
     body: JSON.stringify(reviewData),
-    _role: 'attendee',
   });
 }
 
@@ -375,6 +337,7 @@ window.setCurrentUser = setCurrentUser;
 window.clearCurrentUser = clearCurrentUser;
 window.getRoleHeader = getRoleHeader;
 window.getUserIdHeader = getUserIdHeader;
+window.getAuthHeader = getAuthHeader;
 window.apiRequest = apiRequest;
 window.ApiError = ApiError;
 window.apiLogin = apiLogin;

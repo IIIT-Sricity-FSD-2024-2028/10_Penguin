@@ -42,16 +42,16 @@ function loadState() {
 function initializeDefaultState() {
   AppState = {
     users: [
-      { id: "u1", name: "Super Admin", email: "admin@eventflow.com", password: "admin123", role: "superuser", phone: "+91 9876543210", status: "active", joinedAt: "2024-01-01" },
-      { id: "u2", name: "Priya Sharma", email: "organizer@eventflow.com", password: "org123", role: "organizer", phone: "+91 9876543211", status: "active", joinedAt: "2024-01-05", specialization: "Corporate Events" },
-      { id: "u3", name: "Amit Kumar", email: "staff@eventflow.com", password: "staff123", role: "staff", phone: "+91 9876543212", status: "active", joinedAt: "2024-01-10", service: "Event Coordination" },
-      { id: "u4", name: "Sneha Reddy", email: "client@eventflow.com", password: "client123", role: "client", phone: "+91 9876543213", status: "active", joinedAt: "2024-02-01", company: "TechCorp" },
-      { id: "u5", name: "Rahul Singh", email: "attendee@eventflow.com", password: "att123", role: "attendee", phone: "+91 9876543214", status: "active", joinedAt: "2024-02-10" }
+      { id: "u1", name: "Super Admin", email: "admin@eventflow.com", password: "admin123", role: "superuser", phone: "+91 9876543210", status: "active", joinedAt: "2024-01-01", avatarImage: "assets/images/avatars/user-alex-johnson.jpg" },
+      { id: "u2", name: "Priya Sharma", email: "organizer@eventflow.com", password: "org123", role: "organizer", phone: "+91 9876543211", status: "active", joinedAt: "2024-01-05", specialization: "Corporate Events", avatarImage: "assets/images/avatars/organizer-priya-sharma.jpg" },
+      { id: "u3", name: "Amit Kumar", email: "staff@eventflow.com", password: "staff123", role: "staff", phone: "+91 9876543212", status: "active", joinedAt: "2024-01-10", service: "Event Coordination", avatarImage: "assets/images/avatars/staff-amit-kumar.jpg" },
+      { id: "u4", name: "Sneha Reddy", email: "client@eventflow.com", password: "client123", role: "client", phone: "+91 9876543213", status: "active", joinedAt: "2024-02-01", company: "TechCorp", avatarImage: "assets/images/avatars/user-michael-torres.jpg" },
+      { id: "u5", name: "Rahul Singh", email: "attendee@eventflow.com", password: "att123", role: "attendee", phone: "+91 9876543214", status: "active", joinedAt: "2024-02-10", avatarImage: "assets/images/avatars/user-robert-singh.jpg" }
     ],
     events: [
-      { id: "e1", title: "Tech Fest 2026", category: "Conference", date: "2026-04-15", time: "09:00", location: "Convention Center, Chennai", city: "Chennai", capacity: 500, registered: 342, price: 499, status: "upcoming", organizer: "u2", description: "Premier technology conference featuring AI, Cloud & DevOps workshops" },
-      { id: "e2", title: "Startup Meetup", category: "Networking", date: "2026-04-22", time: "18:00", location: "Innovation Hub, Bangalore", city: "Bangalore", capacity: 150, registered: 98, price: 0, status: "upcoming", organizer: "u2", description: "Monthly networking event for startups and investors" },
-      { id: "e3", title: "Web Dev Workshop", category: "Workshop", date: "2026-05-01", time: "10:00", location: "Tech Academy, Hyderabad", city: "Hyderabad", capacity: 80, registered: 65, price: 299, status: "upcoming", organizer: "u2", description: "Hands-on workshop on modern web development with React & Vue" }
+      { id: "e1", title: "Tech Fest 2026", category: "Conference", date: "2026-04-15", time: "09:00", location: "Convention Center, Chennai", city: "Chennai", capacity: 500, registered: 342, price: 499, status: "upcoming", organizer: "u2", description: "Premier technology conference featuring AI, Cloud & DevOps workshops", image: "assets/images/events/event-tech-summit.jpg" },
+      { id: "e2", title: "Startup Meetup", category: "Networking", date: "2026-04-22", time: "18:00", location: "Innovation Hub, Bangalore", city: "Bangalore", capacity: 150, registered: 98, price: 0, status: "upcoming", organizer: "u2", description: "Monthly networking event for startups and investors", image: "assets/images/events/event-pitch-night.jpg" },
+      { id: "e3", title: "Web Dev Workshop", category: "Workshop", date: "2026-05-01", time: "10:00", location: "Tech Academy, Hyderabad", city: "Hyderabad", capacity: 80, registered: 65, price: 299, status: "upcoming", organizer: "u2", description: "Hands-on workshop on modern web development with React & Vue", image: "assets/images/events/event-marketing-workshop.jpg" }
     ],
     registrations: [
       { id: "r1", attendeeId: "u5", eventId: "e1", date: "2026-03-01", ticketId: "TKT-001", status: "confirmed", amount: 499, checkedIn: false, qr: generateQRCode() },

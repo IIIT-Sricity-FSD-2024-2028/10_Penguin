@@ -18,20 +18,7 @@ async function bootstrap() {
 
   // Enable CORS for frontend integration with specific origins
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:5173',
-      'http://127.0.0.1:5173',
-      'http://localhost:5500',
-      'http://127.0.0.1:5500',
-      'http://localhost:5501',
-      'http://127.0.0.1:5501',
-      'http://localhost:8080',
-      'http://127.0.0.1:8080',
-      'null', // Allow file:// protocol (opens with null origin)
-    ],
-    credentials: true,
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
       'Content-Type',
@@ -92,7 +79,7 @@ async function bootstrap() {
     JSON.stringify(document, null, 2),
   );
 
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('docs', app, document);
 
   const PORT = process.env.PORT || 3001;
   await app.listen(PORT);

@@ -150,7 +150,7 @@ let AnalyticsService = class AnalyticsService {
         };
     }
     // ✅ NEW: Event Staff Dashboard
-    getStaffDashboard(role, userId) {
+    getStaffDashboard(role, userId, employeeType) {
         if (role !== constants_1.UserRole.EVENT_STAFF && role !== constants_1.UserRole.SUPER_ADMIN) {
             throw new common_1.ForbiddenException('Only EVENT_STAFF can view this dashboard');
         }
@@ -163,9 +163,33 @@ let AnalyticsService = class AnalyticsService {
         const myAssignments = this.db.staffAssignments.filter(a => a.staffId === staffUser.staffId);
         const myEventIds = myAssignments.map(a => a.eventId);
         const myReports = this.db.staffReports.filter(r => r.staffId === staffUser.staffId);
+        const departmentStats = employeeType === constants_1.EmployeeType.REGISTRATION_VERIFICATION
+            ? {
+                totalRegistrations: this.db.registrations.length,
+                pendingVerifications: this.db.registrations.filter(r => r.status === 'registered').length,
+                verifiedRegistrations: this.db.registrations.filter(r => r.status === 'attended').length,
+                todayRegistrations: this.db.registrations.filter(r => r.registrationDate === new Date().toISOString().split('T')[0]).length,
+            }
+            : employeeType === constants_1.EmployeeType.EVENT_OPERATIONS
+                ? {
+                    totalEvents: this.db.events.length,
+                    activeEvents: this.db.events.filter(e => e.status === 'published' || e.status === 'ongoing').length,
+                    pendingEvents: this.db.events.filter(e => e.status === 'draft').length,
+                    upcomingEvents: this.db.events.filter(e => new Date(e.date) >= new Date()).length,
+                }
+                : employeeType === constants_1.EmployeeType.SUPPORT_FINANCE
+                    ? {
+                        pendingSupportRequests: this.db.eventRequests.filter(r => r.status === 'pending').length,
+                        openIssues: this.db.eventRequests.filter(r => r.status === 'in_review').length,
+                        successfulTransactions: this.db.payments.filter(p => p.status === 'completed').length,
+                        pendingPayments: this.db.payments.filter(p => p.status === 'pending').length,
+                    }
+                    : {};
         return {
             success: true,
             data: {
+                employeeType,
+                ...departmentStats,
                 totalAssignments: myAssignments.length,
                 pendingAssignments: myAssignments.filter(a => a.status === 'pending').length,
                 acceptedAssignments: myAssignments.filter(a => a.status === 'accepted').length,
