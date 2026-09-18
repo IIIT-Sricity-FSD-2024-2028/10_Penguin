@@ -1051,6 +1051,9 @@
           },
           "401": {
             "description": "Invalid email or password"
+          },
+          "429": {
+            "description": "Too many login attempts. Try again later."
           }
         },
         "tags": [

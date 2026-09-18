@@ -2,6 +2,12 @@
 <html lang="en">
 
 <head>
+  <script>
+    // Avoid showing the landing page for a frame before a saved session is restored.
+    try {
+      if (sessionStorage.getItem('ef_cu')) document.documentElement.classList.add('restoring-session');
+    } catch (e) { }
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EventFlow – Event Registration & Attendee Management</title>
@@ -1263,7 +1269,17 @@
       flex-shrink: 0;
       background: linear-gradient(135deg, var(--accent), var(--green));
       color: #fff;
-      text-transform: uppercase
+      text-transform: uppercase;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .av img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+      display: block;
     }
 
     .av-xs {
@@ -1321,26 +1337,58 @@
       align-items: center;
       justify-content: center;
       font-size: 52px;
-      position: relative
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ev-banner-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .3s ease;
+    }
+
+    .ev-card:hover .ev-banner-img {
+      transform: scale(1.04);
+    }
+
+    .ev-banner-fallback {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      font-size: 52px;
+    }
+
+    .ev-banner-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.05) 40%, rgba(0, 0, 0, 0.65) 100%);
+      pointer-events: none;
     }
 
     .ev-banner-tag {
       position: absolute;
       top: 10px;
-      left: 10px
+      left: 10px;
+      z-index: 2;
     }
 
     .ev-banner-price {
       position: absolute;
       top: 10px;
       right: 10px;
-      background: rgba(0, 0, 0, .55);
+      background: rgba(0, 0, 0, .65);
       backdrop-filter: blur(4px);
       border-radius: 20px;
       padding: 3px 10px;
       font-size: 12px;
       font-weight: 700;
-      color: #fff
+      color: #fff;
+      z-index: 2;
     }
 
     .ev-body {
@@ -2301,6 +2349,15 @@
     #app {
       display: none
     }
+
+    /* The app shell is shown immediately for returning users; boot() fills it once. */
+    html.restoring-session #landing {
+      display: none
+    }
+
+    html.restoring-session #app {
+      display: block
+    }
   </style>
 </head>
 
@@ -2509,24 +2566,28 @@
       <div class="grid-3">
         <div class="role-card" onclick="selectEmployeeType('REGISTRATION_VERIFICATION')">
           <div class="role-card-emoji">✅</div>
-          <div class="role-card-title">Employee 1</div>
-          <p class="role-card-desc">Manage attendee registrations and verify tickets at the event entrance.<br>Track check-ins and prepare attendance reports.</p>
+          <div class="role-card-title">User Executive</div>
+          <p class="role-card-desc">Manage attendee registrations and verify tickets at the event entrance.<br>Track
+            check-ins and prepare attendance reports.</p>
           <button class="btn btn-primary btn-sm">Continue →</button>
         </div>
         <div class="role-card" onclick="selectEmployeeType('EVENT_OPERATIONS')">
           <div class="role-card-emoji">🗓️</div>
-          <div class="role-card-title">Employee 2</div>
-          <p class="role-card-desc">Manage event information, schedules, statuses, and operational requests.<br>Keep each event ready for smooth execution.</p>
+          <div class="role-card-title">Event Executive</div>
+          <p class="role-card-desc">Manage event information, schedules, statuses, and operational requests.<br>Keep
+            each event ready for smooth execution.</p>
           <button class="btn btn-primary btn-sm">Continue →</button>
         </div>
         <div class="role-card" onclick="selectEmployeeType('SUPPORT_FINANCE')">
           <div class="role-card-emoji">💳</div>
-          <div class="role-card-title">Employee 3</div>
-          <p class="role-card-desc">Handle customer support requests and resolve event-related issues.<br>Review payments, transactions, and finance reports.</p>
+          <div class="role-card-title">Customer Support &amp; Finance Executive</div>
+          <p class="role-card-desc">Handle customer support requests and resolve event-related issues.<br>Review
+            payments, transactions, and finance reports.</p>
           <button class="btn btn-primary btn-sm">Continue →</button>
         </div>
       </div>
-      <p style="text-align:center;margin-top:28px"><a href="javascript:showPage('landing')" style="color:var(--text2)">← Back to Home</a></p>
+      <p style="text-align:center;margin-top:28px"><a href="javascript:showPage('landing')" style="color:var(--text2)">←
+          Back to Home</a></p>
     </div>
   </div>
 
@@ -2560,29 +2621,45 @@
       <button class="btn btn-primary btn-lg w-full" onclick="doLogin()">Sign In →</button>
 
       <div class="divider">Demo Credentials (Click to Auto-Fill)</div>
-      <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px;font-size:12.5px;display:flex;flex-direction:column;gap:8px">
-        <div style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)" onclick="fillLogin('staff@example.com', 'Staff@123')">
-          <span><span class="badge badge-green" style="margin-right:4px">Staff</span> <strong>James Wilson:</strong> staff@example.com</span>
+      <div
+        style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px;font-size:12.5px;display:flex;flex-direction:column;gap:8px">
+        <div
+          style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)"
+          onclick="fillLogin('staff@example.com', 'Staff@123')">
+          <span><span class="badge badge-green" style="margin-right:4px">Staff</span> <strong>James Wilson:</strong>
+            staff@example.com</span>
           <span style="color:var(--accent);font-family:monospace;font-size:11px">Staff@123</span>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)">
-          <span><span class="badge badge-purple" style="margin-right:4px">Employee</span> <strong>Employee access:</strong> choose your work area</span>
+        <div
+          style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)">
+          <span><span class="badge badge-purple" style="margin-right:4px">Employee</span> <strong>Employee
+              access:</strong> choose your work area</span>
           <button class="btn btn-primary btn-sm" type="button" onclick="gotoLogin('employee')">Employee Login →</button>
         </div>
-        <div style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)" onclick="fillLogin('organizer@example.com', 'Organizer@123')">
-          <span><span class="badge badge-purple" style="margin-right:4px">Organizer</span> <strong>Sarah Chen:</strong> organizer@example.com</span>
+        <div
+          style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)"
+          onclick="fillLogin('organizer@example.com', 'Organizer@123')">
+          <span><span class="badge badge-purple" style="margin-right:4px">Organizer</span> <strong>Sarah Chen:</strong>
+            organizer@example.com</span>
           <span style="color:var(--accent);font-family:monospace;font-size:11px">Organizer@123</span>
         </div>
-        <div style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)" onclick="fillLogin('client@example.com', 'Client@123')">
-          <span><span class="badge badge-yellow" style="margin-right:4px">Client</span> <strong>Michael Torres:</strong> client@example.com</span>
+        <div
+          style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)"
+          onclick="fillLogin('client@example.com', 'Client@123')">
+          <span><span class="badge badge-yellow" style="margin-right:4px">Client</span> <strong>Michael Torres:</strong>
+            client@example.com</span>
           <span style="color:var(--accent);font-family:monospace;font-size:11px">Client@123</span>
         </div>
-        <div style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)" onclick="fillLogin('attendee@example.com', 'Attendee@123')">
-          <span><span class="badge badge-blue" style="margin-right:4px">Attendee</span> <strong>Priya Patel:</strong> attendee@example.com</span>
+        <div
+          style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:6px;background:var(--surface)"
+          onclick="fillLogin('attendee@example.com', 'Attendee@123')">
+          <span><span class="badge badge-blue" style="margin-right:4px">Attendee</span> <strong>Priya Patel:</strong>
+            attendee@example.com</span>
           <span style="color:var(--accent);font-family:monospace;font-size:11px">Attendee@123</span>
         </div>
         <div style="margin-top:4px;text-align:center">
-          <strong>Super Admin:</strong> <a href="javascript:showPage('login-admin')" style="color:var(--accent);font-weight:600">Admin Portal Login →</a>
+          <strong>Super Admin:</strong> <a href="javascript:showPage('login-admin')"
+            style="color:var(--accent);font-weight:600">Admin Portal Login →</a>
         </div>
       </div>
 
@@ -2657,93 +2734,230 @@
         <p class="muted">Discover upcoming events and register for ones that interest you.</p>
       </div>
 
-      <div class="carousel-wrapper">
-        <div class="carousel-container" id="event-carousel">
-          <div class="feat-card carousel-card">
-            <div style="font-size:32px;margin-bottom:8px">💻</div>
-            <div style="font-size:16px;font-weight:700;margin-bottom:4px">Tech Innovation Summit 2026</div>
-            <div class="small mb-8" style="color:var(--text2)">2026-04-15 · Bangalore</div>
-            <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">Annual technology conference
-              featuring keynotes from industry leaders.</p>
-            <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:12px">
-              <span style="font-weight:700;color:var(--green)">₹150</span>
-            </div>
-            <div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs w-full"
-                onclick="viewPublicEventDetails(1)">👁️ Details</button><button class="btn btn-primary btn-xs w-full"
-                onclick="gotoLogin('attendee')">Register</button></div>
-          </div>
+      <!-- Event Cards Grid for Find Events -->
+      <style>
+        .fe-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 22px;
+        }
 
-          <div class="feat-card carousel-card">
-            <div style="font-size:32px;margin-bottom:8px">🥂</div>
-            <div style="font-size:16px;font-weight:700;margin-bottom:4px">Corporate Annual Gala 2026</div>
-            <div class="small mb-8" style="color:var(--text2)">2026-04-22 · Delhi</div>
-            <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">Exclusive annual corporate
-              dinner and awards ceremony.</p>
-            <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:12px">
-              <span style="font-weight:700;color:var(--green)">₹250</span>
-            </div>
-            <div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs w-full"
-                onclick="viewPublicEventDetails(2)">👁️ Details</button><button class="btn btn-primary btn-xs w-full"
-                onclick="gotoLogin('attendee')">Register</button></div>
-          </div>
+        .fe-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          overflow: hidden;
+          transition: transform .2s, box-shadow .2s;
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+        }
 
-          <div class="feat-card carousel-card">
-            <div style="font-size:32px;margin-bottom:8px">🎵</div>
-            <div style="font-size:16px;font-weight:700;margin-bottom:4px">Spring Music Festival</div>
-            <div class="small mb-8" style="color:var(--text2)">2026-05-01 · Pune</div>
-            <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">Outdoor music festival
-              featuring 15+ artists across multiple genres.</p>
-            <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:12px">
-              <span style="font-weight:700;color:var(--green)">₹75</span>
-            </div>
-            <div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs w-full"
-                onclick="viewPublicEventDetails(3)">👁️ Details</button><button class="btn btn-primary btn-xs w-full"
-                onclick="gotoLogin('attendee')">Register</button></div>
-          </div>
+        .fe-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+        }
 
-          <div class="feat-card carousel-card">
-            <div style="font-size:32px;margin-bottom:8px">📱</div>
-            <div style="font-size:16px;font-weight:700;margin-bottom:4px">Digital Marketing Workshop</div>
-            <div class="small mb-8" style="color:var(--text2)">2026-05-10 · Hyderabad</div>
-            <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">Hands-on full-day workshop
-              on
-              modern digital marketing.</p>
-            <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:12px">
-              <span style="font-weight:700;color:var(--green)">₹80</span>
-            </div>
-            <div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs w-full"
-                onclick="viewPublicEventDetails(4)">👁️ Details</button><button class="btn btn-primary btn-xs w-full"
-                onclick="gotoLogin('attendee')">Register</button></div>
-          </div>
+        .fe-card-img {
+          position: relative;
+          height: 160px;
+          overflow: hidden;
+          background: var(--surface2);
+          flex-shrink: 0;
+        }
 
-          <div class="feat-card carousel-card">
-            <div style="font-size:32px;margin-bottom:8px">🚀</div>
-            <div style="font-size:16px;font-weight:700;margin-bottom:4px">Startup Pitch Night</div>
-            <div class="small mb-8" style="color:var(--text2)">2026-05-15 · Chennai</div>
-            <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">Monthly startup pitch
-              competition with VC judges.</p>
-            <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:12px">
-              <span style="font-weight:700;color:var(--green)">FREE</span>
-            </div>
-            <div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs w-full"
-                onclick="viewPublicEventDetails(5)">👁️ Details</button><button class="btn btn-primary btn-xs w-full"
-                onclick="gotoLogin('attendee')">Register</button></div>
-          </div>
+        .fe-card-img img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform .3s;
+        }
 
-          <div class="feat-card carousel-card">
-            <div style="font-size:32px;margin-bottom:8px">📷</div>
-            <div style="font-size:16px;font-weight:700;margin-bottom:4px">Photography Masterclass</div>
-            <div class="small mb-8" style="color:var(--text2)">2026-06-01 · Pune</div>
-            <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">Hands-on photography
-              workshop
-              for intermediate photographers.</p>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-              <span class="badge badge-green">12/30</span>
-              <span style="font-weight:700;color:var(--green)">₹120</span>
+        .fe-card:hover .fe-card-img img {
+          transform: scale(1.06);
+        }
+
+        .fe-card-img-fallback {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 52px;
+        }
+
+        .fe-card-img-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, transparent 55%);
+        }
+
+        .fe-card-price {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(6px);
+          color: #fff;
+          font-weight: 700;
+          font-size: 12px;
+          padding: 3px 10px;
+          border-radius: 20px;
+        }
+
+        .fe-card-body {
+          padding: 16px;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .fe-card-title {
+          font-weight: 700;
+          font-size: 15px;
+          margin-bottom: 4px;
+          line-height: 1.3;
+        }
+
+        .fe-card-meta {
+          font-size: 12px;
+          color: var(--text2);
+          margin-bottom: 8px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .fe-card-desc {
+          font-size: 12.5px;
+          color: var(--text2);
+          line-height: 1.55;
+          flex: 1;
+          margin-bottom: 12px;
+        }
+
+        .fe-card-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: auto;
+        }
+      </style>
+      <div class="fe-grid">
+        <!-- Tech Innovation Summit -->
+        <div class="fe-card">
+          <div class="fe-card-img">
+            <img src="assets/images/events/event-tech-summit.jpg" alt="Tech Innovation Summit 2026"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="fe-card-img-fallback" style="display:none">💻</div>
+            <div class="fe-card-img-overlay"></div>
+            <span class="fe-card-price">₹150</span>
+          </div>
+          <div class="fe-card-body">
+            <div class="fe-card-title">Tech Innovation Summit 2026</div>
+            <div class="fe-card-meta"><span>📅 2026-04-15</span><span>📍 Bangalore</span></div>
+            <p class="fe-card-desc">Annual technology conference featuring keynotes from industry leaders and live
+              demos.</p>
+            <div class="fe-card-actions">
+              <button class="btn btn-ghost btn-xs w-full" onclick="viewPublicEventDetails(1)">👁️ Details</button>
+              <button class="btn btn-primary btn-xs w-full" onclick="gotoLogin('attendee')">Register</button>
             </div>
-            <div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs w-full"
-                onclick="viewPublicEventDetails(7)">👁️ Details</button><button class="btn btn-primary btn-xs w-full"
-                onclick="gotoLogin('attendee')">Register</button></div>
+          </div>
+        </div>
+        <!-- Corporate Annual Gala -->
+        <div class="fe-card">
+          <div class="fe-card-img">
+            <img src="assets/images/events/event-annual-gala.jpg" alt="Corporate Annual Gala 2026"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="fe-card-img-fallback" style="display:none">🥂</div>
+            <div class="fe-card-img-overlay"></div>
+            <span class="fe-card-price">₹250</span>
+          </div>
+          <div class="fe-card-body">
+            <div class="fe-card-title">Corporate Annual Gala 2026</div>
+            <div class="fe-card-meta"><span>📅 2026-04-22</span><span>📍 Delhi</span></div>
+            <p class="fe-card-desc">Exclusive annual corporate dinner and awards ceremony for top performers.</p>
+            <div class="fe-card-actions">
+              <button class="btn btn-ghost btn-xs w-full" onclick="viewPublicEventDetails(2)">👁️ Details</button>
+              <button class="btn btn-primary btn-xs w-full" onclick="gotoLogin('attendee')">Register</button>
+            </div>
+          </div>
+        </div>
+        <!-- Spring Music Festival -->
+        <div class="fe-card">
+          <div class="fe-card-img">
+            <img src="assets/images/events/event-music-fest.jpg" alt="Spring Music Festival"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="fe-card-img-fallback" style="display:none">🎵</div>
+            <div class="fe-card-img-overlay"></div>
+            <span class="fe-card-price">₹75</span>
+          </div>
+          <div class="fe-card-body">
+            <div class="fe-card-title">Spring Music Festival</div>
+            <div class="fe-card-meta"><span>📅 2026-05-01</span><span>📍 Pune</span></div>
+            <p class="fe-card-desc">Outdoor music festival featuring 15+ artists across multiple genres.</p>
+            <div class="fe-card-actions">
+              <button class="btn btn-ghost btn-xs w-full" onclick="viewPublicEventDetails(3)">👁️ Details</button>
+              <button class="btn btn-primary btn-xs w-full" onclick="gotoLogin('attendee')">Register</button>
+            </div>
+          </div>
+        </div>
+        <!-- Digital Marketing Workshop -->
+        <div class="fe-card">
+          <div class="fe-card-img">
+            <img src="assets/images/events/event-marketing-workshop.jpg" alt="Digital Marketing Workshop"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="fe-card-img-fallback" style="display:none">📱</div>
+            <div class="fe-card-img-overlay"></div>
+            <span class="fe-card-price">₹80</span>
+          </div>
+          <div class="fe-card-body">
+            <div class="fe-card-title">Digital Marketing Workshop</div>
+            <div class="fe-card-meta"><span>📅 2026-05-10</span><span>📍 Hyderabad</span></div>
+            <p class="fe-card-desc">Hands-on full-day workshop on modern digital marketing strategies and tools.</p>
+            <div class="fe-card-actions">
+              <button class="btn btn-ghost btn-xs w-full" onclick="viewPublicEventDetails(4)">👁️ Details</button>
+              <button class="btn btn-primary btn-xs w-full" onclick="gotoLogin('attendee')">Register</button>
+            </div>
+          </div>
+        </div>
+        <!-- Startup Pitch Night -->
+        <div class="fe-card">
+          <div class="fe-card-img">
+            <img src="assets/images/events/event-pitch-night.jpg" alt="Startup Pitch Night"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="fe-card-img-fallback" style="display:none">🚀</div>
+            <div class="fe-card-img-overlay"></div>
+            <span class="fe-card-price">FREE</span>
+          </div>
+          <div class="fe-card-body">
+            <div class="fe-card-title">Startup Pitch Night</div>
+            <div class="fe-card-meta"><span>📅 2026-05-15</span><span>📍 Chennai</span></div>
+            <p class="fe-card-desc">Monthly startup pitch competition with VC judges and networking opportunities.</p>
+            <div class="fe-card-actions">
+              <button class="btn btn-ghost btn-xs w-full" onclick="viewPublicEventDetails(5)">👁️ Details</button>
+              <button class="btn btn-primary btn-xs w-full" onclick="gotoLogin('attendee')">Register</button>
+            </div>
+          </div>
+        </div>
+        <!-- Photography Masterclass -->
+        <div class="fe-card">
+          <div class="fe-card-img">
+            <img src="assets/images/events/event-photography.jpg" alt="Photography Masterclass"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="fe-card-img-fallback" style="display:none">📷</div>
+            <div class="fe-card-img-overlay"></div>
+            <span class="fe-card-price">₹120</span>
+          </div>
+          <div class="fe-card-body">
+            <div class="fe-card-title">Photography Masterclass</div>
+            <div class="fe-card-meta"><span>📅 2026-06-01</span><span>📍 Pune</span><span class="badge badge-green"
+                style="font-size:10px">12/30 spots</span></div>
+            <p class="fe-card-desc">Hands-on photography workshop for intermediate photographers with pro mentors.</p>
+            <div class="fe-card-actions">
+              <button class="btn btn-ghost btn-xs w-full" onclick="viewPublicEventDetails(7)">👁️ Details</button>
+              <button class="btn btn-primary btn-xs w-full" onclick="gotoLogin('attendee')">Register</button>
+            </div>
           </div>
         </div>
       </div>
@@ -2773,26 +2987,151 @@
         <h1 class="h1" style="margin-top:12px">Event Gallery</h1>
         <p class="muted">Showcase of our successful events and happy attendees.</p>
       </div>
+      <style>
+        .gallery-grid {
+          columns: 3;
+          column-gap: 16px;
+        }
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px">
-        <div
-          style="background:var(--surface2);aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:48px">
-          📸</div>
-        <div
-          style="background:var(--surface2);aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:48px">
-          🎉</div>
-        <div
-          style="background:var(--surface2);aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:48px">
-          👥</div>
-        <div
-          style="background:var(--surface2);aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:48px">
-          🎭</div>
-        <div
-          style="background:var(--surface2);aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:48px">
-          🎪</div>
-        <div
-          style="background:var(--surface2);aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:48px">
-          🎵</div>
+        @media(max-width:900px) {
+          .gallery-grid {
+            columns: 2;
+          }
+        }
+
+        @media(max-width:560px) {
+          .gallery-grid {
+            columns: 1;
+          }
+        }
+
+        .gallery-item {
+          break-inside: avoid;
+          margin-bottom: 16px;
+          border-radius: 14px;
+          overflow: hidden;
+          position: relative;
+          cursor: pointer;
+          display: block;
+        }
+
+        .gallery-item img {
+          width: 100%;
+          display: block;
+          transition: transform .35s;
+        }
+
+        .gallery-item:hover img {
+          transform: scale(1.05);
+        }
+
+        .gallery-item-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(0, 0, 0, 0.65) 0%, transparent 50%);
+          opacity: 0;
+          transition: opacity .3s;
+          display: flex;
+          align-items: flex-end;
+          padding: 14px;
+        }
+
+        .gallery-item:hover .gallery-item-overlay {
+          opacity: 1;
+        }
+
+        .gallery-item-label {
+          color: #fff;
+          font-weight: 600;
+          font-size: 13px;
+          line-height: 1.3;
+        }
+      </style>
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <img src="assets/images/events/event-tech-summit.jpg" alt="Tech Innovation Summit"
+            onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-label">Tech Innovation Summit 2026</div>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/images/events/event-music-fest.jpg" alt="Spring Music Festival"
+            onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-label">Spring Music Festival</div>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/images/events/event-annual-gala.jpg" alt="Corporate Annual Gala"
+            onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-label">Corporate Annual Gala 2026</div>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/images/events/event-hackathon.jpg" alt="Hackathon"
+            onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-label">DevSprint Hackathon</div>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/images/events/event-photography.jpg" alt="Photography Masterclass"
+            onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-label">Photography Masterclass</div>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/images/events/event-fintech.jpg" alt="FinTech Summit"
+            onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-label">FinTech Innovation Summit</div>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/images/events/event-pitch-night.jpg" alt="Startup Pitch Night"
+            onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-label">Startup Pitch Night</div>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/images/events/event-marketing-workshop.jpg" alt="Digital Marketing Workshop"
+            onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-label">Digital Marketing Workshop</div>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/images/events/event-ai-summit.jpg" alt="AI Summit"
+            onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-label">AI & Machine Learning Summit</div>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/images/events/event-wedding.jpg" alt="Wedding Gala"
+            onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-label">Grand Wedding Celebration</div>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/images/events/event-healthcare-forum.jpg" alt="Healthcare Forum"
+            onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-label">Healthcare Innovation Forum</div>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/images/events/event-cybersecurity.jpg" alt="Cybersecurity Conference"
+            onerror="this.parentElement.style.background='var(--surface2)';this.style.display='none'">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-label">Cybersecurity Conference</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2919,13 +3258,13 @@
         </div>
         <nav class="sb-nav" id="sb-nav"></nav>
         <div class="sb-bottom">
-          <div class="sb-user" onclick="goNav('profile')" title="View Profile">
+          <div class="sb-user" onclick="goNav('settings')">
             <div class="av" id="sb-av">?</div>
             <div class="sb-user-info">
               <div class="sb-user-name" id="sb-name">User</div>
               <div class="sb-user-role" id="sb-role-lbl">Role</div>
             </div>
-            <span style="color:var(--text3);font-size:13px;opacity:0.6">›</span>
+            <span style="color:var(--text3);font-size:12px">⚙</span>
           </div>
         </div>
       </aside>
@@ -2997,48 +3336,48 @@
     // ════════════════════════════════════════════════
     const DB = {
       users: [
-        { id: 'usr-admin-001', name: 'Alex Johnson', email: 'superadmin@example.com', password: 'Admin@123', role: 'superuser', phone: '+91 9876543201', avatar: 'AJ', status: 'active', joined: '2024-01-15', bio: 'Platform administrator with full system access.' },
-        { id: 'usr-org-001', name: 'Sarah Chen', email: 'organizer@example.com', password: 'Organizer@123', role: 'organizer', phone: '+91 9876543202', avatar: 'SC', status: 'active', joined: '2024-02-01', bio: 'Senior event organizer specializing in corporate events.', service: 'Corporate Events & Conferences', city: 'Bangalore', rating: 4.8, color: '#7c6ff7' },
-        { id: 'usr-emp-001', userId: 'usr-emp-001', name: 'Marcus Vance', email: 'employee@example.com', password: 'Employee@123', role: 'staff', employeeType: 'EVENT_OPERATIONS', phone: '+91 9876543220', avatar: 'MV', status: 'active', joined: '2024-01-18', bio: 'Senior event operations employee managing event information and live execution.', service: 'Corporate Conferences & Tech Summits', city: 'Bangalore', rating: 4.9, color: '#3b82f6' },
-        { id: 'usr-emp-001c', userId: 'usr-emp-001', name: 'Marcus Vance', email: 'marcus.ops@eventflow.com', password: 'Employee@123', role: 'staff', employeeType: 'SUPPORT_FINANCE', phone: '+91 9876543220', avatar: 'MV', status: 'active', joined: '2024-01-18', bio: 'Customer support and finance operations executive.', service: 'Support & Finance', city: 'Bangalore', rating: 4.9, color: '#3b82f6' },
-        { id: 'usr-emp-002', userId: 'usr-emp-002', name: 'Elena Rostova', email: 'elena.coordinator@eventflow.com', password: 'Employee@123', role: 'staff', employeeType: 'EVENT_OPERATIONS', phone: '+91 9876543221', avatar: 'ER', status: 'active', joined: '2024-02-12', bio: 'Event operations executive.', service: 'Event Operations', city: 'Mumbai', rating: 4.8, color: '#ec4899' },
-        { id: 'usr-emp-003', userId: 'usr-emp-003', name: 'Arjun Kapoor', email: 'arjun.events@eventflow.com', password: 'Employee@123', role: 'staff', employeeType: 'REGISTRATION_VERIFICATION', phone: '+91 9876543222', avatar: 'AK', status: 'active', joined: '2024-03-08', bio: 'Registration and attendee verification executive.', service: 'Registration & Verification', city: 'Delhi NCR', rating: 4.9, color: '#8b5cf6' },
-        { id: 'usr-emp-004', userId: 'usr-emp-004', name: 'Maya Lin', email: 'maya.ops@eventflow.com', password: 'Employee@123', role: 'staff', employeeType: 'SUPPORT_FINANCE', phone: '+91 9876543223', avatar: 'ML', status: 'active', joined: '2024-03-22', bio: 'Customer support and finance operations executive.', service: 'Support & Finance', city: 'Hyderabad', rating: 4.7, color: '#10b981' },
-        { id: 'usr-client-001', name: 'Michael Torres', email: 'client@example.com', password: 'Client@123', role: 'client', phone: '+91 9876543203', avatar: 'MT', status: 'active', joined: '2024-03-10', bio: 'Head of Events at TechCorp Ltd.', company: 'TechCorp Ltd' },
-        { id: 'usr-staff-001', name: 'James Wilson', email: 'staff@example.com', password: 'Staff@123', role: 'staff', phone: '+91 9876543204', avatar: 'JW', status: 'active', joined: '2024-02-15', bio: 'Professional photographer and event videographer.', service: 'Photography & Videography', rate: 800 },
-        { id: 'usr-attendee-001', name: 'Priya Patel', email: 'attendee@example.com', password: 'Attendee@123', role: 'attendee', phone: '+91 9876543205', avatar: 'PP', status: 'active', joined: '2024-04-01', bio: 'Tech enthusiast and frequent conference attendee.' },
-        { id: 'usr-dup-001', name: 'Priya Patel (Secondary)', email: 'attendee@example.com', password: 'Attendee@123', role: 'attendee', phone: '+91 9876543205', avatar: 'PP', status: 'active', joined: '2024-04-12', bio: 'Secondary registration under same email.' },
-        { id: 6, name: 'Emma Brown', email: 'emma@eventflow.com', password: 'org123', role: 'organizer', phone: '+91 9876543206', avatar: 'EB', status: 'active', joined: '2024-02-20', service: 'Weddings & Social Events', city: 'Pune', rating: 4.7, color: '#f56565', bio: 'Expert in creating memorable wedding and social event experiences with meticulous attention to detail.' },
-        { id: 7, name: 'David Kim', email: 'david@eventflow.com', password: 'staff123', role: 'staff', phone: '+91 9876543207', avatar: 'DK', status: 'inactive', joined: '2024-03-01', service: 'Catering & Hospitality', rate: 1200 },
-        { id: 8, name: 'Lisa Zhang', email: 'lisa@eventflow.com', password: 'att123', role: 'attendee', phone: '+91 9876543208', avatar: 'LZ', status: 'active', joined: '2024-04-15' },
-        { id: 9, name: 'Robert Singh', email: 'robert@eventflow.com', password: 'att123', role: 'attendee', phone: '+91 9876543209', avatar: 'RS', status: 'active', joined: '2024-05-01' },
-        { id: 10, name: 'Nina Lopez', email: 'nina@eventflow.com', password: 'staff123', role: 'staff', phone: '+91 9876543215', avatar: 'NL', status: 'active', joined: '2024-03-20', service: 'Sound & AV', rate: 950 },
-        { id: 11, name: 'Rajesh Sharma', email: 'rajesh@eventflow.com', password: 'org123', role: 'organizer', phone: '+91 9876543210', avatar: 'RS', status: 'active', joined: '2024-03-05', service: 'Weddings & Social Events', city: 'Delhi NCR', rating: 4.9, color: '#22d3a5', bio: 'Expert wedding planner with 15+ years of experience in creating stunning celebrations for families across India.' },
-        { id: 12, name: 'TechEvents India', email: 'techevents@eventflow.com', password: 'org123', role: 'organizer', phone: '+91 9876543211', avatar: 'TE', status: 'active', joined: '2024-01-20', service: 'Tech Conferences & Hackathons', city: 'Bangalore', rating: 4.6, color: '#ed8936', bio: 'Leading organizer for technology summits, conferences, and hackathons in India.' },
+        { id: 'usr-admin-001', name: 'Alex Johnson', email: 'superadmin@example.com', password: 'Admin@123', role: 'superuser', phone: '+91 9876543201', avatar: 'AJ', avatarImage: 'assets/images/avatars/user-alex-johnson.jpg', status: 'active', joined: '2024-01-15', bio: 'Platform administrator with full system access.' },
+        { id: 'usr-org-001', name: 'Sarah Chen', email: 'organizer@example.com', password: 'Organizer@123', role: 'organizer', phone: '+91 9876543202', avatar: 'SC', avatarImage: 'assets/images/avatars/organizer-sarah-chen.jpg', status: 'active', joined: '2024-02-01', bio: 'Senior event organizer specializing in corporate events.', service: 'Corporate Events & Conferences', city: 'Bangalore', rating: 4.8, color: '#7c6ff7' },
+        { id: 'usr-emp-001', userId: 'usr-emp-001', name: 'Marcus Vance', email: 'employee@example.com', password: 'Employee@123', role: 'staff', employeeType: 'EVENT_OPERATIONS', phone: '+91 9876543220', avatar: 'MV', avatarImage: 'assets/images/avatars/staff-marcus-vance.jpg', status: 'active', joined: '2024-01-18', bio: 'Senior event operations employee managing event information and live execution.', service: 'Corporate Conferences & Tech Summits', city: 'Bangalore', rating: 4.9, color: '#3b82f6' },
+        { id: 'usr-emp-001c', userId: 'usr-emp-001', name: 'Marcus Vance', email: 'marcus.ops@eventflow.com', password: 'Employee@123', role: 'staff', employeeType: 'SUPPORT_FINANCE', phone: '+91 9876543220', avatar: 'MV', avatarImage: 'assets/images/avatars/staff-marcus-vance.jpg', status: 'active', joined: '2024-01-18', bio: 'Customer support and finance operations executive.', service: 'Support & Finance', city: 'Bangalore', rating: 4.9, color: '#3b82f6' },
+        { id: 'usr-emp-002', userId: 'usr-emp-002', name: 'Elena Rostova', email: 'elena.coordinator@eventflow.com', password: 'Employee@123', role: 'staff', employeeType: 'EVENT_OPERATIONS', phone: '+91 9876543221', avatar: 'ER', avatarImage: 'assets/images/avatars/staff-elena-rostova.jpg', status: 'active', joined: '2024-02-12', bio: 'Event operations executive.', service: 'Event Operations', city: 'Mumbai', rating: 4.8, color: '#ec4899' },
+        { id: 'usr-emp-003', userId: 'usr-emp-003', name: 'Arjun Kapoor', email: 'arjun.events@eventflow.com', password: 'Employee@123', role: 'staff', employeeType: 'REGISTRATION_VERIFICATION', phone: '+91 9876543222', avatar: 'AK', avatarImage: 'assets/images/avatars/staff-arjun-kapoor.jpg', status: 'active', joined: '2024-03-08', bio: 'Registration and attendee verification executive.', service: 'Registration & Verification', city: 'Delhi NCR', rating: 4.9, color: '#8b5cf6' },
+        { id: 'usr-emp-004', userId: 'usr-emp-004', name: 'Maya Lin', email: 'maya.ops@eventflow.com', password: 'Employee@123', role: 'staff', employeeType: 'SUPPORT_FINANCE', phone: '+91 9876543223', avatar: 'ML', avatarImage: 'assets/images/avatars/staff-maya-lin.jpg', status: 'active', joined: '2024-03-22', bio: 'Customer support and finance operations executive.', service: 'Support & Finance', city: 'Hyderabad', rating: 4.7, color: '#10b981' },
+        { id: 'usr-client-001', name: 'Michael Torres', email: 'client@example.com', password: 'Client@123', role: 'client', phone: '+91 9876543203', avatar: 'MT', avatarImage: 'assets/images/avatars/user-michael-torres.jpg', status: 'active', joined: '2024-03-10', bio: 'Head of Events at TechCorp Ltd.', company: 'TechCorp Ltd' },
+        { id: 'usr-staff-001', name: 'James Wilson', email: 'staff@example.com', password: 'Staff@123', role: 'staff', phone: '+91 9876543204', avatar: 'JW', avatarImage: 'assets/images/avatars/staff-james-wilson.jpg', status: 'active', joined: '2024-02-15', bio: 'Professional photographer and event videographer.', service: 'Photography & Videography', rate: 800 },
+        { id: 'usr-attendee-001', name: 'Priya Patel', email: 'attendee@example.com', password: 'Attendee@123', role: 'attendee', phone: '+91 9876543205', avatar: 'PP', avatarImage: 'assets/images/avatars/user-priya-patel.jpg', status: 'active', joined: '2024-04-01', bio: 'Tech enthusiast and frequent conference attendee.' },
+        { id: 'usr-dup-001', name: 'Priya Patel (Secondary)', email: 'attendee@example.com', password: 'Attendee@123', role: 'attendee', phone: '+91 9876543205', avatar: 'PP', avatarImage: 'assets/images/avatars/user-priya-patel.jpg', status: 'active', joined: '2024-04-12', bio: 'Secondary registration under same email.' },
+        { id: 6, name: 'Emma Brown', email: 'emma@eventflow.com', password: 'org123', role: 'organizer', phone: '+91 9876543206', avatar: 'EB', avatarImage: 'assets/images/avatars/organizer-emma-brown.jpg', status: 'active', joined: '2024-02-20', service: 'Weddings & Social Events', city: 'Pune', rating: 4.7, color: '#f56565', bio: 'Expert in creating memorable wedding and social event experiences with meticulous attention to detail.' },
+        { id: 7, name: 'David Kim', email: 'david@eventflow.com', password: 'staff123', role: 'staff', phone: '+91 9876543207', avatar: 'DK', avatarImage: 'assets/images/avatars/staff-david-kim.jpg', status: 'inactive', joined: '2024-03-01', service: 'Catering & Hospitality', rate: 1200 },
+        { id: 8, name: 'Lisa Zhang', email: 'lisa@eventflow.com', password: 'att123', role: 'attendee', phone: '+91 9876543208', avatar: 'LZ', avatarImage: 'assets/images/avatars/user-lisa-zhang.jpg', status: 'active', joined: '2024-04-15' },
+        { id: 9, name: 'Robert Singh', email: 'robert@eventflow.com', password: 'att123', role: 'attendee', phone: '+91 9876543209', avatar: 'RS', avatarImage: 'assets/images/avatars/user-robert-singh.jpg', status: 'active', joined: '2024-05-01' },
+        { id: 10, name: 'Nina Lopez', email: 'nina@eventflow.com', password: 'staff123', role: 'staff', phone: '+91 9876543215', avatar: 'NL', avatarImage: 'assets/images/avatars/staff-nina-lopez.jpg', status: 'active', joined: '2024-03-20', service: 'Sound & AV', rate: 950 },
+        { id: 11, name: 'Rajesh Sharma', email: 'rajesh@eventflow.com', password: 'org123', role: 'organizer', phone: '+91 9876543210', avatar: 'RS', avatarImage: 'assets/images/avatars/organizer-rajesh-sharma.jpg', status: 'active', joined: '2024-03-05', service: 'Weddings & Social Events', city: 'Delhi NCR', rating: 4.9, color: '#22d3a5', bio: 'Expert wedding planner with 15+ years of experience in creating stunning celebrations for families across India.' },
+        { id: 12, name: 'TechEvents India', email: 'techevents@eventflow.com', password: 'org123', role: 'organizer', phone: '+91 9876543211', avatar: 'TE', avatarImage: 'assets/images/avatars/organizer-techevents.jpg', status: 'active', joined: '2024-01-20', service: 'Tech Conferences & Hackathons', city: 'Bangalore', rating: 4.6, color: '#ed8936', bio: 'Leading organizer for technology summits, conferences, and hackathons in India.' },
       ],
       events: [
-        { id: 101, title: 'Global AI & Cloud Summit 2026', category: 'Conference', date: '2026-06-15', time: '09:00', endTime: '18:00', venue: 'Grand Convention Center, Hall A', city: 'Bangalore', capacity: 600, registered: 480, price: 200, status: 'upcoming', organizer: 'usr-emp-001', clientId: 'usr-client-001', description: 'Flagship enterprise summit on Generative AI, Cloud Infrastructure, and Agentic Workflows.', color: '#3b82f6', emoji: '🤖', tags: ['AI', 'Cloud', 'Enterprise'] },
-        { id: 102, title: 'FinTech Leaders Executive Conclave', category: 'Corporate', date: '2026-06-22', time: '17:30', endTime: '22:30', venue: 'The Leela Palace Ballroom', city: 'Mumbai', capacity: 250, registered: 210, price: 350, status: 'upcoming', organizer: 'usr-emp-001', clientId: 'usr-client-001', description: 'Exclusive executive dinner and keynote sessions for digital banking and FinTech innovators.', color: '#10b981', emoji: '💼', tags: ['FinTech', 'Banking', 'Executive'] },
-        { id: 103, title: 'Cybersecurity & Zero Trust Workshop', category: 'Workshop', date: '2026-07-05', time: '10:00', endTime: '16:00', venue: 'Cyber Towers — Tech Room 3', city: 'Hyderabad', capacity: 80, registered: 80, price: 120, status: 'full', organizer: 'usr-emp-001', clientId: 'usr-client-001', description: 'Hands-on live simulation on threat modeling, Zero Trust architecture, and cloud security.', color: '#f59e0b', emoji: '🛡️', tags: ['Security', 'ZeroTrust', 'HandsOn'] },
-        { id: 104, title: 'National Web3 & AI Hackathon 2026', category: 'Networking', date: '2026-07-18', time: '08:00', endTime: '20:00', venue: 'Innovation Arena, HITEC City', city: 'Chennai', capacity: 400, registered: 315, price: 0, status: 'upcoming', organizer: 'usr-emp-001', clientId: 'usr-client-001', description: '36-hour national developer hackathon with $50K in prize bounties for open source AI agents.', color: '#8b5cf6', emoji: '🚀', tags: ['Hackathon', 'AI', 'Developers'] },
-        { id: 105, title: 'Healthcare & Biotech Forum 2026', category: 'Conference', date: '2026-03-25', time: '09:00', endTime: '17:00', venue: 'Medical Research Auditorium', city: 'Delhi NCR', capacity: 350, registered: 350, price: 250, status: 'completed', organizer: 'usr-emp-001', clientId: 'usr-client-001', description: 'International forum on AI diagnostics, clinical trials automation, and genomics data.', color: '#06b6d4', emoji: '🏥', tags: ['Healthcare', 'Biotech', 'Genomics'] },
-        { id: 1, title: 'Tech Innovation Summit 2026', category: 'Conference', date: '2026-04-15', time: '09:00', endTime: '18:00', venue: 'Grand Convention Center, Hall A', city: 'Chennai', capacity: 500, registered: 342, price: 150, status: 'upcoming', organizer: 'usr-org-001', clientId: 'usr-client-001', description: 'Annual technology conference featuring keynotes from industry leaders, workshops on AI, blockchain, and cloud computing.', color: '#7c6ff7', emoji: '💻', tags: ['AI', 'Tech', 'Networking'] },
-        { id: 2, title: 'Corporate Annual Gala 2026', category: 'Corporate', date: '2026-04-22', time: '18:00', endTime: '23:00', venue: 'Grand Ballroom — Marriott Hotel', city: 'Tirupathi', capacity: 200, registered: 187, price: 250, status: 'upcoming', organizer: 'usr-org-001', clientId: 'usr-client-001', description: 'Exclusive annual corporate dinner and awards ceremony celebrating achievements and milestones.', color: '#22d3a5', emoji: '🥂', tags: ['Corporate', 'Gala', 'Awards'] },
-        { id: 3, title: 'Spring Music Festival', category: 'Concert', date: '2026-05-01', time: '14:00', endTime: '23:00', venue: 'City Park Outdoor Amphitheater', city: 'Noida', capacity: 1000, registered: 756, price: 75, status: 'upcoming', organizer: 6, clientId: 'usr-client-001', description: 'Two-day outdoor music festival featuring 15+ artists across multiple genres.', color: '#f56565', emoji: '🎵', tags: ['Music', 'Outdoor', 'Festival'] },
-        { id: 4, title: 'Digital Marketing Workshop', category: 'Workshop', date: '2026-05-10', time: '10:00', endTime: '16:00', venue: 'Business Hub — Room 201', city: 'Hyderabad', capacity: 50, registered: 50, price: 80, status: 'full', organizer: 'usr-org-001', clientId: 'usr-client-001', description: 'Hands-on full-day workshop on modern digital marketing, SEO, social media strategy, and analytics.', color: '#f6c90e', emoji: '📱', tags: ['Marketing', 'Workshop', 'SEO'] },
-        { id: 5, title: 'Startup Pitch Night', category: 'Networking', date: '2026-05-15', time: '17:00', endTime: '21:00', venue: 'Innovation Lab — Main Hall', city: 'Chennai', capacity: 150, registered: 98, price: 0, status: 'upcoming', organizer: 6, clientId: 'usr-client-001', description: 'Monthly startup pitch competition with panels of VC judges and networking opportunities.', color: '#7c6ff7', emoji: '🚀', tags: ['Startup', 'Pitch', 'VC'] },
-        { id: 6, title: 'Healthcare Innovation Forum', category: 'Conference', date: '2026-03-10', time: '08:30', endTime: '17:00', venue: 'City Medical Center Auditorium', city: 'Bangalore', capacity: 300, registered: 300, price: 200, status: 'completed', organizer: 'usr-org-001', clientId: 'usr-client-001', description: 'Forum on AI in healthcare, telemedicine, and patient data management.', color: '#22d3a5', emoji: '🏥', tags: ['Health', 'AI', 'Forum'] },
-        { id: 7, title: 'Photography Masterclass', category: 'Workshop', date: '2026-06-01', time: '10:00', endTime: '15:00', venue: 'Art Studio 5, Downtown', city: 'Pune', capacity: 30, registered: 12, price: 120, status: 'upcoming', organizer: 6, clientId: null, description: 'Hands-on photography workshop for intermediate photographers covering lighting, composition, and post-processing.', color: '#ed8936', emoji: '📷', tags: ['Photography', 'Art', 'Workshop'] },
-        { id: 8, title: 'Rajesh Grand Wedding Celebration', category: 'Wedding', date: '2026-05-15', time: '17:00', endTime: '23:59', venue: 'The Ashok Hotel, New Delhi', city: 'Delhi NCR', capacity: 800, registered: 750, price: 0, status: 'ongoing', organizer: 11, clientId: null, description: 'Grand wedding celebration bringing together families and friends. Featuring traditional ceremonies, vibrant decorations, and festive atmosphere.', color: '#22d3a5', emoji: '💒', tags: ['Wedding', 'Celebration', 'Grand'] },
+        { id: 101, title: 'Global AI & Cloud Summit 2026', category: 'Conference', date: '2026-06-15', time: '09:00', endTime: '18:00', venue: 'Grand Convention Center, Hall A', city: 'Bangalore', capacity: 600, registered: 480, price: 200, status: 'upcoming', organizer: 'usr-emp-001', clientId: 'usr-client-001', description: 'Flagship enterprise summit on Generative AI, Cloud Infrastructure, and Agentic Workflows.', color: '#3b82f6', emoji: '🤖', tags: ['AI', 'Cloud', 'Enterprise'], image: 'assets/images/events/event-ai-summit.jpg' },
+        { id: 102, title: 'FinTech Leaders Executive Conclave', category: 'Corporate', date: '2026-06-22', time: '17:30', endTime: '22:30', venue: 'The Leela Palace Ballroom', city: 'Mumbai', capacity: 250, registered: 210, price: 350, status: 'upcoming', organizer: 'usr-emp-001', clientId: 'usr-client-001', description: 'Exclusive executive dinner and keynote sessions for digital banking and FinTech innovators.', color: '#10b981', emoji: '💼', tags: ['FinTech', 'Banking', 'Executive'], image: 'assets/images/events/event-fintech.jpg' },
+        { id: 103, title: 'Cybersecurity & Zero Trust Workshop', category: 'Workshop', date: '2026-07-05', time: '10:00', endTime: '16:00', venue: 'Cyber Towers — Tech Room 3', city: 'Hyderabad', capacity: 80, registered: 80, price: 120, status: 'full', organizer: 'usr-emp-001', clientId: 'usr-client-001', description: 'Hands-on live simulation on threat modeling, Zero Trust architecture, and cloud security.', color: '#f59e0b', emoji: '🛡️', tags: ['Security', 'ZeroTrust', 'HandsOn'], image: 'assets/images/events/event-cybersecurity.jpg' },
+        { id: 104, title: 'National Web3 & AI Hackathon 2026', category: 'Networking', date: '2026-07-18', time: '08:00', endTime: '20:00', venue: 'Innovation Arena, HITEC City', city: 'Chennai', capacity: 400, registered: 315, price: 0, status: 'upcoming', organizer: 'usr-emp-001', clientId: 'usr-client-001', description: '36-hour national developer hackathon with $50K in prize bounties for open source AI agents.', color: '#8b5cf6', emoji: '🚀', tags: ['Hackathon', 'AI', 'Developers'], image: 'assets/images/events/event-hackathon.jpg' },
+        { id: 105, title: 'Healthcare & Biotech Forum 2026', category: 'Conference', date: '2026-03-25', time: '09:00', endTime: '17:00', venue: 'Medical Research Auditorium', city: 'Delhi NCR', capacity: 350, registered: 350, price: 250, status: 'completed', organizer: 'usr-emp-001', clientId: 'usr-client-001', description: 'International forum on AI diagnostics, clinical trials automation, and genomics data.', color: '#06b6d4', emoji: '🏥', tags: ['Healthcare', 'Biotech', 'Genomics'], image: 'assets/images/events/event-healthcare-forum.jpg' },
+        { id: 1, title: 'Tech Innovation Summit 2026', category: 'Conference', date: '2026-04-15', time: '09:00', endTime: '18:00', venue: 'Grand Convention Center, Hall A', city: 'Chennai', capacity: 500, registered: 342, price: 150, status: 'upcoming', organizer: 'usr-org-001', clientId: 'usr-client-001', description: 'Annual technology conference featuring keynotes from industry leaders, workshops on AI, blockchain, and cloud computing.', color: '#7c6ff7', emoji: '💻', tags: ['AI', 'Tech', 'Networking'], image: 'assets/images/events/event-tech-summit.jpg' },
+        { id: 2, title: 'Corporate Annual Gala 2026', category: 'Corporate', date: '2026-04-22', time: '18:00', endTime: '23:00', venue: 'Grand Ballroom — Marriott Hotel', city: 'Tirupathi', capacity: 200, registered: 187, price: 250, status: 'upcoming', organizer: 'usr-org-001', clientId: 'usr-client-001', description: 'Exclusive annual corporate dinner and awards ceremony celebrating achievements and milestones.', color: '#22d3a5', emoji: '🥂', tags: ['Corporate', 'Gala', 'Awards'], image: 'assets/images/events/event-annual-gala.jpg' },
+        { id: 3, title: 'Spring Music Festival', category: 'Concert', date: '2026-05-01', time: '14:00', endTime: '23:00', venue: 'City Park Outdoor Amphitheater', city: 'Noida', capacity: 1000, registered: 756, price: 75, status: 'upcoming', organizer: 6, clientId: 'usr-client-001', description: 'Two-day outdoor music festival featuring 15+ artists across multiple genres.', color: '#f56565', emoji: '🎵', tags: ['Music', 'Outdoor', 'Festival'], image: 'assets/images/events/event-music-fest.jpg' },
+        { id: 4, title: 'Digital Marketing Workshop', category: 'Workshop', date: '2026-05-10', time: '10:00', endTime: '16:00', venue: 'Business Hub — Room 201', city: 'Hyderabad', capacity: 50, registered: 50, price: 80, status: 'full', organizer: 'usr-org-001', clientId: 'usr-client-001', description: 'Hands-on full-day workshop on modern digital marketing, SEO, social media strategy, and analytics.', color: '#f6c90e', emoji: '📱', tags: ['Marketing', 'Workshop', 'SEO'], image: 'assets/images/events/event-marketing-workshop.jpg' },
+        { id: 5, title: 'Startup Pitch Night', category: 'Networking', date: '2026-05-15', time: '17:00', endTime: '21:00', venue: 'Innovation Lab — Main Hall', city: 'Chennai', capacity: 150, registered: 98, price: 0, status: 'upcoming', organizer: 6, clientId: 'usr-client-001', description: 'Monthly startup pitch competition with panels of VC judges and networking opportunities.', color: '#7c6ff7', emoji: '🚀', tags: ['Startup', 'Pitch', 'VC'], image: 'assets/images/events/event-pitch-night.jpg' },
+        { id: 6, title: 'Healthcare Innovation Forum', category: 'Conference', date: '2026-03-10', time: '08:30', endTime: '17:00', venue: 'City Medical Center Auditorium', city: 'Bangalore', capacity: 300, registered: 300, price: 200, status: 'completed', organizer: 'usr-org-001', clientId: 'usr-client-001', description: 'Forum on AI in healthcare, telemedicine, and patient data management.', color: '#22d3a5', emoji: '🏥', tags: ['Health', 'AI', 'Forum'], image: 'assets/images/events/event-medtech.jpg' },
+        { id: 7, title: 'Photography Masterclass', category: 'Workshop', date: '2026-06-01', time: '10:00', endTime: '15:00', venue: 'Art Studio 5, Downtown', city: 'Pune', capacity: 30, registered: 12, price: 120, status: 'upcoming', organizer: 6, clientId: null, description: 'Hands-on photography workshop for intermediate photographers covering lighting, composition, and post-processing.', color: '#ed8936', emoji: '📷', tags: ['Photography', 'Art', 'Workshop'], image: 'assets/images/events/event-photography.jpg' },
+        { id: 8, title: 'Rajesh Grand Wedding Celebration', category: 'Wedding', date: '2026-05-15', time: '17:00', endTime: '23:59', venue: 'The Ashok Hotel, New Delhi', city: 'Delhi NCR', capacity: 800, registered: 750, price: 0, status: 'ongoing', organizer: 11, clientId: null, description: 'Grand wedding celebration bringing together families and friends. Featuring traditional ceremonies, vibrant decorations, and festive atmosphere.', color: '#22d3a5', emoji: '💒', tags: ['Wedding', 'Celebration', 'Grand'], image: 'assets/images/events/event-wedding.jpg' },
       ],
       eventRequests: [
         { id: 101, clientId: 'usr-client-001', title: 'Torres Tech Q3 Product Launch', type: 'Corporate', date: '2026-06-01', guests: 350, budget: 35000, status: 'pending', desc: 'Global launch for next-gen enterprise suite. Require 4K live streaming, stage AV, VIP catering, and 5 photographers.', created: '2026-03-20', organizer: 'usr-emp-001', venue: 'Downtown Convention Center' },
         { id: 102, clientId: 'usr-client-001', title: 'Annual Leadership Strategy Retreat', type: 'Corporate', date: '2026-06-15', guests: 120, budget: 18000, status: 'approved', desc: 'Annual executive team retreat with breakout workshop sessions, keynote speaker, and outdoor networking dinner.', created: '2026-03-15', organizer: 'usr-emp-001', venue: 'Hilltop Mountain Resort' },
         { id: 103, clientId: 'usr-client-001', title: 'Tech Innovation Demo Day', type: 'Networking', date: '2026-07-10', guests: 200, budget: 22000, status: 'in_review', desc: 'Startup and partner showcase demo day with booth setups, investor pitch panels, and networking reception.', created: '2026-03-25', organizer: 'usr-emp-001', venue: 'Innovation Hub Hall 2' },
-        { id: 1, clientId: 3, title: 'Product Launch Event', type: 'Corporate', date: '2026-06-01', guests: 300, budget: 25000, status: 'pending', desc: 'Grand product launch for our new AI-powered software suite. Need venue, catering, AV, and professional photography.', created: '2026-03-20', venue: 'Downtown Convention Center' },
-        { id: 2, clientId: 3, title: 'Team Building Retreat', type: 'Corporate', date: '2026-06-15', guests: 80, budget: 12000, status: 'approved', desc: 'Annual team building activity with outdoor challenges, group activities, and team dinner.', created: '2026-03-15', organizer: 2, venue: 'Mountain Resort' },
-        { id: 3, clientId: 3, title: 'Annual Client Appreciation Dinner', type: 'Corporate', date: '2026-07-10', guests: 120, budget: 18000, status: 'in_review', desc: 'Formal black-tie dinner for top 120 clients. Need premium venue, 5-course dinner, live entertainment.', created: '2026-03-25', organizer: 2, venue: 'Five Star Restaurant & Event Hall' },
-        { id: 4, clientId: 3, title: 'Sales Training Conference', type: 'Conference', date: '2026-07-20', guests: 200, budget: 15000, status: 'rejected', desc: 'Two-day sales training conference with industry speakers and breakout sessions.', created: '2026-03-28', venue: 'City Conference Center' },
+        { id: 1, clientId: 'usr-client-001', title: 'Product Launch Event', type: 'Corporate', date: '2026-06-01', guests: 300, budget: 25000, status: 'pending', desc: 'Grand product launch for our new AI-powered software suite. Need venue, catering, AV, and professional photography.', created: '2026-03-20', venue: 'Downtown Convention Center' },
+        { id: 2, clientId: 'usr-client-001', title: 'Team Building Retreat', type: 'Corporate', date: '2026-06-15', guests: 80, budget: 12000, status: 'approved', desc: 'Annual team building activity with outdoor challenges, group activities, and team dinner.', created: '2026-03-15', organizer: 'usr-org-001', venue: 'Mountain Resort' },
+        { id: 3, clientId: 'usr-client-001', title: 'Annual Client Appreciation Dinner', type: 'Corporate', date: '2026-07-10', guests: 120, budget: 18000, status: 'in_review', desc: 'Formal black-tie dinner for top 120 clients. Need premium venue, 5-course dinner, live entertainment.', created: '2026-03-25', organizer: 'usr-org-001', venue: 'Five Star Restaurant & Event Hall' },
+        { id: 4, clientId: 'usr-client-001', title: 'Sales Training Conference', type: 'Conference', date: '2026-07-20', guests: 200, budget: 15000, status: 'rejected', desc: 'Two-day sales training conference with industry speakers and breakout sessions.', created: '2026-03-28', venue: 'City Conference Center' },
       ],
       reports: [
         { id: 'rpt-emp-001', eventId: 105, fileName: 'healthcare-biotech-final-report.pdf', submittedBy: 'usr-staff-001', submittedAt: '2026-03-26 16:45' },
@@ -3079,14 +3418,25 @@
         { id: 105, staffId: 'usr-staff-005', eventId: 104, role: 'Live Stream Videographer', status: 'pending', fee: 1100, notes: 'Operate roving 4K camera for hackathon teams and project demos.' },
         { id: 1, staffId: 'usr-staff-001', eventId: 1, role: 'Lead Photographer', status: 'accepted', fee: 800, notes: 'Capture keynotes and networking sessions' },
         { id: 2, staffId: 7, eventId: 1, role: 'Catering Head', status: 'pending', fee: 1200, notes: 'Manage lunch and coffee breaks for 500 attendees' },
-        { id: 3, staffId: 'usr-staff-001', eventId: 6, role: 'Event Photographer', status: 'accepted', fee: 600, notes: 'Completed' },
+        { id: 3, staffId: 'usr-staff-001', eventId: 6, role: 'Event Photographer', status: 'accepted', fee: 600, notes: 'Completed — full gallery delivered to organizer.' },
         { id: 4, staffId: 10, eventId: 2, role: 'AV & Sound Engineer', status: 'accepted', fee: 950, notes: 'Full AV setup and management throughout the gala' },
         { id: 5, staffId: 7, eventId: 2, role: 'Catering Coordinator', status: 'pending', fee: 1500, notes: '5-course dinner service for 200 guests' },
         { id: 6, staffId: 'usr-staff-001', eventId: 2, role: 'Photographer & Videographer', status: 'pending', fee: 1100, notes: 'Full photo & video coverage of the gala including red carpet arrivals and award ceremony' },
         { id: 7, staffId: 'usr-staff-001', eventId: 3, role: 'Stage Photographer', status: 'pending', fee: 750, notes: 'Capture live performances, artist backstage moments, and crowd energy shots' },
         { id: 8, staffId: 'usr-staff-001', eventId: 5, role: 'Event Documentarian', status: 'pending', fee: 500, notes: 'Document startup pitches, judge reactions, and networking moments for social media' },
+        /* ── Mock data: Active Assignments for James Wilson (usr-staff-001) ── */
+        { id: 201, staffId: 'usr-staff-001', eventId: 101, role: 'Official Summit Photographer', status: 'accepted', fee: 1400, notes: 'Primary shooter for keynote stage, exhibition floor, and speaker portraits. Deliver edited gallery within 48 hrs.' },
+        { id: 202, staffId: 'usr-staff-001', eventId: 4, role: 'Workshop Documentarian', status: 'accepted', fee: 850, notes: 'Capture full-day Digital Marketing Workshop — classroom activities, presenter slides, and attendee highlights for post-event content.' },
+        { id: 203, staffId: 'usr-staff-001', eventId: 8, role: 'Wedding Videographer', status: 'accepted', fee: 2200, notes: 'Cinematic wedding video for Rajesh Grand Wedding — ceremony reel, reception highlights, and raw footage hand-off.' },
+        /* ── Mock data: Pending Event Requests for James Wilson (usr-staff-001) ── */
+        { id: 204, staffId: 'usr-staff-001', eventId: 102, role: 'Executive Portrait Photographer', status: 'pending', fee: 1600, notes: 'Capture executive headshots and candid networking moments during the FinTech Leaders Conclave dinner session.' },
+        { id: 205, staffId: 'usr-staff-001', eventId: 104, role: 'Hackathon Coverage Photographer', status: 'pending', fee: 950, notes: 'Document 36-hour hackathon teams, project demos, and prize ceremony. Deliver 200+ edited shots within 72 hrs.' },
       ],
       staffRequests: [
+        /* ── Mock data: Direct staff requests for James Wilson (usr-staff-001) ── */
+        { id: 1, staffId: 'usr-staff-001', organizerId: 'usr-org-001', type: 'Photography', date: '2026-06-15', hours: 8, fee: 1200, details: 'Need a professional photographer for our Tech Innovation Summit 2026 — covering keynote sessions, panel discussions, and evening networking reception. Full edited gallery required.', status: 'pending', createdAt: '2026-08-28' },
+        { id: 2, staffId: 'usr-staff-001', organizerId: 6, type: 'Videography', date: '2026-05-01', hours: 10, fee: 900, details: 'Spring Music Festival requires an experienced videographer for full day coverage — stage performances, crowd atmosphere, and a 3-minute highlight reel for social media release.', status: 'pending', createdAt: '2026-08-29' },
+        { id: 3, staffId: 'usr-staff-001', organizerId: 11, type: 'Photography & Videography', date: '2026-08-15', hours: 12, fee: 2500, details: 'Grand wedding celebration — bridal entry, ceremony rites, reception, and family portraits. Drone footage and cinematic edit required. Previous work portfolio requested.', status: 'accepted', acceptedAt: '2026-08-20', createdAt: '2026-08-18' },
       ],
       notifications: [
         { id: 101, title: 'New Event Proposal', msg: 'Michael Torres submitted "Torres Tech Q3 Product Launch" with ₹35,000 budget.', time: '10 mins ago', read: false, type: 'info', icon: '📋' },
@@ -3183,7 +3533,9 @@
         localStorage.setItem('ffsd_db', JSON.stringify(DB));
       } catch (e) { console.log('Storage quota exceeded or private mode'); }
     }
-    function loadDB() {
+    // `persist` is disabled for storage events so receiving tabs do not write the
+    // same data back and trigger another refresh in every open session.
+    function loadDB(persist = true) {
       try {
         const saved = localStorage.getItem('ffsd_db');
         if (saved) {
@@ -3204,7 +3556,7 @@
           const initialEventOperationsTasks = [...(DB.eventOperationsTasks || [])];
           const initialEventOpsReports = [...(DB.eventOpsReports || [])];
           const initialUserQueries = [...(DB.userQueries || [])];
-          
+
           Object.assign(DB, parsed);
 
           // Ensure optional arrays exist
@@ -3221,6 +3573,7 @@
           if (!DB.eventOpsRequests) DB.eventOpsRequests = [];
           if (!DB.userQueries) DB.userQueries = [];
           if (!DB.routedRequests) DB.routedRequests = [];
+          if (!DB.staffBooked) DB.staffBooked = {};
 
           // Sync all demo/seed users and passwords from latest build
           initialUsers.forEach(initU => {
@@ -3232,20 +3585,38 @@
               existing.status = 'active';
               if (initU.role) existing.role = initU.role;
               if (initU.name) existing.name = initU.name;
+              if (initU.avatarImage) existing.avatarImage = initU.avatarImage;
+              if (initU.avatar) existing.avatar = initU.avatar;
+              if (initU.service) existing.service = initU.service;
+              if (initU.bio) existing.bio = initU.bio;
+              if (initU.color) existing.color = initU.color;
             }
           });
 
           // Always restore missing mock events (ensuring employee events are always populated)
           initialEvents.forEach(ev => {
-            if (!DB.events.find(e => String(e.id) === String(ev.id))) {
+            const existing = DB.events.find(e => String(e.id) === String(ev.id));
+            if (!existing) {
               DB.events.push(ev);
+            } else {
+              if (ev.image) existing.image = ev.image;
+              if (ev.color) existing.color = ev.color;
+              if (ev.emoji) existing.emoji = ev.emoji;
             }
           });
 
-          // Always restore missing mock event requests
+          // Always restore missing mock event requests & migrate legacy client IDs
           initialRequests.forEach(req => {
-            if (!DB.eventRequests.find(r => String(r.id) === String(req.id))) {
+            const existing = DB.eventRequests.find(r => String(r.id) === String(req.id));
+            if (!existing) {
               DB.eventRequests.push(req);
+            } else if (existing.clientId === 3 || existing.clientId === '3' || !DB.users.find(u => String(u.id) === String(existing.clientId))) {
+              existing.clientId = 'usr-client-001';
+            }
+          });
+          DB.eventRequests.forEach(r => {
+            if (r.clientId === 3 || r.clientId === '3' || !DB.users.find(u => String(u.id) === String(r.clientId))) {
+              r.clientId = 'usr-client-001';
             }
           });
 
@@ -3327,7 +3698,7 @@
           initialEventOpsReports.forEach(report => {
             if (!DB.eventOpsReports.find(item => String(item.id) === String(report.id))) DB.eventOpsReports.push(report);
           });
-          (DB._initialEventOpsRequests || DB.eventOpsRequests.slice()).forEach(() => {});
+          (DB._initialEventOpsRequests || DB.eventOpsRequests.slice()).forEach(() => { });
           // Restore event ops requests from seed
           if (typeof initialEventOpsRequests !== 'undefined') {
             initialEventOpsRequests.forEach(req => {
@@ -3342,9 +3713,10 @@
           DB._nextId.regs = Math.max(DB._nextId.regs || 0, _maxId(DB.registrations, 'id') + 1);
           DB._nextId.assignments = Math.max(DB._nextId.assignments || 0, _maxId(DB.staffAssignments, 'id') + 1);
           DB._nextId.reqs = Math.max(DB._nextId.reqs || 0, _maxId(DB.eventRequests, 'id') + 1);
-          
-          // Re-save merged DB to local storage immediately
-          saveDB();
+
+          // Persist seed-data migrations only for local loads. A storage event
+          // must remain read-only to avoid a cross-tab update loop.
+          if (persist) saveDB();
         }
       } catch (e) { console.log('Could not load DB from storage'); }
     }
@@ -3396,6 +3768,11 @@
       return (CU?.email || '').toLowerCase() === DEMO_CREDS.employee.email;
     }
 
+    // New department-based Employee 1/2/3 accounts. Legacy staff accounts have no employeeType.
+    function isDepartmentEmployee() {
+      return CU?.role === 'staff' && !!CU?.employeeType;
+    }
+
     // ════════════════════════════════════════════════
     //  PAGE SWITCHING
     // ════════════════════════════════════════════════
@@ -3420,9 +3797,9 @@
 
     let selectedEmployeeType = null;
     const EMPLOYEE_TYPE_LABELS = {
-      REGISTRATION_VERIFICATION: 'Registration & Verification',
-      EVENT_OPERATIONS: 'Event Operations',
-      SUPPORT_FINANCE: 'Customer Support & Finance',
+      REGISTRATION_VERIFICATION: 'User Executive',
+      EVENT_OPERATIONS: 'Event Executive',
+      SUPPORT_FINANCE: 'Customer Support & Finance Executive',
     };
     function selectEmployeeType(employeeType) {
       selectedEmployeeType = employeeType;
@@ -3440,7 +3817,7 @@
     // ════════════════════════════════════════════════
     //  AUTH
     // ════════════════════════════════════════════════
-    
+
     function fillLogin(email, pass) {
       if (g('l-email')) g('l-email').value = email;
       if (g('l-pass')) g('l-pass').value = pass;
@@ -3457,7 +3834,7 @@
       const btn = document.querySelector('#login .btn-primary');
       if (btn) { btn.textContent = 'Signing in…'; btn.disabled = true; }
 
-      // Authentication must be handled by the backend.
+      // Try backend first, with instant fallback to local DB if backend is offline
       apiLogin(email, pass).then(function (userData) {
         const roleMap = {
           SUPER_ADMIN: 'superuser', super_admin: 'superuser',
@@ -3475,6 +3852,7 @@
           userId: userData.userId,
           name: userData.name,
           email: userData.email,
+          token: userData.token,
           role: frontendRole,
           userRole: selectedEmployeeType ? 'event_staff' : (userData.role || userData.userRole),
           employeeType: userData.employeeType || selectedEmployeeType,
@@ -3487,12 +3865,6 @@
         initApp();
         toast(`Welcome back, ${CU.name}! 👋`, 'success');
       }).catch(function (err) {
-<<<<<<< HEAD
-        const msg = err.message || 'Unable to sign in. Start the backend server on port 3001.';
-        toast(msg, 'error');
-        showErr('l-pass-err');
-        g('l-pass-err').textContent = msg;
-=======
         // Check local DB if offline or if password matches demo aliases
         const localUser = DB.users.find(u => u.email.toLowerCase() === email.toLowerCase());
         const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -3533,7 +3905,6 @@
           showErr('l-pass-err');
           g('l-pass-err').textContent = msg;
         }
->>>>>>> 46cfc74b (Update project changes)
       }).finally(function () {
         if (btn) { btn.textContent = 'Sign In →'; btn.disabled = false; }
       });
@@ -3562,6 +3933,7 @@
           userId: userData.userId,
           name: userData.name,
           email: userData.email,
+          token: userData.token,
           role: 'superuser',
           userRole: 'SUPER_ADMIN',
           status: userData.status,
@@ -3690,13 +4062,13 @@
         <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%">
           <div style="display:flex;align-items:flex-end;gap:5px;width:100%;height:100%;justify-content:center">
             ${group.bars.map(bar => {
-              const barHeight = Math.max(8, Math.round(((bar.value || 0) / max) * Math.max(chartHeight - 52, 40)));
-              return `
+          const barHeight = Math.max(8, Math.round(((bar.value || 0) / max) * Math.max(chartHeight - 52, 40)));
+          return `
               <div style="flex:1;max-width:26px;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;gap:4px">
                 <div style="font-size:10px;font-weight:700;color:var(--text3)">${bar.value}</div>
                 <div style="width:100%;height:${barHeight}px;flex-shrink:0;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,var(--green),#15803d);box-shadow:0 8px 16px rgba(15,23,42,.12)" title="${bar.label || ''}: ${bar.value}"></div>
               </div>`;
-            }).join('')}
+        }).join('')}
           </div>
           <div style="font-size:11px;font-weight:600;color:var(--text2);text-align:center;line-height:1.2;margin-top:4px">${group.label}</div>
         </div>`;
@@ -3710,22 +4082,22 @@
       return `
   <div style="display:flex;align-items:flex-end;gap:14px;height:${chartHeight}px;padding-top:12px">
     ${items.map(item => {
-          const barHeight = Math.max(8, Math.round(((item.value || 0) / max) * Math.max(chartHeight - 52, 40)));
-          return `
+        const barHeight = Math.max(8, Math.round(((item.value || 0) / max) * Math.max(chartHeight - 52, 40)));
+        return `
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px">
         <div style="font-size:11px;color:var(--text3)">${item.value}</div>
         <div style="width:100%;max-width:58px;height:${barHeight}px;flex-shrink:0;border-radius:18px 18px 8px 8px;background:linear-gradient(180deg,var(--green),#15803d);box-shadow:0 16px 28px rgba(15,23,42,.18)"></div>
         <div style="font-size:11px;color:var(--text2);text-align:center;line-height:1.35">${item.label}</div>
       </div>`;
-        }).join('')}
+      }).join('')}
   </div>`;
     }
     function buildAnalyticsProgress(items) {
       const total = items.reduce((sum, item) => sum + (item.value || 0), 0) || 1;
       return `<div style="display:flex;flex-direction:column;gap:14px">
     ${items.map(item => {
-          const pct = Math.round(((item.value || 0) / total) * 100);
-          return `<div>
+        const pct = Math.round(((item.value || 0) / total) * 100);
+        return `<div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <span style="font-size:12px;color:var(--text2)">${item.label}</span>
         <span style="font-size:12px;color:var(--text)">${item.value} · ${pct}%</span>
@@ -3734,7 +4106,7 @@
         <div style="width:${pct}%;height:100%;border-radius:999px;background:${item.color}"></div>
       </div>
     </div>`;
-        }).join('')}
+      }).join('')}
   </div>`;
     }
     async function pageEmployeeStats() {
@@ -3820,15 +4192,19 @@
 
     function initApp() {
       const r = CU.role;
-      const navRole = r === 'staff' ? 'employee' : r;
-      const displayRole = r === 'staff' ? (EMPLOYEE_TYPE_LABELS[CU.employeeType] || 'Employee') : (ROLE_LABELS[r] || r);
+      const navRole = isDepartmentEmployee() ? 'employee' : r;
+      const displayRole = isDepartmentEmployee() ? EMPLOYEE_TYPE_LABELS[CU.employeeType] : (ROLE_LABELS[r] || r);
       g('sb-role-sub').textContent = displayRole;
-      g('sb-name').textContent = CU.name;
-      g('sb-role-lbl').textContent = displayRole;
-      g('sb-av').textContent = CU.avatar || CU.name.charAt(0);
+      g('sb-name').textContent = isDepartmentEmployee() ? displayRole : CU.name;
+      g('sb-role-lbl').textContent = isDepartmentEmployee() ? 'Employee workspace' : displayRole;
+      if (CU.avatarImage) {
+        g('sb-av').innerHTML = `<img src="${CU.avatarImage}" alt="${CU.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.textContent='${CU.avatar || CU.name.charAt(0)}'">`;
+      } else {
+        g('sb-av').textContent = CU.avatar || CU.name.charAt(0);
+      }
       updateNotifDot();
       buildNav(navRole);
-      if (r === 'staff') buildEmployeeNav(CU.employeeType);
+      if (isDepartmentEmployee()) buildEmployeeNav(CU.employeeType);
       goNav('dashboard');
     }
 
@@ -3896,7 +4272,7 @@
       'revenue-reports': 'Revenue Reports & Analytics',
       dashboard: 'Dashboard', 'users': 'User Statistics', 'events': 'Events', 'browse-events': 'Browse Events',
       'my-tickets': 'My Tickets', 'assignments': 'Manage Events', 'staff': 'Staff Management', 'staff-admin': 'Staff Overview', 'staff-availability': 'My Availability', 'staff-event-requests': 'Event Requests',
-      attendees: 'User Management', 'reports': 'Reports & Analytics', 'notifications': 'Notifications', 'attendeeVerification': 'Verification',
+      attendees: 'Attendee Management', 'reports': 'Reports & Analytics', 'notifications': 'Notifications', 'attendeeVerification': 'Attendee Verification',
       'employee-stats': 'Employee Statistics',
       registrations: 'Registrations',
       'find-organizers': 'Find Event Organisers', 'upcoming-events': 'Upcoming Events', 'completed-events': 'Completed Events', 'ongoing-events': 'Ongoing Events',
@@ -3907,9 +4283,14 @@
     function goNav(pg) {
       _currentPage = pg;
       document.querySelectorAll('.sb-item').forEach(el => el.classList.toggle('active', el.dataset.pg === pg));
-      g('topbar-title').textContent = PAGE_TITLES[pg] || pg;
-      // Always reload latest shared data before rendering any page
-      loadDB();
+      const pageTitle = PAGE_TITLES[pg] || pg;
+      g('topbar-title').textContent = isDepartmentEmployee()
+        ? `${EMPLOYEE_TYPE_LABELS[CU.employeeType]} · ${pageTitle}`
+        : pageTitle;
+      // Read the latest shared data without writing it back. Writing during
+      // navigation broadcasts a storage event and forces other open tabs to
+      // rebuild their current page.
+      loadDB(false);
       // renderPage may be async for pages that fetch backend data
       renderPage(pg).catch(err => console.error('Render error', err));
     }
@@ -3922,11 +4303,11 @@
       const el = g('page-content');
       const r = CU.role;
 
-      if (r === 'staff') {
+      if (isDepartmentEmployee()) {
         const allowed = {
-          REGISTRATION_VERIFICATION: ['dashboard', 'registrations', 'attendees', 'attendeeVerification', 'reports', 'profile', 'notifications'],
-          EVENT_OPERATIONS: ['dashboard', 'events', 'event-requests', 'reports', 'profile', 'notifications'],
-          SUPPORT_FINANCE: ['dashboard', 'support-center', 'finance', 'reports', 'profile', 'notifications'],
+          REGISTRATION_VERIFICATION: ['dashboard', 'registrations', 'attendees', 'attendeeVerification', 'reports', 'profile', 'settings', 'notifications'],
+          EVENT_OPERATIONS: ['dashboard', 'events', 'event-requests', 'staff-event-requests', 'reports', 'profile', 'settings', 'notifications'],
+          SUPPORT_FINANCE: ['dashboard', 'support-center', 'finance', 'reports', 'profile', 'settings', 'notifications'],
         }[CU.employeeType] || [];
         if (!allowed.includes(pg)) { el.innerHTML = `<div class="empty"><div class="empty-title">Access restricted</div><p class="empty-desc">This department does not have access to this area.</p></div>`; return; }
       }
@@ -3950,7 +4331,7 @@
 
       switch (pg) {
         case 'dashboard':
-          el.innerHTML = r === 'staff'
+          el.innerHTML = isDepartmentEmployee()
             ? dashDepartmentEmployee()
             : ({ organizer: dashOrganizer, client: dashClient, staff: dashStaff, attendee: dashAttendee }[r] || dashAttendee)();
           break;
@@ -3958,16 +4339,16 @@
           el.innerHTML = pageRegistrationsForEmployee();
           break;
         case 'events':
-          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'EVENT_OPERATIONS' ? pageEventOpsEvents() : pageEvents();
+          el.innerHTML = isDepartmentEmployee() && CU.employeeType === 'EVENT_OPERATIONS' ? pageEventOpsEvents() : pageEvents();
           break;
         case 'event-requests':
-          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'EVENT_OPERATIONS' ? pageEventOperationsWorkspace() : pageEventRequests();
+          el.innerHTML = isDepartmentEmployee() && CU.employeeType === 'EVENT_OPERATIONS' ? pageEventOperationsWorkspace() : pageEventRequests();
           break;
         case 'support-center':
-          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'SUPPORT_FINANCE' ? pageSupportCenter() : pageEventRequests();
+          el.innerHTML = isDepartmentEmployee() && CU.employeeType === 'SUPPORT_FINANCE' ? pageSupportCenter() : pageEventRequests();
           break;
         case 'finance':
-          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'SUPPORT_FINANCE' ? pageFinanceCenter() : pageRevenueReports();
+          el.innerHTML = isDepartmentEmployee() && CU.employeeType === 'SUPPORT_FINANCE' ? pageFinanceCenter() : pageRevenueReports();
           break;
         case 'request-status':
           el.innerHTML = pageRequestStatus();
@@ -3977,13 +4358,13 @@
           el.innerHTML = pageStaffCombined();
           break;
         case 'attendees':
-          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'REGISTRATION_VERIFICATION' ? pageUserManagement() : pageUserManagement();
+          el.innerHTML = isDepartmentEmployee() && CU.employeeType === 'REGISTRATION_VERIFICATION' ? pageUserManagement() : pageAttendees();
           break;
         case 'attendeeVerification':
-          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'REGISTRATION_VERIFICATION' ? pageAttendeeVerification() : pageAttendeeVerification();
+          el.innerHTML = pageAttendeeVerification();
           break;
         case 'reports':
-          el.innerHTML = CU.role === 'staff' && CU.employeeType === 'REGISTRATION_VERIFICATION' ? pageRegVerificationReports() : (CU.role === 'staff' && CU.employeeType === 'EVENT_OPERATIONS' ? pageEventOpsReports() : (CU.role === 'staff' && CU.employeeType === 'SUPPORT_FINANCE' ? pageOperationalReports() : pageReports()));
+          el.innerHTML = isDepartmentEmployee() && CU.employeeType === 'REGISTRATION_VERIFICATION' ? pageRegVerificationReports() : (isDepartmentEmployee() && CU.employeeType === 'EVENT_OPERATIONS' ? pageEventOpsReports() : (isDepartmentEmployee() && CU.employeeType === 'SUPPORT_FINANCE' ? pageOperationalReports() : pageReports()));
           break;
         case 'staff-reports':
           el.innerHTML = pageStaffReports();
@@ -3993,6 +4374,9 @@
           break;
         case 'assignments':
           el.innerHTML = pageAssignments();
+          break;
+        case 'staff-event-requests':
+          el.innerHTML = pageStaffEventRequests();
           break;
         case 'staff-requests':
           el.innerHTML = pageStaffRequests();
@@ -4232,10 +4616,10 @@
             </div>
             <div style="display:flex;flex-direction:column;gap:10px">
               ${regs.slice(0, 5).map(r => {
-                const u = users.find(user => String(user.id) === String(r.attendeeId)) || { name: 'Attendee' };
-                const e = DB.events.find(ev => String(ev.id) === String(r.eventId)) || { title: 'Event' };
-                const verifStatus = r.verificationStatus || (r.status === 'confirmed' ? 'Verified' : 'Pending Review');
-                return `
+        const u = users.find(user => String(user.id) === String(r.attendeeId)) || { name: 'Attendee' };
+        const e = DB.events.find(ev => String(ev.id) === String(r.eventId)) || { title: 'Event' };
+        const verifStatus = r.verificationStatus || (r.status === 'confirmed' ? 'Verified' : 'Pending Review');
+        return `
                   <div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2)" class="flex justify-between items-center">
                     <div>
                       <div style="font-weight:700;font-size:13.5px;color:var(--text)">${u.name}</div>
@@ -4244,7 +4628,7 @@
                     <span class="badge badge-${verifStatus === 'Verified' ? 'green' : verifStatus === 'Flagged' ? 'yellow' : 'purple'}">${verifStatus}</span>
                   </div>
                 `;
-              }).join('') || '<div class="empty">No registrations found</div>'}
+      }).join('') || '<div class="empty">No registrations found</div>'}
             </div>
           </div>
 
@@ -4418,7 +4802,7 @@
             <div class="page-sub">Operational overview and event management for ${CU.name}.</div>
           </div>
         </div>
-        
+
         <div class="grid-4 mb-20">
           <div class="stat-card">
             <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">🗓️</div>
@@ -4450,8 +4834,8 @@
             </div>
             <div style="display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;padding-right:4px">
               ${upcomingEventsList.slice(0, 6).map(e => {
-                const isFull = (e.registered || 0) >= (e.capacity || 100);
-                return `
+        const isFull = (e.registered || 0) >= (e.capacity || 100);
+        return `
                   <div style="padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface2)">
                     <div class="flex justify-between items-start mb-6">
                       <div style="font-weight:700;font-size:14px;color:var(--text)">${e.title || e.name}</div>
@@ -4464,7 +4848,7 @@
                     </div>
                   </div>
                 `;
-              }).join('') || '<div class="empty">No upcoming events found</div>'}
+      }).join('') || '<div class="empty">No upcoming events found</div>'}
             </div>
           </div>
 
@@ -4500,7 +4884,7 @@
         const city = (e.city || '').toLowerCase();
         const cat = (e.category || '').toLowerCase();
         const matchesQuery = !query || title.includes(query) || venue.includes(query) || city.includes(query) || cat.includes(query);
-        
+
         let st = formatEventStatus(e.status).toLowerCase();
         let normFilter = statusFilter.toLowerCase();
         let matchesStatus = !normFilter || st === normFilter;
@@ -4556,11 +4940,11 @@
               </thead>
               <tbody>
                 ${filtered.map(e => {
-                  const currentStatus = formatEventStatus(e.status);
-                  const isPending = currentStatus === 'Pending';
-                  const isFull = (e.registered || 0) >= (e.capacity || 100);
+        const currentStatus = formatEventStatus(e.status);
+        const isPending = currentStatus === 'Pending';
+        const isFull = (e.registered || 0) >= (e.capacity || 100);
 
-                  return `
+        return `
                     <tr>
                       <td>
                         <div style="font-weight:700;font-size:14px;color:var(--text)">${e.title || e.name}</div>
@@ -4599,7 +4983,7 @@
                       </td>
                     </tr>
                   `;
-                }).join('') || '<tr><td colspan="7" class="text-center py-20">No matching events found.</td></tr>'}
+      }).join('') || '<tr><td colspan="7" class="text-center py-20">No matching events found.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -4992,8 +5376,8 @@
               </thead>
               <tbody>
                 ${requests.map(item => {
-                  const user = supportUser(item), event = supportEvent(item);
-                  return `
+        const user = supportUser(item), event = supportEvent(item);
+        return `
                     <tr>
                       <td>
                         <div style="font-weight:700;font-size:13.5px;color:var(--text)">${item.subject}</div>
@@ -5017,7 +5401,7 @@
                       </td>
                     </tr>
                   `;
-                }).join('') || '<tr><td colspan="6" class="text-center py-20 muted">No support requests found.</td></tr>'}
+      }).join('') || '<tr><td colspan="6" class="text-center py-20 muted">No support requests found.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -5132,7 +5516,7 @@
       ]);
     }
 
-    window.prefillRouteForm = function(reqId) {
+    window.prefillRouteForm = function (reqId) {
       if (!reqId) return;
       const item = (DB.supportRequests || []).find(r => r.id === reqId);
       if (!item) return;
@@ -5293,7 +5677,147 @@
     }
 
     function financeStatusBadge(status) { return { Successful: 'green', Pending: 'yellow', Failed: 'red', Requested: 'yellow', Processing: 'purple', Completed: 'green', Rejected: 'red' }[status] || 'gray'; }
-    function pageFinanceCenter() { const tab = sessionStorage.getItem('finance_tab') || 'transactions'; const query = (sessionStorage.getItem('finance_query') || '').toLowerCase(); const records = tab === 'transactions' ? DB.financeTransactions : DB.financeRefunds; const filtered = records.filter(item => { const user = DB.users.find(u => String(u.id) === String(item.userId)) || {}; const event = DB.events.find(e => String(e.id) === String(item.eventId)) || {}; return !query || `${item.id} ${user.name} ${user.email} ${event.title} ${item.status}`.toLowerCase().includes(query); }); return `<div class="page-hd"><div class="page-hd-left"><div class="page-title">Finance</div><div class="page-sub">Review transactions and manage refund requests.</div></div></div><div style="display:flex;gap:6px;margin-bottom:16px"><button class="btn ${tab === 'transactions' ? 'btn-primary' : 'btn-ghost'}" onclick="switchFinanceTab('transactions')">💳 Transactions</button><button class="btn ${tab === 'refunds' ? 'btn-primary' : 'btn-ghost'}" onclick="switchFinanceTab('refunds')">↩️ Refunds</button></div><div class="filter-row"><div class="search-box input-group"><span class="input-icon">🔍</span><input class="form-control" id="finance-query" placeholder="Search finance records..." value="${query}" oninput="refreshFinanceCenter()"></div></div><div class="card"><div class="table-wrap"><table><thead>${tab === 'transactions' ? '<tr><th>Transaction ID</th><th>User</th><th>Event</th><th>Amount</th><th>Payment Status</th><th>Date</th></tr>' : '<tr><th>Refund ID</th><th>User</th><th>Event</th><th>Amount</th><th>Reason</th><th>Status</th><th>Date</th></tr>'}</thead><tbody>${filtered.map(item => { const user = DB.users.find(u => String(u.id) === String(item.userId)) || { name: 'Unknown' }, event = DB.events.find(e => String(e.id) === String(item.eventId)) || { title: 'Unknown Event' }; return tab === 'transactions' ? `<tr><td class="mono">${item.id}</td><td>${user.name}</td><td>${event.title}</td><td style="color:var(--green);font-weight:700">₹${item.amount}</td><td><span class="badge badge-${financeStatusBadge(item.status)}">${item.status}</span></td><td>${item.date}</td></tr>` : `<tr><td class="mono">${item.id}</td><td>${user.name}</td><td>${event.title}</td><td style="color:var(--green);font-weight:700">₹${item.amount}</td><td>${item.reason}</td><td><span class="badge badge-${financeStatusBadge(item.status)}">${item.status}</span></td><td>${item.date}</td></tr>`; }).join('') || `<tr><td colspan="${tab === 'transactions' ? 6 : 7}">No finance records found.</td></tr>`}</tbody></table></div></div>`; }
+    function pageFinanceCenter() {
+      const tab = sessionStorage.getItem('finance_tab') || 'transactions';
+      const query = (sessionStorage.getItem('finance_query') || '').toLowerCase();
+      const commissionRate = 0.15;
+      const allTransactions = Array.isArray(DB.financeTransactions) ? DB.financeTransactions : [];
+      const refundRecords = Array.isArray(DB.financeRefunds) ? DB.financeRefunds : [];
+      const paidRegistrations = (DB.registrations || []).filter(reg => String(reg.payment || '').toLowerCase() === 'paid' && ['confirmed', 'verified'].includes(String(reg.status || '').toLowerCase()));
+      const successfulTransactions = paidRegistrations.length ? paidRegistrations : allTransactions.filter(tx => String(tx.status || '').toLowerCase() === 'successful' && Number(tx.amount || 0) > 0);
+      const totalRevenue = successfulTransactions.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+      const platformCommission = totalRevenue * commissionRate;
+      const organizerPayout = totalRevenue - platformCommission;
+
+      const records = tab === 'transactions' ? allTransactions : refundRecords;
+      const filtered = records.filter(item => {
+        const user = DB.users.find(u => String(u.id) === String(item.userId)) || {};
+        const event = DB.events.find(e => String(e.id) === String(item.eventId)) || {};
+        const text = `${item.id || ''} ${user.name || ''} ${user.email || ''} ${event.title || ''} ${item.status || ''} ${item.reason || ''}`.toLowerCase();
+        return !query || text.includes(query);
+      });
+
+      return `
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Finance &amp; Revenue</div>
+            <div class="page-sub">Track registration revenue, platform commission, organizer payouts, and customer payment activity.</div>
+          </div>
+        </div>
+
+        <div class="grid-4 mb-20">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">💰</div>
+            <div class="stat-value" style="color:var(--green)">₹${totalRevenue.toLocaleString('en-IN')}</div>
+            <div class="stat-label">Total Registration Revenue</div>
+            <div class="stat-sub neutral">Successful attendee payments</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">📈</div>
+            <div class="stat-value" style="color:var(--accent)">₹${platformCommission.toLocaleString('en-IN')}</div>
+            <div class="stat-label">Platform Commission</div>
+            <div class="stat-sub neutral">Fixed 15% fee share</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">💸</div>
+            <div class="stat-value" style="color:var(--yellow)">₹${organizerPayout.toLocaleString('en-IN')}</div>
+            <div class="stat-label">Organizer Payouts</div>
+            <div class="stat-sub neutral">Net payout after commission</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--purple-dim);color:var(--purple)">🧾</div>
+            <div class="stat-value" style="color:var(--purple)">${successfulTransactions.length}</div>
+            <div class="stat-label">Successful Transactions</div>
+            <div class="stat-sub neutral">Monitored payment records</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="flex justify-between items-center mb-12">
+            <div class="h4">Event-wise Revenue &amp; Commission</div>
+            <div class="small muted">Commission formula: registration fee × 15%</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Attendees</th>
+                  <th>Gross Revenue</th>
+                  <th>Platform Commission</th>
+                  <th>Organizer Payout</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(() => {
+                  const eventSummary = {};
+                  successfulTransactions.forEach(tx => {
+                    const event = DB.events.find(e => String(e.id) === String(tx.eventId)) || { title: 'Unknown Event' };
+                    const eventKey = String(tx.eventId || event.title);
+                    if (!eventSummary[eventKey]) {
+                      eventSummary[eventKey] = {
+                        eventTitle: event.title,
+                        attendeeCount: 0,
+                        revenue: 0
+                      };
+                    }
+                    eventSummary[eventKey].attendeeCount += 1;
+                    eventSummary[eventKey].revenue += Number(tx.amount || 0);
+                  });
+                  const rows = Object.values(eventSummary);
+                  return rows.length
+                    ? rows.map(row => {
+                        const commission = row.revenue * commissionRate;
+                        const payout = row.revenue - commission;
+                        return `
+                          <tr>
+                            <td>${row.eventTitle}</td>
+                            <td>${row.attendeeCount}</td>
+                            <td style="color:var(--green);font-weight:700">₹${row.revenue}</td>
+                            <td style="color:var(--accent);font-weight:700">₹${commission}</td>
+                            <td style="color:var(--yellow);font-weight:700">₹${payout}</td>
+                          </tr>
+                        `;
+                      }).join('')
+                    : '<tr><td colspan="5" class="text-center py-20">No successful event revenue data found.</td></tr>';
+                })()}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:6px;margin-bottom:16px">
+          <button class="btn ${tab === 'transactions' ? 'btn-primary' : 'btn-ghost'}" onclick="switchFinanceTab('transactions')">💳 Transactions</button>
+          <button class="btn ${tab === 'refunds' ? 'btn-primary' : 'btn-ghost'}" onclick="switchFinanceTab('refunds')">↩️ Refunds</button>
+        </div>
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="finance-query" placeholder="Search finance records..." value="${query}" oninput="refreshFinanceCenter()">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                ${tab === 'transactions' ? '<tr><th>Transaction ID</th><th>User</th><th>Event</th><th>Amount</th><th>Payment Status</th><th>Date</th></tr>' : '<tr><th>Refund ID</th><th>User</th><th>Event</th><th>Amount</th><th>Reason</th><th>Status</th><th>Date</th></tr>'}
+              </thead>
+              <tbody>
+                ${filtered.map(item => {
+                  const user = DB.users.find(u => String(u.id) === String(item.userId)) || { name: 'Unknown' };
+                  const event = DB.events.find(e => String(e.id) === String(item.eventId)) || { title: 'Unknown Event' };
+                  return tab === 'transactions'
+                    ? `<tr><td class="mono">${item.id}</td><td>${user.name}</td><td>${event.title}</td><td style="color:var(--green);font-weight:700">₹${item.amount}</td><td><span class="badge badge-${financeStatusBadge(item.status)}">${item.status}</span></td><td>${item.date}</td></tr>`
+                    : `<tr><td class="mono">${item.id}</td><td>${user.name}</td><td>${event.title}</td><td style="color:var(--green);font-weight:700">₹${item.amount}</td><td>${item.reason}</td><td><span class="badge badge-${financeStatusBadge(item.status)}">${item.status}</span></td><td>${item.date}</td></tr>`;
+                }).join('') || `<tr><td colspan="${tab === 'transactions' ? 6 : 7}" class="text-center py-20">No finance records found.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
     function switchFinanceTab(tab) { sessionStorage.setItem('finance_tab', tab); renderPage('finance'); }
     function refreshFinanceCenter() { sessionStorage.setItem('finance_query', v('finance-query')); renderPage('finance'); }
 
@@ -5356,11 +5880,11 @@
               </thead>
               <tbody>
                 ${filtered.map(reg => {
-                  const attendee = DB.users.find(u => String(u.id) === String(reg.attendeeId)) || { name: 'Unknown User', email: '—' };
-                  const event = DB.events.find(e => String(e.id) === String(reg.eventId)) || { title: 'Unknown Event' };
-                  const isPending = reg.status === 'pending';
+        const attendee = DB.users.find(u => String(u.id) === String(reg.attendeeId)) || { name: 'Unknown User', email: '—' };
+        const event = DB.events.find(e => String(e.id) === String(reg.eventId)) || { title: 'Unknown Event' };
+        const isPending = reg.status === 'pending';
 
-                  return `
+        return `
                     <tr>
                       <td class="mono"><strong>${reg.ticketId || reg.id}</strong></td>
                       <td>
@@ -5386,7 +5910,7 @@
                       </td>
                     </tr>
                   `;
-                }).join('') || '<tr><td colspan="7" class="text-center py-20">No matching registrations found.</td></tr>'}
+      }).join('') || '<tr><td colspan="7" class="text-center py-20">No matching registrations found.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -5525,11 +6049,11 @@
               </thead>
               <tbody>
                 ${filtered.map(u => {
-                  const em = (u.email || '').toLowerCase();
-                  const isDup = emailCounts[em] > 1 || (u.phone && phoneCounts[u.phone] > 1);
-                  const isDeactivated = u.status === 'deactivated' || u.status === 'inactive';
+        const em = (u.email || '').toLowerCase();
+        const isDup = emailCounts[em] > 1 || (u.phone && phoneCounts[u.phone] > 1);
+        const isDeactivated = u.status === 'deactivated' || u.status === 'inactive';
 
-                  return `
+        return `
                     <tr style="${isDup ? 'background:rgba(234,179,8,0.04)' : ''}">
                       <td>
                         <div class="flex items-center gap-10">
@@ -5560,7 +6084,7 @@
                       </td>
                     </tr>
                   `;
-                }).join('') || '<tr><td colspan="6" class="text-center py-20">No matching users found.</td></tr>'}
+      }).join('') || '<tr><td colspan="6" class="text-center py-20">No matching users found.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -5727,14 +6251,14 @@
               </thead>
               <tbody>
                 ${filtered.map(r => {
-                  const attendee = DB.users.find(u => String(u.id) === String(r.attendeeId)) || { name: 'Unknown User', email: '—', phone: '—' };
-                  const event = DB.events.find(e => String(e.id) === String(r.eventId)) || { title: 'Unknown Event' };
-                  const currentVerif = r.verificationStatus || (r.status === 'confirmed' ? 'Verified' : 'Pending Review');
-                  const isPending = currentVerif === 'Pending Review' || currentVerif === 'Pending';
-                  const docType = r.docType || 'Govt Aadhaar / Passport ID';
-                  const docRef = r.docRef || 'REF-' + String(r.id).padStart(4, '0');
+        const attendee = DB.users.find(u => String(u.id) === String(r.attendeeId)) || { name: 'Unknown User', email: '—', phone: '—' };
+        const event = DB.events.find(e => String(e.id) === String(r.eventId)) || { title: 'Unknown Event' };
+        const currentVerif = r.verificationStatus || (r.status === 'confirmed' ? 'Verified' : 'Pending Review');
+        const isPending = currentVerif === 'Pending Review' || currentVerif === 'Pending';
+        const docType = r.docType || 'Govt Aadhaar / Passport ID';
+        const docRef = r.docRef || 'REF-' + String(r.id).padStart(4, '0');
 
-                  return `
+        return `
                     <tr>
                       <td class="mono"><strong>${r.ticketId || r.id}</strong></td>
                       <td>
@@ -5760,7 +6284,7 @@
                       </td>
                     </tr>
                   `;
-                }).join('') || '<tr><td colspan="6" class="text-center py-20">No registration verification records found.</td></tr>'}
+      }).join('') || '<tr><td colspan="6" class="text-center py-20">No registration verification records found.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -5923,9 +6447,9 @@
                     <td class="small">${r.period || '—'}</td>
                     <td>
                       ${r.fileName
-                        ? `<span style="font-weight:600;color:var(--accent);font-size:12.5px">📄 ${r.fileName}</span>`
-                        : `<span class="small muted">No file attached</span>`
-                      }
+          ? `<span style="font-weight:600;color:var(--accent);font-size:12.5px">📄 ${r.fileName}</span>`
+          : `<span class="small muted">No file attached</span>`
+        }
                     </td>
                     <td>
                       <span class="badge badge-${r.status === 'Reviewed' ? 'green' : r.status === 'Submitted' ? 'purple' : 'yellow'}">${r.status}</span>
@@ -5982,14 +6506,14 @@
       ] : []);
     }
 
-    window.handleRegReportFileSelect = function(input) {
+    window.handleRegReportFileSelect = function (input) {
       const preview = document.getElementById('rv-file-preview');
       if (input.files && input.files[0]) {
         const f = input.files[0];
         if (preview) {
           preview.innerHTML = `
             <div class="flex items-center justify-between" style="background:var(--accent-dim);border-radius:8px;padding:10px 14px">
-              <div style="font-weight:600;color:var(--accent);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 ${f.name} (${(f.size/1024).toFixed(1)} KB)</div>
+              <div style="font-weight:600;color:var(--accent);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 ${f.name} (${(f.size / 1024).toFixed(1)} KB)</div>
               <button type="button" class="btn btn-danger btn-xs" onclick="event.stopPropagation();resetRegReportFileSelect()">✕ Remove</button>
             </div>
           `;
@@ -5997,7 +6521,7 @@
       }
     };
 
-    window.resetRegReportFileSelect = function() {
+    window.resetRegReportFileSelect = function () {
       const input = document.getElementById('rv-file');
       if (input) input.value = '';
       const preview = document.getElementById('rv-file-preview');
@@ -6127,6 +6651,7 @@
     </div>
   </div>`;
     }
+
     function searchOrganizerEvents(query) {
       sessionStorage.setItem('org_events_search', query);
       renderPage('dashboard');
@@ -6769,15 +7294,23 @@
       }
       return `<table>
     <thead><tr><th>User</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
-    <tbody>${users.map(u => `<tr>
-      <td><div class="flex items-center gap-8"><div class="av av-xs">${u.avatar || u.name?.[0] || '?'}</div><strong>${u.name || 'Unknown User'}</strong></div></td>
+    <tbody>${users.map(u => {
+        const avHtml = u.avatarImage ? `
+        <div class="av av-xs">
+          <img src="${u.avatarImage}" alt="${u.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <span style="display:none">${u.avatar || u.name?.[0] || '?'}</span>
+        </div>
+      ` : `<div class="av av-xs">${u.avatar || u.name?.[0] || '?'}</div>`;
+        return `<tr>
+      <td><div class="flex items-center gap-8">${avHtml}<strong>${u.name || 'Unknown User'}</strong></div></td>
       <td>${u.email || '—'}</td>
       <td>${u.phone || '—'}</td>
       <td><span class="badge badge-${ROLE_COLORS[u.role] || 'blue'}">${u.role === 'organizer' ? 'Event Manager' : ROLE_LABELS[u.role] || u.role}</span></td>
       <td><span class="badge badge-${u.status === 'active' ? 'green' : 'red'}">${u.status || 'unknown'}</span></td>
       <td>${u.joined || u.createdAt || '—'}</td>
       <td><div class="actions"><button class="btn btn-ghost btn-xs" onclick="openEditUserModal('${u.id}')">Edit</button><button class="btn btn-xs btn-danger" onclick="removeUser('${u.id}')">Remove</button></div></td>
-    </tr>`).join('')}</tbody>
+    </tr>`;
+      }).join('')}</tbody>
   </table>`;
     }
 
@@ -6837,9 +7370,7 @@
         toast('User removed', 'info');
       });
     }
-    function pageEmployeeStats() {
-      return pageStaffReportsAdmin();
-    }
+
     function pageEvents() {
       if (CU.role === 'superuser') return pageEventReports();
       if (CU.role === 'client') {
@@ -6876,9 +7407,15 @@
     function evCard(e, role, reg = null) {
       const pct = Math.min(100, Math.round((e.registered / e.capacity) * 100));
       const regForThis = reg || DB.registrations.find(r => String(r.attendeeId) === String(CU.id) && String(r.eventId) === String(e.id));
+      const bannerContent = e.image ? `
+        <img src="${e.image}" alt="${e.title || 'Event'}" class="ev-banner-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="ev-banner-fallback" style="display:none;align-items:center;justify-content:center;font-size:52px;width:100%;height:100%">${e.emoji || '📅'}</div>
+        <div class="ev-banner-overlay"></div>
+      ` : `<span style="font-size:52px">${e.emoji || '📅'}</span>`;
+
       return `<div class="ev-card">
-    <div class="ev-banner" style="background:${e.color}18">
-      ${e.emoji}
+    <div class="ev-banner" style="background:${e.color || 'var(--accent)'}18">
+      ${bannerContent}
       <div class="ev-banner-tag"><span class="badge badge-${evStatBadge(e.status)}">${e.status}</span></div>
       <div class="ev-banner-price">${e.price === 0 ? 'Free' : '₹' + e.price}</div>
     </div>
@@ -6896,9 +7433,9 @@
       <div class="ev-footer">
         ${role === 'attendee' ? `<div class="flex gap-6" style="width:100%;justify-content:space-between"><button class="btn btn-sm ${regForThis ? 'btn-ghost' : 'btn-primary'}" onclick="regForEvent('${e.id}')" ${(e.status === 'full' && !regForThis) || e.status === 'completed' ? 'disabled' : ''} style="${(e.status === 'full' && !regForThis) || e.status === 'completed' ? 'opacity:.5' : ''}">${regForThis ? '✓ Registered' : e.status === 'full' ? 'Event Full' : 'Register'}</button><button class="btn btn-ghost btn-xs" onclick="openViewEventDrawer('${e.id}')" title="View event details">View Details</button></div>` :
           role === 'organizer' ? `<div class="actions"><button class="btn btn-ghost btn-xs" onclick="openViewEventDrawer('${e.id}')" title="View event details">👁️ View</button><button class="btn btn-ghost btn-xs" onclick="openEditEventModal('${e.id}')">✏️ Edit</button><button class="btn btn-xs btn-danger" onclick="deleteEvent('${e.id}')">🗑️</button></div>` :
-          role === 'superuser' ? `<div class="actions"><button class="btn btn-ghost btn-xs w-full" onclick="openViewEventDrawer('${e.id}')" title="View event details">👁️ View</button></div>` :
-            role === 'staff' || role === 'client' ? `<div class="flex gap-6"><button class="btn btn-ghost btn-xs w-full" onclick="openViewEventDrawer('${e.id}')" title="View event details">👁️ View Details</button></div>` :
-              `<button class="btn btn-ghost btn-xs" onclick="openViewEventDrawer('${e.id}')" title="View event details">👁️ Details</button>`}
+            role === 'superuser' ? `<div class="actions"><button class="btn btn-ghost btn-xs w-full" onclick="openViewEventDrawer('${e.id}')" title="View event details">👁️ View</button></div>` :
+              role === 'staff' || role === 'client' ? `<div class="flex gap-6"><button class="btn btn-ghost btn-xs w-full" onclick="openViewEventDrawer('${e.id}')" title="View event details">👁️ View Details</button></div>` :
+                `<button class="btn btn-ghost btn-xs" onclick="openViewEventDrawer('${e.id}')" title="View event details">👁️ Details</button>`}
         <div class="tag-list" style="flex:1;justify-content:flex-end">${(e.tags || []).slice(0, 2).map(t => `<span class="tag">${t}</span>`).join('')}</div>
       </div>
     </div>
@@ -7036,8 +7573,13 @@
       const e = DB.events.find(ev => String(ev.id) === String(id)); if (!e) return;
       const regs = DB.registrations.filter(r => String(r.eventId) === String(id));
       const assigns = DB.staffAssignments.filter(a => String(a.eventId) === String(id));
+      const bannerHTML = e.image ? `
+        <div style="height:140px;border-radius:12px;overflow:hidden;margin-bottom:16px;position:relative;background:${e.color || 'var(--accent)'}18">
+          <img src="${e.image}" alt="${e.title || 'Event'}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=\'font-size:52px;text-align:center;padding:30px 0\'>${e.emoji || '📅'}</div>'">
+        </div>
+      ` : `<div style="font-size:52px;text-align:center;margin-bottom:16px">${e.emoji || '📅'}</div>`;
       openDrawer(e.title, `
-    <div style="font-size:52px;text-align:center;margin-bottom:16px">${e.emoji}</div>
+    ${bannerHTML}
     <span class="badge badge-${evStatBadge(e.status)} mb-16">${e.status}</span>
     <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px">
       <div class="info-row"><span class="info-label">Category</span><span class="info-value">${e.category}</span></div>
@@ -7059,8 +7601,19 @@
       const e = DB.events.find(ev => ev.id === id); if (!e) return;
       const regs = DB.registrations.filter(r => r.eventId === id);
       const org = DB.users.find(u => u.id === e.organizer) || { name: '—', avatar: '?' };
+      const bannerHTML = e.image ? `
+        <div style="height:140px;border-radius:12px;overflow:hidden;margin-bottom:16px;position:relative;background:${e.color || 'var(--accent)'}18">
+          <img src="${e.image}" alt="${e.title || 'Event'}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=\'font-size:52px;text-align:center;padding:30px 0\'>${e.emoji || '📅'}</div>'">
+        </div>
+      ` : `<div style="font-size:52px;text-align:center;margin-bottom:16px">${e.emoji || '📅'}</div>`;
+      const orgAvHTML = org.avatarImage ? `
+        <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:var(--accent-dim);flex-shrink:0;position:relative">
+          <img src="${org.avatarImage}" alt="${org.name}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;color:var(--accent);font-weight:700">${org.avatar || org.name?.[0] || 'O'}</div>
+        </div>
+      ` : `<div style="width:40px;height:40px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">${org.avatar || org.name?.[0] || 'O'}</div>`;
       openDrawer(e.title, `
-    <div style="font-size:52px;text-align:center;margin-bottom:16px">${e.emoji}</div>
+    ${bannerHTML}
     <span class="badge badge-${evStatBadge(e.status)} mb-16">${e.status}</span>
     <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px">
       <div class="info-row"><span class="info-label">Category</span><span class="info-value">${e.category}</span></div>
@@ -7073,7 +7626,7 @@
     ${e.description ? `<div class="label mb-8">Description</div><p style="font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px">${e.description}</p>` : ''}
     <div class="label mb-8">Organizer</div>
     <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:8px;margin-bottom:16px">
-      <div style="width:40px;height:40px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">${org.avatar || org.name[0]}</div>
+      ${orgAvHTML}
       <div style="flex:1;min-width:0">
         <div style="font-weight:600">${org.name}</div>
         <div class="small" style="color:var(--text2)">${org.service || org.bio || 'Professional Event Organizer'}</div>
@@ -7090,11 +7643,16 @@
       const checkedIn = regs.filter(r => r.checkedIn).length;
       const totalRevenue = regs.reduce((sum, r) => sum + r.amount, 0);
       const avgRating = 4.5;
+      const reportThumb = e.image ? `
+        <div style="width:64px;height:64px;border-radius:10px;overflow:hidden;flex-shrink:0;background:${e.color || 'var(--accent)'}20;position:relative">
+          <img src="${e.image}" alt="${e.title || 'Event'}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=\'font-size:48px\'>${e.emoji || '📅'}</div>'">
+        </div>
+      ` : `<div style="font-size:48px">${e.emoji || '📅'}</div>`;
 
       openModal(`Event Report - ${e.title}`, `
     <div style="background:linear-gradient(135deg,${e.color}20,${e.color}05);border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid ${e.color}30">
-      <div style="display:flex;gap:12px;align-items:start">
-        <div style="font-size:48px">${e.emoji}</div>
+      <div style="display:flex;gap:14px;align-items:center">
+        ${reportThumb}
         <div style="flex:1">
           <div style="font-weight:700;font-size:18px;margin-bottom:4px">${e.title}</div>
           <div style="font-size:13px;color:var(--text2)">📅 ${e.date} · 📍 ${e.venue}</div>
@@ -7205,11 +7763,17 @@
       if (!e || e.status === 'full') { toast(e ? 'Sorry, this event is full' : 'Event not found', 'error'); return; }
       const existing = DB.registrations.find(r => String(r.attendeeId) === String(CU.id) && String(r.eventId) === String(eventId));
       if (existing) { openViewTicketModal(existing.id); return; }
+      const regThumb = e.image ? `
+        <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:${e.color || 'var(--accent)'}20;position:relative">
+          <img src="${e.image}" alt="${e.title || 'Event'}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<span style=\'font-size:32px\'>${e.emoji || '📅'}</span>'">
+        </div>
+      ` : `<span style="font-size:32px">${e.emoji || '📅'}</span>`;
+
       // Show registration flow
       openModal(`Register — ${e.title}`, `
     <div style="background:${e.color}12;border:1px solid ${e.color}30;border-radius:var(--r-lg);padding:16px;margin-bottom:20px">
       <div class="flex items-center gap-12">
-        <span style="font-size:32px">${e.emoji}</span>
+        ${regThumb}
         <div>
           <div style="font-weight:700;font-size:15px">${e.title}</div>
           <div class="small">📅 ${e.date} · ${e.time}</div>
@@ -7223,7 +7787,7 @@
     ${e.price > 0 ? `
     <div style="background:var(--surface3);border-radius:var(--r);padding:16px;border:1px solid var(--border)">
       <div class="h4 mb-12">💳 Payment Information</div>
-      <div class="form-group"><label class="form-label">Cardholder Name</label><input class="form-control" id="pay-name" value="${CU.name}" placeholder="Name on card"></div>
+      <div class="form-group"><label class="form-label">Cardholder Name</label><input class="form-control" id="pay-name" placeholder="Name on card" autocomplete="off"></div>
       <div class="form-group"><label class="form-label">Card Number *</label><input class="form-control" id="pay-card" placeholder="1234 5678 9012 3456" maxlength="19" oninput="fmtCard(this)"></div>
       <div class="grid-2">
         <div class="form-group"><label class="form-label">Expiry *</label><input class="form-control" id="pay-exp" placeholder="MM/YY" maxlength="5" oninput="fmtExp(this)"></div>
@@ -7372,8 +7936,6 @@
     <div class="page-hd">
       <div class="page-hd-left"><div class="page-title">Attendee Management</div><div class="page-sub">${regs.length} total · ${approved} approved</div></div>
       <div class="page-hd-right">
-        <button class="btn btn-ghost" onclick="generateReport()">📊 Generate Report</button>
-        <button class="btn btn-ghost" onclick="toast('Report sent to email','success')">📧 Send Report</button>
       </div>
     </div>
     <div class="card mb-16" style="padding:16px">
@@ -7401,8 +7963,6 @@
   <div class="page-hd">
     <div class="page-hd-left"><div class="page-title">Attendee Management</div><div class="page-sub">${regs.length} total · ${checkedIn2} checked in</div></div>
     <div class="page-hd-right">
-      <button class="btn btn-ghost" onclick="generateReport()">📊 Generate Report</button>
-      <button class="btn btn-ghost" onclick="toast('Report sent to email','success')">📧 Send Report</button>
       <button class="btn btn-ghost" onclick="toast('Exported to CSV','success')">📥 Export CSV</button>
     </div>
   </div>
@@ -7867,12 +8427,18 @@
 
       const avail = getAvailability(CU.id);
 
-      // Get event dates for accepted assignments
-      const myAssignments = DB.staffAssignments.filter(a => a.staffId === CU.id && a.status === 'accepted');
+      // Booked dates = accepted assignment event dates
+      if (!DB.staffBooked) DB.staffBooked = {};
+      const myAssignments = DB.staffAssignments.filter(a => String(a.staffId) === String(CU.id) && a.status === 'accepted');
       const assignedDates = myAssignments.map(a => {
-        const ev = DB.events.find(e => e.id === a.eventId);
+        const ev = DB.events.find(e => String(e.id) === String(a.eventId));
         return ev ? ev.date : '';
       }).filter(d => d);
+      // Merge booked from DB.staffBooked + live assigned dates
+      const bookedDates = [...new Set([
+        ...(DB.staffBooked[String(CU.id)] || []),
+        ...assignedDates
+      ])];
 
       // Format a date string "YYYY-MM-DD" -> "Mon DD"
       function fmtChip(d) {
@@ -7908,28 +8474,39 @@
         const day = i + 1;
         const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const isAvail = avail.includes(fullDate);
-        const isAssigned = assignedDates.includes(fullDate);
+        const isBooked = bookedDates.includes(fullDate);
         const isToday = fullDate === todayStr;
-        let bg, color, border, fontWeight = '600';
-        if (isAssigned) {
-          bg = 'var(--accent)'; color = '#fff'; border = '2px solid var(--accent)';
+        let bg, color, border, fontWeight = '600', cursor = 'pointer', title = '';
+        if (isBooked) {
+          bg = 'var(--red-dim)'; color = 'var(--red)'; border = '2px solid var(--red)'; cursor = 'default'; title = 'Booked — accepted assignment';
         } else if (isAvail) {
-          bg = 'var(--accent)'; color = '#fff'; border = '2px solid var(--accent)';
+          bg = 'var(--green)'; color = '#072b1a'; border = '2px solid var(--green)'; title = 'Available — click to unmark';
         } else if (isToday) {
-          bg = 'transparent'; color = 'var(--text)'; border = '2px solid var(--accent)';
+          bg = 'transparent'; color = 'var(--text)'; border = '2px solid var(--accent)'; title = 'Today';
         } else {
-          bg = 'var(--surface2)'; color = 'var(--text)'; border = '1px solid var(--border)';
+          bg = 'var(--surface2)'; color = 'var(--text2)'; border = '1px solid var(--border)'; title = 'Click to mark available';
         }
-        return `<button onclick="toggleAvailabilityDate('${fullDate}')" style="padding:12px 4px;border-radius:10px;border:${border};background:${bg};color:${color};font-weight:${fontWeight};cursor:pointer;font-size:14px;transition:all .15s;width:100%" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">${day}</button>`;
+        if (isBooked) {
+          return `<div title="${title}" style="padding:12px 4px;border-radius:10px;border:${border};background:${bg};color:${color};font-weight:${fontWeight};font-size:14px;width:100%;text-align:center;position:relative" >${day}<span style="position:absolute;bottom:3px;left:50%;transform:translateX(-50%);font-size:7px;letter-spacing:0;color:var(--red);font-weight:700;line-height:1">BOOKED</span></div>`;
+        }
+        return `<button onclick="toggleAvailabilityDate('${fullDate}')" title="${title}" style="padding:12px 4px;border-radius:10px;border:${border};background:${bg};color:${color};font-weight:${fontWeight};cursor:${cursor};font-size:14px;transition:all .15s;width:100%" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">${day}</button>`;
       }).join('')}
       </div>
+    </div>
+
+    <!-- Legend -->
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:600">
+      <div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:var(--green);display:inline-block"></span><span style="color:var(--text2)">Available</span></div>
+      <div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:var(--red-dim);border:2px solid var(--red);display:inline-block"></span><span style="color:var(--text2)">Booked (accepted assignment)</span></div>
+      <div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:transparent;border:2px solid var(--accent);display:inline-block"></span><span style="color:var(--text2)">Today</span></div>
+      <div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);display:inline-block"></span><span style="color:var(--text2)">Unavailable / Unset</span></div>
     </div>
 
     <!-- Selected Dates Chips -->
     <div class="card" style="padding:20px;margin-bottom:20px;border-left:3px solid var(--accent)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
         <span style="font-size:16px">✅</span>
-        <div style="font-weight:700;font-size:15px;color:var(--text)">Selected Dates (${avail.length})</div>
+        <div style="font-weight:700;font-size:15px;color:var(--text)">Available Dates (${avail.length})</div>
       </div>
       ${avail.length === 0
           ? `<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px">No dates selected yet. Click any date on the calendar to mark availability.</div>`
@@ -7997,26 +8574,48 @@
     }
 
     // ════════════════════════════════════════════════
+    // ════════════════════════════════════════════════
     //  STAFF MANAGEMENT
     // ════════════════════════════════════════════════
     function pageStaffCombined() {
       const tab = sessionStorage.getItem('staff_tab') || 'manage';
-      const staffList = DB.users.filter(u => u.role === 'staff');
+      const allStaffList = DB.users.filter(u => u.role === 'staff');
       let content = '';
 
       if (tab === 'manage') {
+        // Only show staff assigned to events owned by the current organizer
+        const myEventIds = DB.events
+          .filter(e => String(e.organizer) === String(CU.id))
+          .map(e => String(e.id));
+        const myAssignments = DB.staffAssignments.filter(a => myEventIds.includes(String(a.eventId)));
+        const myStaffIds = [...new Set(myAssignments.map(a => String(a.staffId)))];
+        const myStaffList = allStaffList.filter(s => myStaffIds.includes(String(s.id)));
+
         content = `
     <div class="page-hd">
-      <div class="page-hd-left"><div class="page-title">Staff Management</div><div class="page-sub">${staffList.length} staff members</div></div>
+      <div class="page-hd-left"><div class="page-title">My Assigned Staff</div><div class="page-sub">${myStaffList.length} staff member${myStaffList.length !== 1 ? 's' : ''} assigned to your events</div></div>
         <div class="page-hd-right">${CU.role !== 'superuser' ? `<button class="btn btn-primary" onclick="openAssignStaffModal()">+ Assign Staff</button>` : ''}</div>
     </div>
+    ${myStaffList.length === 0 ? `
+    <div class="empty">
+      <div class="empty-icon">👥</div>
+      <div class="empty-title">No staff assigned yet</div>
+      <p class="empty-desc">You haven't assigned any staff to your events. Use Browse Staff to find and assign staff.</p>
+      <button class="btn btn-primary mt-16" onclick="switchStaffTab('browse')">🔍 Browse Staff</button>
+    </div>` : `
     <div class="grid-3 mb-24">
-        ${staffList.map(s => {
-          const assigns = DB.staffAssignments.filter(a => String(a.staffId) === String(s.id));
+        ${myStaffList.map(s => {
+          const assigns = myAssignments.filter(a => String(a.staffId) === String(s.id));
           const earnings = assigns.reduce((sum, a) => sum + (parseFloat(a.fee) || 0), 0);
+          const avImg = s.avatarImage ? `
+            <div class="av av-lg">
+              <img src="${s.avatarImage}" alt="${s.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+              <span style="display:none">${s.avatar || s.name[0]}</span>
+            </div>
+          ` : `<div class="av av-lg">${s.avatar || s.name[0]}</div>`;
           return `<div class="card">
           <div class="flex items-center gap-12 mb-14">
-            <div class="av av-lg">${s.avatar || s.name[0]}</div>
+            ${avImg}
             <div>
               <div style="font-weight:700;font-size:14.5px">${s.name}</div>
               <div class="small mt-4">${s.service || 'General Staff'}</div>
@@ -8025,9 +8624,8 @@
           </div>
           <div class="info-row"><span class="info-label">Email</span><span class="info-value small">${s.email}</span></div>
           <div class="info-row"><span class="info-label">Rate</span><span class="info-value" style="color:var(--green)">${s.rate ? '$' + s.rate + '/event' : '—'}</span></div>
-          <div class="info-row"><span class="info-label">Assignments</span><span class="info-value">${assigns.length}</span></div>
-          <div class="info-row"><span class="info-label">Earnings</span><span class="info-value" style="color:var(--green)">$${earnings.toLocaleString()}</span></div>
-          <div class="info-row"><span class="info-label">Joined</span><span class="info-value small">${s.joined || s.createdAt || '—'}</span></div>
+          <div class="info-row"><span class="info-label">My Assignments</span><span class="info-value">${assigns.length}</span></div>
+          <div class="info-row"><span class="info-label">Total Fee</span><span class="info-value" style="color:var(--green)">$${earnings.toLocaleString()}</span></div>
           <div class="flex gap-6 mt-14">
             <button class="btn btn-ghost btn-xs w-full" onclick="viewStaffModal('${s.id}')">View</button>
             ${CU.role !== 'superuser' ? `<button class="btn btn-primary btn-xs w-full" onclick="openAssignStaffModal('${s.id}')">Assign</button>` : ''}
@@ -8038,11 +8636,17 @@
     <div class="h4 mb-12">Assignment Log</div>
     <div class="table-wrap">
       <table><thead><tr><th>Staff</th><th>Event</th><th>Role</th><th>Fee</th><th>Status</th><th>Actions</th></tr></thead>
-      <tbody>${DB.staffAssignments.map(a => {
-          const s = DB.users.find(u => u.id === a.staffId) || { name: '—', avatar: '?' };
-          const e = DB.events.find(ev => ev.id === a.eventId) || { title: '—' };
+      <tbody>${myAssignments.map(a => {
+          const s = DB.users.find(u => String(u.id) === String(a.staffId)) || { name: '—', avatar: '?' };
+          const e = DB.events.find(ev => String(ev.id) === String(a.eventId)) || { title: '—' };
+          const rowAv = s.avatarImage ? `
+            <div class="av av-xs">
+              <img src="${s.avatarImage}" alt="${s.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+              <span style="display:none">${s.avatar || s.name[0]}</span>
+            </div>
+          ` : `<div class="av av-xs">${s.avatar || s.name[0]}</div>`;
           return `<tr>
-          <td><div class="flex items-center gap-8"><div class="av av-xs">${s.avatar || s.name[0]}</div>${s.name}</div></td>
+          <td><div class="flex items-center gap-8">${rowAv}${s.name}</div></td>
           <td style="font-size:13px;max-width:160px" class="truncate">${e.title}</td>
           <td class="muted">${a.role}</td>
           <td style="color:var(--green);font-weight:600">$${a.fee}</td>
@@ -8051,7 +8655,8 @@
         </tr>`;
         }).join('')}
       </tbody></table>
-    </div>`;
+    </div>`}
+`;
       } else {
         content = `
     <div class="page-hd">
@@ -8086,11 +8691,15 @@
           const rating = s.rating || 4.0;
           const reviews = Math.floor(Math.random() * 150) + 20;
           const completedJobs = Math.floor(Math.random() * 200) + 30;
-          const earnings = DB.staffAssignments.filter(a => String(a.staffId) === String(s.id)).reduce((sum,a) => sum + (parseFloat(a.fee) || 0), 0);
+          const earnings = DB.staffAssignments.filter(a => String(a.staffId) === String(s.id)).reduce((sum, a) => sum + (parseFloat(a.fee) || 0), 0);
+          const staffCardAv = s.avatarImage ? `
+            <img src="${s.avatarImage}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div style="display:none;font-size:80px;font-weight:700;color:${s.color || 'var(--green)'}">${s.avatar || s.name[0]}</div>
+          ` : `<div style="font-size:80px;font-weight:700;color:${s.color || 'var(--green)'}">${s.avatar || s.name[0]}</div>`;
           return `<div class="card" style="overflow:hidden;display:flex;flex-direction:column;position:relative">
-          <div style="aspect-ratio:1;background:linear-gradient(135deg,${s.color || 'var(--green)'}30,${s.color || 'var(--green)'}10);display:flex;align-items:center;justify-content:center;margin-bottom:16px;border-radius:12px;position:relative">
-            <div style="font-size:80px">${s.avatar || s.name[0]}</div>
-            <div style="position:absolute;top:12px;right:12px;background:var(--yellow);color:#1a1400;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600">⭐ ${rating.toFixed(1)}</div>
+          <div style="aspect-ratio:1;background:linear-gradient(135deg,${s.color || 'var(--green)'}30,${s.color || 'var(--green)'}10);display:flex;align-items:center;justify-content:center;margin-bottom:16px;border-radius:12px;position:relative;overflow:hidden">
+            ${staffCardAv}
+            <div style="position:absolute;top:12px;right:12px;background:var(--yellow);color:#1a1400;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;z-index:2">⭐ ${rating.toFixed(1)}</div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column">
             <div style="font-weight:700;font-size:16px;margin-bottom:4px">${s.name}</div>
@@ -8260,21 +8869,28 @@
         ? assigns.slice(0, 4).map(a => {
           const ev = DB.events.find(e => String(e.id) === String(a.eventId)) || { title: 'Event', date: '', venue: '' };
           const sc = a.status === 'accepted' ? 'green' : a.status === 'pending' ? 'yellow' : 'red';
-          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)"><div><div style="font-weight:600;font-size:13px;margin-bottom:2px">${ev.title}</div><div style="font-size:11px;color:var(--text3)">${a.role} Â· ${ev.date} Â· ${ev.venue || ev.city || 'â€”'}</div></div><span class="badge badge-${sc}" style="flex-shrink:0">${a.status}</span></div>`;
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)"><div><div style="font-weight:600;font-size:13px;margin-bottom:2px">${ev.title}</div><div style="font-size:11px;color:var(--text3)">${a.role} · ${ev.date} · ${ev.venue || ev.city || '—'}</div></div><span class="badge badge-${sc}" style="flex-shrink:0">${a.status}</span></div>`;
         }).join('')
         : `<div style="text-align:center;padding:20px;color:var(--text3);background:var(--surface2);border-radius:8px;font-size:13px">No assignments yet</div>`;
 
+      const modalAv = s.avatarImage ? `
+        <div class="av av-xl" style="flex-shrink:0">
+          <img src="${s.avatarImage}" alt="${s.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <span style="display:none">${s.avatar || s.name[0]}</span>
+        </div>
+      ` : `<div class="av av-xl" style="flex-shrink:0">${s.avatar || s.name[0]}</div>`;
+
       openModal(s.name, `
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
-      <div class="av av-xl" style="flex-shrink:0">${s.avatar || s.name[0]}</div>
+      ${modalAv}
       <div>
         <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:2px">${s.name}</div>
         <div style="color:var(--accent);font-size:13px;font-weight:600;margin-bottom:8px">${s.service || 'Event Staff'}</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span style="background:var(--yellow);color:#1a1400;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:700">&#11088; ${rating.toFixed(1)}</span>
+          <span style="background:var(--yellow);color:#1a1400;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:700">⭐ ${rating.toFixed(1)}</span>
           <span style="color:var(--text3);font-size:12px">${reviews} reviews</span>
         </div>
-        <div style="font-size:12px;color:var(--text2)">&#128241; ${s.phone || '+91 9876543204'}</div>
+        <div style="font-size:12px;color:var(--text2)">📱 ${s.phone || '+91 9876543204'}</div>
         <div style="margin-top:6px;font-size:13px;color:var(--text2)">💰 <strong style="color:var(--green)">$${earnings.toLocaleString()}</strong> earnings</div>
       </div>
     </div>
@@ -8290,10 +8906,10 @@
     </div>
     ${s.bio ? `<p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px">${s.bio}</p>` : ''}
     <div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:20px;border-left:3px solid var(--accent)">
-      <div style="font-weight:600;font-size:14px;margin-bottom:12px;display:flex;align-items:center;gap:8px">&#128197; Availability &mdash; ${monthStr}</div>
+      <div style="font-weight:600;font-size:14px;margin-bottom:12px;display:flex;align-items:center;gap:8px">📅 Availability &mdash; ${monthStr}</div>
       ${calHTML}
     </div>
-    <div style="font-weight:600;font-size:14px;margin-bottom:10px">&#128203; Current Assignments</div>
+    <div style="font-weight:600;font-size:14px;margin-bottom:10px">📋 Current Assignments</div>
     <div style="display:flex;flex-direction:column;gap:8px">${assignCards}</div>
   `, [{ lbl: 'Assign to Event', cls: 'btn-primary', fn: `closeModal();openAssignStaffModal('${id}')` }]);
     }
@@ -8357,60 +8973,36 @@
   </div>
   ${requests.length === 0
           ? `<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">No pending event requests</div><p class="empty-desc">When an organizer assigns you to an event, it will appear here for your review.</p></div>`
-          : `<div style="display:flex;flex-direction:column;gap:16px">
+          : `<div style="display:flex;flex-direction:column;gap:10px">
         ${requests.map(a => {
-            const e = DB.events.find(ev => String(ev.id) === String(a.eventId)) || { title: 'Event', date: '', venue: '', emoji: '📅', color: '#7c6ff7', description: '', type: 'N/A', capacity: 0, budget: 0 };
-            const organizer = DB.users.find(u => String(u.id) === String(e.organizer)) || { name: 'Unknown Organizer', avatar: 'O' };
-            return `<div class="card" style="border-left:4px solid var(--yellow);padding:24px">
-            <!-- Event header -->
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:18px">
-              <div style="display:flex;gap:14px;align-items:center">
-                <div style="font-size:44px;line-height:1">${e.emoji || '📅'}</div>
-                <div>
-                  <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px">${e.title}</div>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <span class="badge badge-yellow">⏳ Awaiting Response</span>
-                    <span class="small" style="color:var(--text3)">from ${organizer.name}</span>
-                  </div>
+            const e = DB.events.find(ev => String(ev.id) === String(a.eventId)) || { title: 'Event', date: '', venue: '', emoji: '📅', color: '#7c6ff7', type: 'N/A' };
+            const organizer = DB.users.find(u => String(u.id) === String(e.organizer)) || { name: 'Unknown Organizer' };
+            const reqThumb = e.image ? `
+              <div style="width:44px;height:44px;border-radius:8px;overflow:hidden;flex-shrink:0;background:${e.color || 'var(--accent)'}20;position:relative">
+                <img src="${e.image}" alt="${e.title || 'Event'}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<span style=\'font-size:28px\'>${e.emoji || '📅'}</span>'">
+              </div>
+            ` : `<span style="font-size:28px;line-height:1;flex-shrink:0">${e.emoji || '📅'}</span>`;
+            return `<div class="card" style="border-left:4px solid var(--yellow);padding:14px 18px">
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+              ${reqThumb}
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+                  <span style="font-size:14px;font-weight:700;color:var(--text)">${e.title}</span>
+                  <span class="badge badge-yellow" style="font-size:10px">⏳ Pending</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text2)">
+                  <span>👤 <strong style="color:var(--accent)">${a.role}</strong></span>
+                  ${e.date ? `<span>📅 ${e.date}</span>` : ''}
+                  ${e.venue || e.city ? `<span>📍 ${e.venue || e.city}</span>` : ''}
+                  <span style="color:var(--text3)">from ${organizer.name}</span>
                 </div>
               </div>
-              <div style="text-align:right">
-                <div style="font-size:22px;font-weight:800;color:var(--green)">$${a.fee.toLocaleString()}</div>
-                <div class="small" style="color:var(--text2)">Offered Fee</div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                <span style="font-size:15px;font-weight:800;color:var(--green)">$${a.fee.toLocaleString()}</span>
+                <button onclick="respondAssign('${a.id}','accepted')" style="padding:7px 14px;background:var(--green);color:#07100d;border:none;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .18s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">✓ Accept</button>
+                <button onclick="respondAssign('${a.id}','declined')" style="padding:7px 14px;background:var(--red-dim);color:var(--red);border:1px solid var(--red);border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .18s" onmouseover="this.style.background='var(--red)';this.style.color='#fff'" onmouseout="this.style.background='var(--red-dim)';this.style.color='var(--red)'">✕ Decline</button>
+                <button onclick="viewStaffEventDetails('${e.id}')" style="padding:7px 12px;background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .18s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">🔍 Details</button>
               </div>
-            </div>
-            <!-- Event details grid -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:18px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);overflow:hidden">
-              <div style="padding:12px 16px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)">
-                <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">📅 Date</div>
-                <div style="font-weight:600;color:var(--text)">${e.date || '—'}</div>
-              </div>
-              <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
-                <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">📍 Venue</div>
-                <div style="font-weight:600;color:var(--text)">${e.venue || e.city || '—'}</div>
-              </div>
-              <div style="padding:12px 16px;border-right:1px solid var(--border)">
-                <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">🎭 Event Type</div>
-                <div style="font-weight:600;color:var(--text)">${e.type || '—'}</div>
-              </div>
-              <div style="padding:12px 16px">
-                <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">👤 Your Role</div>
-                <div style="font-weight:600;color:var(--accent)">${a.role}</div>
-              </div>
-            </div>
-            ${e.description ? `<div style="margin-bottom:16px;padding:14px;background:var(--surface2);border-radius:8px;border-left:2px solid var(--border2)">
-              <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">About This Event</div>
-              <p style="font-size:13.5px;color:var(--text2);line-height:1.7;margin:0">${e.description}</p>
-            </div>` : ''}
-            ${a.notes ? `<div style="margin-bottom:16px;padding:12px 14px;background:var(--accent-dim);border-radius:8px;border:1px solid var(--border2)">
-              <div style="font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">📝 Organizer Notes</div>
-              <div style="font-size:13px;color:var(--text2)">${a.notes}</div>
-            </div>` : ''}
-            <!-- Action buttons -->
-            <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <button onclick="respondAssign('${a.id}','accepted')" style="flex:1;min-width:120px;padding:11px 20px;background:var(--green);color:#07100d;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s" onmouseover="this.style.background='#1ab88d'" onmouseout="this.style.background='var(--green)'">✓ Accept Assignment</button>
-              <button onclick="respondAssign('${a.id}','declined')" style="flex:1;min-width:120px;padding:11px 20px;background:var(--red-dim);color:var(--red);border:1px solid var(--red);border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s" onmouseover="this.style.background='var(--red)';this.style.color='#fff'" onmouseout="this.style.background='var(--red-dim)';this.style.color='var(--red)'">✕ Decline</button>
-              <button onclick="viewStaffEventDetails('${e.id}')" style="padding:11px 20px;background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;transition:all .18s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">🔍 Full Details</button>
             </div>
           </div>`;
           }).join('')}
@@ -8439,10 +9031,15 @@
     }
     function staffAssignCard(a, showActions) {
       const e = DB.events.find(ev => String(ev.id) === String(a.eventId)) || { title: 'Event', date: '', venue: '', emoji: '📅', color: '#7c6ff7', description: '' };
+      const eventThumb = e.image ? `
+        <div style="width:52px;height:52px;border-radius:10px;overflow:hidden;flex-shrink:0;background:${e.color || 'var(--accent)'}20;position:relative">
+          <img src="${e.image}" alt="${e.title || 'Event'}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<span style=\'font-size:36px\'>${e.emoji || '📅'}</span>'">
+        </div>
+      ` : `<span style="font-size:36px">${e.emoji || '📅'}</span>`;
       return `<div class="card" style="border-left:3px solid ${e.color}">
     <div class="flex justify-between items-start">
       <div class="flex items-center gap-12">
-        <span style="font-size:36px">${e.emoji}</span>
+        ${eventThumb}
         <div style="flex:1">
           <div style="font-weight:700;font-size:15px">${e.title}</div>
           <div class="small mt-4">📅 ${e.date}${e.venue ? ' · 📍 ' + e.venue : ''}</div>
@@ -8470,8 +9067,32 @@
       saveDB();
 
       const a = matches[0];
-      const e = DB.events.find(ev => String(ev.id) === String(a.eventId)) || { title: 'Event' };
+      const e = DB.events.find(ev => String(ev.id) === String(a.eventId)) || { title: 'Event', date: '' };
       const s = DB.users.find(u => String(u.id) === String(a.staffId)) || { name: 'Staff' };
+
+      // ── Availability auto-update ──────────────────────────
+      if (e.date) {
+        if (!DB.staffBooked) DB.staffBooked = {};
+        const staffKey = String(a.staffId);
+
+        if (status === 'accepted') {
+          // Remove date from available list
+          const avail = getAvailability(staffKey);
+          const idx = avail.indexOf(e.date);
+          if (idx > -1) { avail.splice(idx, 1); saveAvailability(staffKey, avail); }
+          // Add to booked list
+          if (!DB.staffBooked[staffKey]) DB.staffBooked[staffKey] = [];
+          if (!DB.staffBooked[staffKey].includes(e.date)) DB.staffBooked[staffKey].push(e.date);
+        } else {
+          // Remove from booked list when declining / reconsidering
+          if (DB.staffBooked[staffKey]) {
+            const bi = DB.staffBooked[staffKey].indexOf(e.date);
+            if (bi > -1) DB.staffBooked[staffKey].splice(bi, 1);
+          }
+        }
+        saveDB();
+      }
+      // ─────────────────────────────────────────────────────
 
       const notifMsg = status === 'accepted' ?
         `OK ${s.name} accepted assignment for ${e.title}` :
@@ -8501,7 +9122,7 @@
       }, 50);
 
       const emoji = status === 'accepted' ? 'OK' : 'X';
-      const msg = status === 'accepted' ? emoji + ' Assignment accepted!' : emoji + ' Assignment declined';
+      const msg = status === 'accepted' ? emoji + ' Assignment accepted! Date marked as unavailable.' : emoji + ' Assignment declined';
       const toastType = status === 'accepted' ? 'success' : 'warning';
       toast(msg, toastType);
     }
@@ -8515,15 +9136,21 @@
   <div class="table-wrap">
     <table><thead><tr><th>Client</th><th>Event</th><th>Type</th><th>Date</th><th>Guests</th><th>Budget</th><th>Status</th><th>Actions</th></tr></thead>
     <tbody>${DB.eventRequests.map(r => {
-        const cl = DB.users.find(u => u.id === r.clientId) || { name: '?', avatar: '?' };
+        const cl = DB.users.find(u => String(u.id) === String(r.clientId)) || DB.users.find(u => u.role === 'client') || { name: 'Michael Torres', avatar: 'MT', avatarImage: 'assets/images/avatars/user-michael-torres.jpg' };
+        const clientAv = cl.avatarImage ? `
+          <div class="av av-xs">
+            <img src="${cl.avatarImage}" alt="${cl.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <span style="display:none">${cl.avatar || cl.name?.[0] || 'C'}</span>
+          </div>
+        ` : `<div class="av av-xs">${cl.avatar || cl.name?.[0] || 'C'}</div>`;
         return `<tr>
-        <td><div class="flex items-center gap-8"><div class="av av-xs">${cl.avatar || cl.name[0]}</div>${cl.name}</div></td>
+        <td><div class="flex items-center gap-8">${clientAv}<strong>${cl.name}</strong></div></td>
         <td><strong>${r.title}</strong></td><td>${r.type}</td><td>${r.date}</td><td>${r.guests}</td>
         <td style="color:var(--green);font-weight:600">$${r.budget.toLocaleString()}</td>
         <td><span class="badge badge-${reqBadge(r.status)}">${r.status}</span></td>
         <td><div class="actions">
           <button class="btn btn-ghost btn-xs" onclick="viewRequestDrawer('${r.id}')">View</button>
-          ${r.status === 'pending' ? `<button class="btn btn-success btn-xs" onclick="approveReq('${r.id}')">Approve</button><button class="btn btn-xs btn-danger" onclick="rejectReq('${r.id}')">Reject</button>` : ''}
+          ${r.status === 'pending' ? `<button class="btn btn-success btn-xs" onclick="approveReq('${r.id}')">Accept</button><button class="btn btn-xs btn-danger" onclick="rejectReq('${r.id}')">Decline</button>` : ''}
         </div></td>
       </tr>`;
       }).join('')}
@@ -8546,7 +9173,7 @@
     </div>
     <div class="label mb-8">Description</div>
     <p style="font-size:13.5px;color:var(--text2);line-height:1.7">${r.desc}</p>
-    ${r.status === 'pending' ? `<div class="flex gap-8 mt-20"><button class="btn btn-success w-full" onclick="closeDrawer();approveReq(${r.id})">✓ Approve</button><button class="btn btn-danger w-full" onclick="closeDrawer();rejectReq(${r.id})">✕ Reject</button></div>` : ''}
+    ${r.status === 'pending' ? `<div class="flex gap-8 mt-20"><button class="btn btn-success w-full" onclick="closeDrawer();approveReq(${r.id})">✓ Accept Event</button><button class="btn btn-danger w-full" onclick="closeDrawer();rejectReq(${r.id})">✕ Decline</button></div>` : ''}
   `);
     }
     function approveReq(id) {
@@ -8580,13 +9207,13 @@
 
         saveDB();
         renderPage(_currentPage);
-        toast('Request approved and event created!', 'success');
+        toast('Event request accepted — event created!', 'success');
       }
     }
     function rejectReq(id) {
-      confirm2('Reject Request', 'Mark this event request as rejected?', () => {
+      confirm2('Decline Request', 'Mark this event request as declined?', () => {
         const r = DB.eventRequests.find(r => String(r.id) === String(id));
-        if (r) { r.status = 'rejected'; renderPage(_currentPage); toast('Request rejected', 'info'); }
+        if (r) { r.status = 'rejected'; renderPage(_currentPage); toast('Request declined', 'info'); }
       });
     }
 
@@ -8604,7 +9231,7 @@
         const pendingHtml = pendingReqs.length === 0
           ? '<div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-title">No pending requests</div><p class="empty-desc">New client event requests will appear here.</p></div>'
           : pendingReqs.map(r => {
-            const cl = DB.users.find(u => u.id === r.clientId) || { name: 'Client' };
+            const cl = DB.users.find(u => String(u.id) === String(r.clientId)) || DB.users.find(u => u.role === 'client') || { name: 'Michael Torres' };
             return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;border-left:4px solid var(--yellow)">
           <div style="flex:1">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
@@ -8612,9 +9239,10 @@
               <span style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px">Pending</span>
             </div>
             <div style="display:flex;gap:24px;font-size:13px;color:var(--text2);flex-wrap:wrap">
-              <span>&#128197; ${r.date}</span>
-              <span>&#128205; ${r.venue || 'TBD'}${r.city ? ', ' + r.city : ''}</span>
-              <span>&#128101; ${r.guests} expected attendees</span>
+              <span>👤 ${cl.name}</span>
+              <span>📅 ${r.date}</span>
+              <span>📍 ${r.venue || 'TBD'}${r.city ? ', ' + r.city : ''}</span>
+              <span>👥 ${r.guests} expected attendees</span>
             </div>
           </div>
           <button class="btn btn-primary" onclick="viewRequestDetail('${r.id}')" style="white-space:nowrap;border-radius:8px;padding:10px 20px">Review Request</button>
@@ -8658,7 +9286,7 @@
       </div>
     </div>`;
       } else {
-        const reqs = DB.eventRequests.filter(r => r.clientId === CU.id);
+        const reqs = DB.eventRequests.filter(r => String(r.clientId) === String(CU.id));
         return `
     <div class="page-hd">
       <div class="page-hd-left"><div class="page-title">Request Status</div><div class="page-sub">${reqs.length} event requests</div></div>
@@ -8671,7 +9299,7 @@
           <div style="font-size:16px;font-weight:700;margin-bottom:5px">${r.title}</div>
           <div class="small mb-8">${r.type} &middot; ${r.guests} guests &middot; ${r.date}</div>
           <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px">${r.desc}</p>
-          <span class="badge badge-${reqBadge(r.status)}">${r.status}</span>
+          <span class="badge badge-${reqBadge(r.status)}">${r.status === 'approved' ? 'Accepted' : r.status}</span>
         </div>
         <div style="text-align:right;flex-shrink:0;margin-left:20px">
           <div style="font-size:22px;font-weight:800;color:var(--green)">&#8377;${r.budget.toLocaleString()}</div>
@@ -8693,7 +9321,7 @@
 
     function viewRequestDetail(reqId) {
       const r = DB.eventRequests.find(x => String(x.id) === String(reqId)); if (!r) return;
-      const cl = DB.users.find(u => u.id === r.clientId) || { name: 'Client', email: '', phone: '' };
+      const cl = DB.users.find(u => String(u.id) === String(r.clientId)) || DB.users.find(u => u.role === 'client') || { name: 'Michael Torres', email: 'client@example.com', phone: '+91 9876543203' };
       const el = document.getElementById('page-content');
       if (!el) return;
       el.innerHTML = `<div style="padding:28px;background:var(--bg);min-height:100vh">
@@ -8992,10 +9620,10 @@
                     </td>
                     <td class="small" style="font-weight:600;color:var(--text2)">${r.scope || '—'}</td>
                     <td>
-                      ${r.fileName 
-                        ? `<span style="font-weight:600;color:var(--accent);font-size:12.5px">📄 ${r.fileName}</span>`
-                        : `<span class="small muted">No file attached</span>`
-                      }
+                      ${r.fileName
+          ? `<span style="font-weight:600;color:var(--accent);font-size:12.5px">📄 ${r.fileName}</span>`
+          : `<span class="small muted">No file attached</span>`
+        }
                     </td>
                     <td>
                       <span class="badge badge-${eventOpsReportBadge(r.status)}">${r.status}</span>
@@ -9053,14 +9681,14 @@
       ] : []);
     }
 
-    window.handleReportFileSelect = function(input) {
+    window.handleReportFileSelect = function (input) {
       const preview = document.getElementById('eor-file-preview');
       if (input.files && input.files[0]) {
         const f = input.files[0];
         if (preview) {
           preview.innerHTML = `
             <div class="flex items-center justify-between" style="background:var(--accent-dim);border-radius:8px;padding:10px 14px">
-              <div style="font-weight:600;color:var(--accent);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 ${f.name} (${(f.size/1024).toFixed(1)} KB)</div>
+              <div style="font-weight:600;color:var(--accent);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 ${f.name} (${(f.size / 1024).toFixed(1)} KB)</div>
               <button type="button" class="btn btn-danger btn-xs" onclick="event.stopPropagation();resetReportFileSelect()">✕ Remove</button>
             </div>
           `;
@@ -9068,7 +9696,7 @@
       }
     };
 
-    window.resetReportFileSelect = function() {
+    window.resetReportFileSelect = function () {
       const input = document.getElementById('eor-file');
       if (input) input.value = '';
       const preview = document.getElementById('eor-file-preview');
@@ -9856,7 +10484,7 @@
       n.read = true;
       saveDB();
       updateNotifDot();
-      if (CU.role === 'staff') buildEmployeeNav(CU.employeeType); else buildNav(CU.role);
+      if (isDepartmentEmployee()) buildEmployeeNav(CU.employeeType); else buildNav(CU.role);
       // Smart redirect: assignment/event-request notifications go to Event Requests tab for staff
       if (CU.role === 'staff' &&
         (n.title === 'Staff Assignment Pending' || n.title === 'New Assignment' ||
@@ -9868,13 +10496,106 @@
     }
     function markAllRead() {
       visibleNotifications().forEach(n => n.read = true);
-      renderPage('notifications'); updateNotifDot(); if (CU.role === 'staff') buildEmployeeNav(CU.employeeType); else buildNav(CU.role); toast('All notifications marked as read', 'success');
+      renderPage('notifications'); updateNotifDot(); if (isDepartmentEmployee()) buildEmployeeNav(CU.employeeType); else buildNav(CU.role); toast('All notifications marked as read', 'success');
     }
 
     // ════════════════════════════════════════════════
     //  PROFILE
     // ════════════════════════════════════════════════
+    function pageDepartmentEmployeeProfile() {
+      const type = CU.employeeType;
+      const profile = {
+        REGISTRATION_VERIFICATION: {
+          title: 'User Executive',
+          purpose: 'Protect event access by reviewing registrations, validating attendee documents, and resolving account verification issues.',
+          focus: ['Review pending registrations and identity documents', 'Verify attendee eligibility and ticket details', 'Resolve duplicate-account and registration queries'],
+          primaryAction: "goNav('registrations')",
+          primaryLabel: 'Open Registrations',
+          secondaryAction: "goNav('attendees')",
+          secondaryLabel: 'Manage Attendees',
+        },
+        EVENT_OPERATIONS: {
+          title: 'Event Executive',
+          purpose: 'Coordinate event readiness and live delivery, from event information and operational plans to post-event reporting.',
+          focus: ['Maintain event schedules, venues, and operational details', 'Prepare and track event-operation tasks', 'Coordinate changes with organizers and clients'],
+          primaryAction: "goNav('events')",
+          primaryLabel: 'Manage Events',
+          secondaryAction: "goNav('event-requests')",
+          secondaryLabel: 'Open Operations',
+        },
+        SUPPORT_FINANCE: {
+          title: 'Customer Support & Finance Executive',
+          purpose: 'Resolve customer requests and maintain accurate payment, refund, and service-operation records.',
+          focus: ['Respond to customer support requests', 'Review transactions and refund cases', 'Maintain service and finance operational reports'],
+          primaryAction: "goNav('support-center')",
+          primaryLabel: 'Open Support Center',
+          secondaryAction: "goNav('finance')",
+          secondaryLabel: 'Open Finance',
+        },
+      }[type];
+
+      if (!profile) return '';
+
+      const registrations = DB.registrations || [];
+      const supportRequests = DB.supportRequests || [];
+      const transactions = DB.financeTransactions || [];
+      const events = DB.events || [];
+      const verificationPending = registrations.filter(r => !r.verified || ['Pending Review', 'Flagged', 'pending'].includes(r.verificationStatus || r.status)).length;
+      const verified = registrations.filter(r => r.verified || r.verificationStatus === 'Verified').length;
+      const activeEvents = events.filter(e => ['upcoming', 'ongoing'].includes(e.status)).length;
+      const operationalTasks = (DB.eventOperationsTasks || []).filter(task => !task.status || !['completed', 'done'].includes(String(task.status).toLowerCase())).length;
+      const openSupport = supportRequests.filter(r => !['Resolved', 'Closed'].includes(r.status)).length;
+      const refundsToReview = (DB.financeRefunds || []).filter(r => !['Approved', 'Completed', 'Rejected'].includes(r.status)).length;
+      const metrics = type === 'REGISTRATION_VERIFICATION'
+        ? [['Pending reviews', verificationPending, 'var(--yellow)'], ['Verified attendees', verified, 'var(--green)'], ['Registration records', registrations.length, 'var(--accent)']]
+        : type === 'EVENT_OPERATIONS'
+          ? [['Active events', activeEvents, 'var(--accent)'], ['Open operations tasks', operationalTasks, 'var(--yellow)'], ['Event requests', (DB.eventRequests || []).length, 'var(--green)']]
+          : [['Open support requests', openSupport, 'var(--yellow)'], ['Transactions reviewed', transactions.length, 'var(--blue)'], ['Refunds awaiting review', refundsToReview, 'var(--red)']];
+
+      return `
+  <div class="page-hd"><div class="page-hd-left"><div class="page-title">My Employee Profile</div><div class="page-sub">Your department responsibilities and work overview.</div></div><div class="page-hd-right"><button class="btn btn-ghost" onclick="goNav('settings')">Edit Profile</button></div></div>
+  <div class="profile-banner">
+    ${CU.avatarImage ? `<div class="av av-xl"><img src="${CU.avatarImage}" alt="${CU.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">${CU.avatar || CU.name[0]}</span></div>` : `<div class="av av-xl">${CU.avatar || CU.name[0]}</div>`}
+    <div class="profile-info">
+      <div class="profile-name">${CU.name}</div>
+      <div class="profile-role-tag">${profile.title}</div>
+      <div class="small mt-4">${CU.service || EMPLOYEE_TYPE_LABELS[type]}</div>
+      <span class="badge badge-green mt-8">Active employee account</span>
+    </div>
+  </div>
+  <div class="grid-3 mb-20">
+    ${metrics.map(([label, value, color]) => `<div class="card"><div class="label">${label}</div><div class="stat-value" style="color:${color};margin-top:10px">${value}</div></div>`).join('')}
+  </div>
+  <div class="grid-2" style="align-items:start;gap:20px">
+    <div class="card">
+      <div class="h4 mb-14">Role & Responsibilities</div>
+      <p style="font-size:13.5px;color:var(--text2);line-height:1.7;margin-bottom:16px">${profile.purpose}</p>
+      <div class="label mb-8">Core responsibilities</div>
+      <div style="display:flex;flex-direction:column;gap:10px">${profile.focus.map(item => `<div style="display:flex;gap:9px;align-items:flex-start;color:var(--text2)"><span style="color:var(--green);font-weight:700">&#10003;</span><span>${item}</span></div>`).join('')}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="h4 mb-14">Employee Details</div>
+        <div class="info-row"><span class="info-label">Department</span><span class="info-value">${EMPLOYEE_TYPE_LABELS[type]}</span></div>
+        <div class="info-row"><span class="info-label">Email</span><span class="info-value">${CU.email}</span></div>
+        <div class="info-row"><span class="info-label">Phone</span><span class="info-value">${CU.phone || 'Not set'}</span></div>
+        <div class="info-row"><span class="info-label">Location</span><span class="info-value">${CU.city || 'Not set'}</span></div>
+        <div class="info-row"><span class="info-label">Member since</span><span class="info-value">${CU.joined || 'Not set'}</span></div>
+      </div>
+      <div class="card">
+        <div class="h4 mb-14">Work Tools</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-primary w-full" onclick="${profile.primaryAction}">${profile.primaryLabel}</button>
+          <button class="btn btn-ghost w-full" onclick="${profile.secondaryAction}">${profile.secondaryLabel}</button>
+          <button class="btn btn-ghost w-full" onclick="goNav('reports')">View Department Reports</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+    }
+
     function pageProfile() {
+      if (isDepartmentEmployee()) return pageDepartmentEmployeeProfile();
       const assigns = CU.role === 'staff' ? DB.staffAssignments.filter(a => a.staffId === CU.id) : [];
       const regs = CU.role === 'attendee' ? DB.registrations.filter(r => r.attendeeId === CU.id) : [];
       const myEvs = CU.role === 'organizer' ? DB.events.filter(e => e.organizer === CU.id) : [];
@@ -9886,7 +10607,7 @@
       return `
   <div class="page-hd"><div class="page-hd-left"><div class="page-title">My Profile</div></div><div class="page-hd-right"><button class="btn btn-ghost" onclick="goNav('settings')">✏️ Edit Profile</button></div></div>
   <div class="profile-banner">
-    <div class="av av-xl">${CU.avatar || CU.name[0]}</div>
+    ${CU.avatarImage ? `<div class="av av-xl"><img src="${CU.avatarImage}" alt="${CU.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">${CU.avatar || CU.name[0]}</span></div>` : `<div class="av av-xl">${CU.avatar || CU.name[0]}</div>`}
     <div class="profile-info">
       <div class="profile-name">${CU.name}</div>
       <div class="profile-role-tag">${isSF ? 'Customer Support &amp; Finance Executive' : ROLE_LABELS[CU.role]}</div>
@@ -9951,7 +10672,7 @@
     <div class="card card-lg">
       <div class="h4 mb-20">Personal Information</div>
       <div class="profile-banner" style="margin-bottom:20px;padding:18px">
-        <div class="av av-lg">${CU.avatar || CU.name[0]}</div>
+        ${CU.avatarImage ? `<div class="av av-lg"><img src="${CU.avatarImage}" alt="${CU.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">${CU.avatar || CU.name[0]}</span></div>` : `<div class="av av-lg">${CU.avatar || CU.name[0]}</div>`}
         <div><div style="font-weight:700">${CU.name}</div><div class="small">${ROLE_LABELS[CU.role]}</div></div>
       </div>
       <div class="form-group"><label class="form-label">Full Name</label><input class="form-control" id="st-name" value="${CU.name}"></div>
@@ -10057,31 +10778,37 @@
   
   <div style="margin-bottom:16px;color:var(--text2);font-size:13px">Showing ${organizers.length} event organiser${organizers.length !== 1 ? 's' : ''}</div>
   
-  <div class="grid-3" style="gap:20px">
+  <div class="grid-3" style="gap:16px">
     ${organizers.length === 0 ? `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No organizers found</div><p>Try adjusting your search filters</p></div>` : organizers.map(o => {
-        const rating = o.rating || 4.2;
-        const reviews = Math.floor(Math.random() * 200) + 50;
-        const events = Math.floor(Math.random() * 300) + 50;
-        const categories = (o.service || 'Events').split(',').slice(0, 2).join(' & ');
+        const rt = o.rating || 4.2;
+        const rv = o.reviews || (Math.floor(rt * 38) + 12);
+        const ev = o.eventsCount || (Math.floor(rt * 65) + 20);
+        const orgAv = o.avatarImage ? `
+          <div style="width:56px;height:56px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid ${o.color || 'var(--accent)'}40;position:relative">
+            <img src="${o.avatarImage}" alt="${o.name}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${o.color || 'var(--accent)'}20;font-size:20px;font-weight:700;color:${o.color || 'var(--accent)'}">${o.avatar || o.name[0]}</div>
+          </div>
+        ` : `<div style="width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${o.color || 'var(--accent)'}15;font-size:20px;font-weight:700;color:${o.color || 'var(--accent)'};border:2px solid ${o.color || 'var(--accent)'}30">${o.avatar || o.name[0]}</div>`;
         return `
-      <div class="card" style="overflow:hidden;display:flex;flex-direction:column;position:relative">
-        <div style="aspect-ratio:1;background:linear-gradient(135deg,${o.color || 'var(--accent)'}30,${o.color || 'var(--accent)'}10);display:flex;align-items:center;justify-content:center;margin-bottom:16px;border-radius:12px;position:relative">
-          <div style="font-size:80px">${o.avatar || o.name[0]}</div>
-          <div style="position:absolute;top:12px;right:12px;background:var(--yellow);color:#1a1400;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600">⭐ ${rating.toFixed(1)}</div>
-        </div>
-        <div style="padding:0;flex:1;display:flex;flex-direction:column">
-          <div style="font-weight:700;font-size:16px;margin-bottom:4px">${o.name}</div>
-          <div style="font-size:13px;color:var(--accent);margin-bottom:8px;font-weight:500">${o.service || 'Event Organizer'}</div>
-          <div style="font-size:12px;color:var(--text2);margin-bottom:12px">📍 ${o.city || 'India'}</div>
-          <p style="font-size:12.5px;color:var(--text2);line-height:1.5;margin-bottom:12px;flex:1">${o.bio || 'Professional event organizer with extensive experience'}</p>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;color:var(--text3);margin-bottom:16px;padding:10px;background:var(--surface3);border-radius:8px">
-            <div><strong style="color:var(--text)">${reviews}</strong><div>Reviews</div></div>
-            <div><strong style="color:var(--text)">${events}</strong><div>Events</div></div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:auto">
-            <button class="btn btn-primary w-full" onclick="viewOrganizerProfile('${o.id}')" style="flex:1;justify-content:center">View Profile</button>
+      <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;transition:transform .18s,box-shadow .18s;cursor:pointer" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="viewOrganizerProfile('${o.id}')">
+        <div style="display:flex;align-items:center;gap:12px">
+          ${orgAv}
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              <span style="font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.name}</span>
+              <span style="background:var(--yellow);color:#1a1400;padding:1px 7px;border-radius:10px;font-size:10.5px;font-weight:700;flex-shrink:0">⭐ ${rt.toFixed(1)}</span>
+            </div>
+            <div style="font-size:12px;color:var(--accent);font-weight:500;margin-bottom:2px">${o.service || 'Event Organizer'}</div>
+            <div style="font-size:11.5px;color:var(--text3)">📍 ${o.city || 'India'}</div>
           </div>
         </div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.5;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${o.bio || 'Professional event organizer with extensive industry experience.'}</p>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="background:var(--surface3);padding:3px 10px;border-radius:6px;font-size:11px;color:var(--text2)"><strong style="color:var(--text)">${ev}</strong> events</span>
+          <span style="background:var(--surface3);padding:3px 10px;border-radius:6px;font-size:11px;color:var(--text2)"><strong style="color:var(--text)">${rv}</strong> reviews</span>
+          <span style="background:var(--green)14;padding:3px 10px;border-radius:6px;font-size:11px;color:var(--green);font-weight:600">96% satisfaction</span>
+        </div>
+        <button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();viewOrganizerProfile('${o.id}')" style="justify-content:center;padding:8px;font-size:12.5px">View Profile & Request Event</button>
       </div>`;
       }).join('')}
   </div>`;
@@ -10109,10 +10836,17 @@
       const events = Math.floor(Math.random() * 300) + 50;
       const completedEvents = Math.floor(events * 0.9);
 
+      const orgModalAv = org.avatarImage ? `
+        <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;flex-shrink:0;background:${org.color || 'var(--accent)'}20;position:relative">
+          <img src="${org.avatarImage}" alt="${org.name}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:60px;color:${org.color || 'var(--accent)'}">${org.avatar || org.name[0]}</div>
+        </div>
+      ` : `<div style="font-size:60px;width:80px;height:80px;display:flex;align-items:center;justify-content:center;background:${org.color || 'var(--accent)'}20;border-radius:12px;flex-shrink:0">${org.avatar || org.name[0]}</div>`;
+
       openModal(`${org.name} - Organizer Profile`, `
     <div style="background:linear-gradient(135deg,${org.color || 'var(--accent)'}20,${org.color || 'var(--accent)'}05);border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid ${org.color || 'var(--accent)'}30">
       <div style="display:flex;gap:16px;align-items:flex-start">
-        <div style="font-size:60px;width:80px;height:80px;display:flex;align-items:center;justify-content:center;background:${org.color || 'var(--accent)'}20;border-radius:12px">${org.avatar || org.name[0]}</div>
+        ${orgModalAv}
         <div style="flex:1">
           <div style="font-weight:700;font-size:20px;margin-bottom:4px">${org.name}</div>
           <div style="color:var(--accent);font-weight:500;margin-bottom:8px">${org.service || 'Event Organizer'}</div>
@@ -10241,11 +10975,15 @@
         const rating = s.rating || 4.0;
         const reviews = Math.floor(Math.random() * 150) + 20;
         const completedJobs = Math.floor(Math.random() * 200) + 30;
+        const staffAvatarContent = s.avatarImage ? `
+          <img src="${s.avatarImage}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div style="display:none;font-size:80px;font-weight:700;color:${s.color || 'var(--green)'}">${s.avatar || s.name[0]}</div>
+        ` : `<div style="font-size:80px;font-weight:700;color:${s.color || 'var(--green)'}">${s.avatar || s.name[0]}</div>`;
         return `
       <div class="card" style="overflow:hidden;display:flex;flex-direction:column;position:relative">
-        <div style="aspect-ratio:1;background:linear-gradient(135deg,${s.color || 'var(--green)'}30,${s.color || 'var(--green)'}10);display:flex;align-items:center;justify-content:center;margin-bottom:16px;border-radius:12px;position:relative">
-          <div style="font-size:80px">${s.avatar || s.name[0]}</div>
-          <div style="position:absolute;top:12px;right:12px;background:var(--yellow);color:#1a1400;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600">⭐ ${rating.toFixed(1)}</div>
+        <div style="aspect-ratio:1;background:linear-gradient(135deg,${s.color || 'var(--green)'}30,${s.color || 'var(--green)'}10);display:flex;align-items:center;justify-content:center;margin-bottom:16px;border-radius:12px;position:relative;overflow:hidden">
+          ${staffAvatarContent}
+          <div style="position:absolute;top:12px;right:12px;background:var(--yellow);color:#1a1400;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;z-index:2">⭐ ${rating.toFixed(1)}</div>
         </div>
         <div style="flex:1;display:flex;flex-direction:column">
           <div style="font-weight:700;font-size:16px;margin-bottom:4px">${s.name}</div>
@@ -10319,10 +11057,17 @@
         return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--surface3);border-radius:8px;border:1px solid var(--border);margin-bottom:8px"><div><div style="font-weight:600;font-size:13px;margin-bottom:2px">' + ev.title + '</div><div style="font-size:11px;color:var(--text3)">' + a.role + ' \u00b7 ' + ev.date + ' \u00b7 ' + (ev.venue || ev.city || '') + '</div></div><span class="badge badge-' + sc + '">' + a.status + '</span></div>';
       }).join('');
 
+      const staffModalAv = s.avatarImage ? `
+        <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;flex-shrink:0;background:${s.color || 'var(--green)'}20;position:relative">
+          <img src="${s.avatarImage}" alt="${s.name}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:60px;color:${s.color || 'var(--green)'}">${s.avatar || s.name[0]}</div>
+        </div>
+      ` : `<div style="font-size:60px;width:80px;height:80px;display:flex;align-items:center;justify-content:center;background:${s.color || 'var(--green)'}20;border-radius:12px;flex-shrink:0">${s.avatar || s.name[0]}</div>`;
+
       openModal(s.name, `
     <div style="background:linear-gradient(135deg,${s.color || 'var(--green)'}20,${s.color || 'var(--green)'}05);border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid ${s.color || 'var(--green)'}30">
       <div style="display:flex;gap:16px;align-items:flex-start">
-        <div style="font-size:60px;width:80px;height:80px;display:flex;align-items:center;justify-content:center;background:${s.color || 'var(--green)'}20;border-radius:12px">${s.avatar || s.name[0]}</div>
+        ${staffModalAv}
         <div style="flex:1">
           <div style="font-weight:700;font-size:20px;margin-bottom:4px">${s.name}</div>
           <div style="color:var(--green);font-weight:500;margin-bottom:8px">${s.service || 'Event Staff'}</div>
@@ -10596,11 +11341,6 @@
       <div class="page-sub">Events happening soon that you might be interested in</div>
     </div>
   </div>
-  <div class="empty mb-20" style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;padding:20px;text-align:center;grid-column:1/-1;${CU.role !== 'client' ? 'display:none' : ''}">
-    <div class="empty-icon">ℹ️</div>
-    <div class="empty-title">View Only</div>
-    <p class="empty-desc">You can view and check event details. To register for events, please request an organizer.</p>
-  </div>
   <div class="events-grid">${upcoming.length === 0 ? `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📅</div><div class="empty-title">No upcoming events</div></div>` : upcoming.map(e => evCard(e, CU.role === 'client' ? 'client' : 'attendee')).join('')}</div>`;
     }
 
@@ -10614,14 +11354,15 @@
       <div class="page-sub">Events that have been successfully completed</div>
     </div>
   </div>
-  <div class="empty mb-20" style="background:var(--green-dim);border:1px solid var(--green);border-radius:8px;padding:20px;text-align:center;grid-column:1/-1;${CU.role !== 'client' ? 'display:none' : ''}">
-    <div class="empty-icon">✅</div>
-    <div class="empty-title">Event Completion Details</div>
-    <p class="empty-desc">View details and reports for events that have been completed.</p>
-  </div>
-  <div class="events-grid">${completed.length === 0 ? `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">✅</div><div class="empty-title">No completed events</div></div>` : completed.map(e => `<div class="ev-card">
-    <div class="ev-banner" style="background:${e.color}18">
-      ${e.emoji}
+  <div class="events-grid">${completed.length === 0 ? `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">✅</div><div class="empty-title">No completed events</div></div>` : completed.map(e => {
+        const bannerContent = e.image ? `
+          <img src="${e.image}" alt="${e.title || 'Event'}" class="ev-banner-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="ev-banner-fallback" style="display:none;align-items:center;justify-content:center;font-size:52px;width:100%;height:100%">${e.emoji || '📅'}</div>
+          <div class="ev-banner-overlay"></div>
+        ` : `<span style="font-size:52px">${e.emoji || '📅'}</span>`;
+        return `<div class="ev-card">
+    <div class="ev-banner" style="background:${e.color || 'var(--accent)'}18">
+      ${bannerContent}
       <div class="ev-banner-tag"><span class="badge badge-green">✓ Completed</span></div>
       <div class="ev-banner-price">${e.price === 0 ? 'Free' : '₹' + e.price}</div>
     </div>
@@ -10644,7 +11385,8 @@
         <div class="tag-list" style="flex:1;justify-content:flex-end">${(e.tags || []).slice(0, 2).map(t => `<span class="tag">${t}</span>`).join('')}</div>
       </div>
     </div>
-  </div>`).join('')}</div>`;
+  </div>`;
+      }).join('')}</div>`;
     }
 
     function pageStaffRequests() {
@@ -10739,11 +11481,6 @@
       <div class="page-title">Ongoing Events</div>
       <div class="page-sub">Events currently happening right now</div>
     </div>
-  </div>
-  <div class="empty mb-20" style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;padding:20px;text-align:center;grid-column:1/-1;${CU.role !== 'client' ? 'display:none' : ''}">
-    <div class="empty-icon">ℹ️</div>
-    <div class="empty-title">View Only</div>
-    <p class="empty-desc">You can view and check event details. To register for events, please request an organizer.</p>
   </div>
   <div class="events-grid">${ongoing.length === 0 ? `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">⏱️</div><div class="empty-title">No ongoing events</div></div>` : ongoing.map(e => evCard(e, CU.role === 'client' ? 'client' : 'attendee')).join('')}</div>`;
     }
@@ -10843,14 +11580,22 @@
     // ════════════════════════════════════════════════
     //  CROSS-TAB DATA SYNCHRONIZATION
     // ════════════════════════════════════════════════
-    // Listen for localStorage changes made by OTHER browser tabs.
     // The 'storage' event fires ONLY in tabs that did NOT make the change.
+    // We debounce re-renders to avoid blinking when multiple tabs are active.
+    let _syncDebounceTimer = null;
     window.addEventListener('storage', function (e) {
-      if (e.key === 'ffsd_db' && e.newValue) {
+      if (e.key !== 'ffsd_db' || !e.newValue) return;
+
+      // Skip if the data content hasn't meaningfully changed (same length = same data)
+      if (e.newValue === e.oldValue) return;
+
+      // Clear any pending re-render and schedule a new one after a short delay.
+      // This collapses rapid consecutive saves (e.g. from the other tab's own renders)
+      // into a single update, eliminating the visible flicker.
+      clearTimeout(_syncDebounceTimer);
+      _syncDebounceTimer = setTimeout(function () {
         try {
-          // Reload shared DB state from localStorage
-          loadDB();
-          // Re-render current page if user is logged in
+          loadDB(false);
           if (CU && _currentPage) {
             renderPage(_currentPage);
             updateNotifDot();
@@ -10858,62 +11603,32 @@
         } catch (err) {
           console.warn('[Sync] Failed to reload from storage event:', err);
         }
-      }
+      }, 600); // 600ms debounce — imperceptible delay, eliminates flicker
     });
 
-    // Periodic sync: also poll every 3 seconds in case storage events are missed
-    // (e.g. same-tab updates that need to reflect across roles, or file:// quirks)
-    setInterval(function () {
-      if (!CU || !_currentPage) return;
-      try {
-        const saved = localStorage.getItem('ffsd_db');
-        if (!saved) return;
-        const parsed = JSON.parse(saved);
-        // Compare a lightweight fingerprint to detect changes
-        const fingerprint = [
-          JSON.stringify(parsed.eventRequests || []),
-          JSON.stringify(parsed.registrations || []),
-          JSON.stringify(parsed.staffAssignments || []),
-          JSON.stringify(parsed.events || []),
-          JSON.stringify(parsed.users || []),
-          JSON.stringify(parsed.notifications || []),
-          JSON.stringify(parsed.reports || []),
-          JSON.stringify(parsed.employeeChangeRequests || []),
-        ].join('|');
-        const currentFingerprint = [
-          JSON.stringify(DB.eventRequests || []),
-          JSON.stringify(DB.registrations || []),
-          JSON.stringify(DB.staffAssignments || []),
-          JSON.stringify(DB.events || []),
-          JSON.stringify(DB.users || []),
-          JSON.stringify(DB.notifications || []),
-          JSON.stringify(DB.reports || []),
-          JSON.stringify(DB.employeeChangeRequests || []),
-        ].join('|');
-        if (fingerprint !== currentFingerprint) {
-          loadDB();
-          renderPage(_currentPage);
-          updateNotifDot();
-        }
-      } catch (err) {
-        console.warn('[Sync] Periodic check error:', err);
-      }
-    }, 3000);
+
+    // Local changes already update the page directly. Other browser tabs are
+    // handled by the storage event above, so a polling-based full re-render is
+    // unnecessary and caused the visible dashboard flicker after login.
 
     // ════════════════════════════════════════════════
-    (async function boot() {
-      // Always load latest persisted data first
-      loadDB();
+    (function boot() {
+      // Restore the session synchronously. Waiting on a health request caused a
+      // visible landing-page-to-dashboard swap and unnecessarily logged out
+      // users whenever the optional backend was offline.
+      loadDB(false);
       try {
         const saved = sessionStorage.getItem('ef_cu');
         if (saved) {
-          await fetch('http://localhost:3001/health', { cache: 'no-store' });
           CU = JSON.parse(saved);
           showPage('app');
           initApp();
           return;
         }
-      } catch (e) { }
+      } catch (e) {
+        try { sessionStorage.removeItem('ef_cu'); } catch (ignore) { }
+      }
+      document.documentElement.classList.remove('restoring-session');
       showPage('landing');
     })();
   </script>
@@ -11040,19 +11755,25 @@
       });
 
       document.addEventListener('click', (e) => {
-        if (e.target.tagName === 'BUTTON' && (e.target.classList.contains('btn-primary') || e.target.classList.contains('btn-success') || e.target.id === 'login-btn')) {
-          const onclickCode = e.target.getAttribute('onclick') || '';
-          if (onclickCode.includes('open') || onclickCode.includes('goNav') || onclickCode.includes('showPage')) return;
+        const btn = e.target.closest('button');
+        if (!btn) return;
 
-          // Determine form scope, fall back to body (preventing empty document sweeps breaking things)
-          const container = e.target.closest('.modal-box') || e.target.closest('.card') || e.target.closest('section') || document.body;
+        if (btn.classList.contains('btn-primary') || btn.classList.contains('btn-success') || btn.id === 'login-btn') {
+          const onclickCode = btn.getAttribute('onclick') || '';
+          if (onclickCode.includes('open') || onclickCode.includes('goNav') || onclickCode.includes('showPage') || onclickCode.includes('doLogin') || onclickCode.includes('gotoLogin') || onclickCode.includes('fillLogin') || onclickCode.includes('selectEmployee') || onclickCode.includes('doLogout')) return;
 
-          // Only validate elements that are visibly active
-          const inputs = container.querySelectorAll('input, select, textarea');
+          // Scope validation exclusively to modals or explicit form containers
+          const formScope = btn.closest('.modal-box, form');
+          if (!formScope) return;
+
+          // Only validate inputs that are currently visible
+          const inputs = formScope.querySelectorAll('input, select, textarea');
           let hasError = false;
           inputs.forEach(input => {
-            const isValid = validateInput(input);
-            if (!isValid) hasError = true;
+            if (input.offsetWidth > 0 || input.offsetHeight > 0 || input.getClientRects().length > 0) {
+              const isValid = validateInput(input);
+              if (!isValid) hasError = true;
+            }
           });
 
           if (hasError) {

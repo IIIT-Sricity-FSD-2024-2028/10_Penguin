@@ -37,6 +37,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Invalid email or password' })
   @ApiResponse({ status: 400, description: 'Account suspended/inactive or invalid input' })
+  @ApiResponse({ status: 429, description: 'Too many login attempts. Try again later.' })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
