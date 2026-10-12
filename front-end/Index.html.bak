@@ -3383,6 +3383,14 @@
 
     const ROLE_LABELS = { superuser: 'Super Administrator', organizer: 'Event Organizer', client: 'Client', staff: 'Event Staff', attendee: 'Attendee' };
     const ROLE_COLORS = { superuser: 'red', organizer: 'purple', client: 'yellow', staff: 'green', attendee: 'blue' };
+    const EMPLOYEE_TYPE_LABELS = {
+      REGISTRATION_VERIFICATION: 'Registration & Verification',
+      EVENT_OPERATIONS: 'Event Operations',
+      SUPPORT_FINANCE: 'Support & Finance',
+      registration_verification: 'Registration & Verification',
+      event_operations: 'Event Operations',
+      support_finance: 'Support & Finance',
+    };
     const DEMO_CREDS = {
       employee: { email: 'employee@example.com', pw: 'Employee@123' },
       organizer: { email: 'organizer@example.com', pw: 'Organizer@123' },
@@ -10895,8 +10903,33 @@
       loadDB();
       try {
         const saved = sessionStorage.getItem('ef_cu');
+<<<<<<< Updated upstream:front-end/Index.html.bak
         if (saved) { CU = JSON.parse(saved); showPage('app'); initApp(); return; }
       } catch (e) { }
+=======
+        if (saved) {
+          CU = JSON.parse(saved);
+          const workspace = getRoleWorkspace(CU);
+          if (workspace && routeToRoleWorkspace(CU)) return;
+          if (!workspace && window.EventFlowRole?.key !== 'landing') {
+            window.location.replace(new URL('../landing/index.html', window.location.href).href);
+            return;
+          }
+          initApp();
+          showPage('app');
+          document.documentElement.classList.remove('restoring-session');
+          return;
+        }
+      } catch (e) {
+        console.error('[Employee workspace] Failed to restore saved session.', e);
+        try { sessionStorage.removeItem('ef_cu'); } catch (ignore) { }
+      }
+      if (window.EventFlowRole?.key !== 'landing') {
+        window.location.replace(new URL('../landing/index.html', window.location.href).href);
+        return;
+      }
+      document.documentElement.classList.remove('restoring-session');
+>>>>>>> Stashed changes:front-end/users/employee1/employee1.js
       showPage('landing');
     })();
   </script>
