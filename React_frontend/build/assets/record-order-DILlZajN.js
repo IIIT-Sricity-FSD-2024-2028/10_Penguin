@@ -1,0 +1,1 @@
+function s(e){const t=e.rawEvent||e.event||e.rawRequest||e.request||{};for(const n of[e.createdAt,e.registrationDate,e.created,t.createdAt,t.created]){if(n==null||n==="")continue;const i=new Date(n).getTime();if(Number.isFinite(i))return i}return 0}function a(e,t){return s(t)-s(e)}function r(e){return[...e].sort(a)}export{a as c,r as n};

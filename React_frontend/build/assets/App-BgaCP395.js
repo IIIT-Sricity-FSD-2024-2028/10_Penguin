@@ -1,0 +1,20005 @@
+import{r as P,j as e,P as Se,b as de,p as Ce,q as ke}from"./index-Ca0ZN0F_.js";import{U as Ie,G as $e,A as je,C as De,D as qe,L as Ne}from"./LegacyRuntime-Cmht0qYr.js";import{P as Pe}from"./PortalPublicHomePage-BMLR2BJO.js";import{r as Ae,u as Te,E as ze,L as Be,F as Oe}from"./ProfileAvatar-ztaOo_XF.js";import{P as M,I as K,E as Ue,A as ce,c as Me,p as Fe}from"./createPageBridge-d1XhjohM.js";import{C as pe}from"./CustomerSupportPage-Db1MIkRS.js";import{F as ne}from"./FilterInput-DNpIdKas.js";import{c as te}from"./record-order-DILlZajN.js";import{l as _e}from"./view-utils-DJS-vhN5.js";import{E as Le}from"./EventDetailsLayout-BiCR-DVD.js";import"./SupportTicketTable-DM7a7Ehz.js";const He=`// Browser actions for the organizer workspace. App.jsx assembles this script with API, state,
+// and page sections. Keep global handler names stable because existing HTML calls them.
+// DB is the legacy browser model; CU is the signed-in user.
+/* PORTAL_SECTION_api */ /* PORTAL_SECTION_state */ /* ===== EventFlow source: main.js ===== */
+// ═══════════════════════════════════════════════════════════════
+// UI RENDERING & HELPER FUNCTIONS - EventFlow Platform
+// Dynamically renders all UI components based on state
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════ RENDER: TABLES ═══════════════════
+
+function renderUsersTable(containerId, users = null) {
+  users = users || AppState.users;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const html = \`
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Phone</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        \${users
+          .map(
+            user => \`
+          <tr class="table-row">
+            <td>\${escapeHtml(user.name)}</td>
+            <td>\${escapeHtml(user.email)}</td>
+            <td><span class="badge badge-\${user.role}">\${user.role}</span></td>
+            <td>\${escapeHtml(user.phone)}</td>
+            <td><span class="status-badge status-\${user.status}">\${user.status}</span></td>
+            <td class="action-buttons">
+              <button class="btn-small btn-edit" onclick="editUserHandler('\${
+                user.id
+              }')">Edit</button>
+              <button class="btn-small btn-delete" onclick="deleteUserHandler('\${
+                user.id
+              }')">Delete</button>
+            </td>
+          </tr>
+        \`
+          )
+          .join('')}
+      </tbody>
+    </table>
+  \`;
+  globalThis.window?.EventFlowOrganizerPages?.clear(container);
+  container.innerHTML = html;
+}
+function renderEventsTable(containerId, events = null) {
+  events = events || AppState.events;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const html = \`
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Event Title</th>
+          <th>Date</th>
+          <th>City</th>
+          <th>Capacity</th>
+          <th>Registered</th>
+          <th>Price (₹)</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        \${events
+          .map(
+            event => \`
+          <tr class="table-row">
+            <td><strong>\${escapeHtml(event.title)}</strong></td>
+            <td>\${event.date}</td>
+            <td>\${escapeHtml(event.city)}</td>
+            <td>\${event.capacity}</td>
+            <td>\${event.registered}/\${event.capacity}</td>
+            <td>₹\${event.price}</td>
+            <td><span class="status-badge status-\${event.status}">\${event.status}</span></td>
+            <td class="action-buttons">
+              <button class="btn-small btn-edit" onclick="editEventHandler('\${
+                event.id
+              }')">Edit</button>
+              <button class="btn-small btn-delete" onclick="deleteEventHandler('\${
+                event.id
+              }')">Delete</button>
+            </td>
+          </tr>
+        \`
+          )
+          .join('')}
+      </tbody>
+    </table>
+  \`;
+  globalThis.window?.EventFlowOrganizerPages?.clear(container);
+  container.innerHTML = html;
+}
+function renderRegistrationsTable(containerId, registrations = null) {
+  registrations = registrations || AppState.registrations;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const html = \`
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Ticket ID</th>
+          <th>Attendee</th>
+          <th>Event</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Checked In</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        \${registrations
+          .map(registration => {
+            const attendee = findUser(registration.attendeeId);
+            const event = findEvent(registration.eventId);
+            return \`
+            <tr class="table-row">
+              <td><code>\${registration.ticketId}</code></td>
+              <td>\${escapeHtml(attendee?.name || 'Unknown')}</td>
+              <td>\${escapeHtml(event?.title || 'Unknown')}</td>
+              <td>\${registration.date}</td>
+              <td><span class="status-badge status-\${registration.status}">\${
+              registration.status
+            }</span></td>
+              <td>\${registration.checkedIn ? '✓' : '−'}</td>
+              <td class="action-buttons">
+                \${
+                  !registration.checkedIn
+                    ? \`<button class="btn-small btn-success" onclick="checkInHandler('\${registration.id}')">Check In</button>\`
+                    : ''
+                }
+                <button class="btn-small btn-delete" onclick="cancelRegistrationHandler('\${
+                  registration.id
+                }')">Cancel</button>
+              </td>
+            </tr>
+          \`;
+          })
+          .join('')}
+      </tbody>
+    </table>
+  \`;
+  globalThis.window?.EventFlowOrganizerPages?.clear(container);
+  container.innerHTML = html;
+}
+
+// ═══════════════════ RENDER: EVENT CARDS ═══════════════════
+
+function renderEventCards(containerId, events = null, isAttendee = false) {
+  events = events || AppState.events;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const html = \`
+    <div class="event-cards-grid">
+      \${events
+        .map(event => {
+          const userReg = AppState.registrations.find(
+            registration =>
+              registration.eventId === event.id &&
+              AppState.currentUser &&
+              registration.attendeeId === AppState.currentUser.id
+          );
+          const isFull = event.registered >= event.capacity;
+          const isRegistered = !!userReg;
+          return \`
+          <div class="event-card">
+            \${
+              event.image
+                ? \`
+              <div class="event-card-banner" style="height:130px;overflow:hidden;border-radius:8px 8px 0 0;margin:-16px -16px 12px -16px;position:relative">
+                <img src="\${event.image}" alt="\${escapeHtml(
+                    event.title
+                  )}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'">
+              </div>
+            \`
+                : ''
+            }
+            <div class="event-card-header">
+              <h3>\${escapeHtml(event.title)}</h3>
+              <span class="badge badge-\${(event.category || '').toLowerCase()}">\${
+            event.category
+          }</span>
+            </div>
+            <div class="event-card-body">
+              <p class="event-date">📅 \${event.date} at \${event.time}</p>
+              <p class="event-location">📍 \${escapeHtml(event.city)}</p>
+              <p class="event-description">\${escapeHtml(event.description)}</p>
+              <div class="event-capacity">
+                <span>\${event.registered}/\${event.capacity} registered</span>
+                <div class="progress-bar">
+                  <div class="progress" style="width: \${
+                    (event.registered / event.capacity) * 100
+                  }%"></div>
+                </div>
+              </div>
+              <p class="event-price"><strong>₹\${event.price}</strong>\${
+            event.price === 0 ? ' (FREE)' : ''
+          }</p>
+            </div>
+            <div class="event-card-footer">
+              \${
+                isAttendee
+                  ? \`
+                \${
+                  isRegistered
+                    ? \`<button class="btn btn-secondary" disabled>Registered ✓</button>\`
+                    : \`<button class="btn btn-primary" onclick="quickRegisterHandler('\${
+                        event.id
+                      }')" \${isFull ? 'disabled' : ''}>
+                    \${isFull ? 'Event Full' : 'Register Now'}
+                  </button>\`
+                }
+              \`
+                  : ''
+              }
+            </div>
+          </div>
+        \`;
+        })
+        .join('')}
+    </div>
+  \`;
+  globalThis.window?.EventFlowOrganizerPages?.clear(container);
+  container.innerHTML = html;
+}
+
+// ═══════════════════ RENDER: NOTIFICATIONS ═══════════════════
+
+function renderNotificationsPanel(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const unread = AppState.notifications.filter(notification => !notification.read);
+  const html = \`
+    <div class="notifications-panel">
+      \${
+        unread.length === 0
+          ? \`<p class="empty-state">No new notifications</p>\`
+          : \`
+          <div class="notification-list">
+            \${unread
+              .map(
+                n => \`
+              <div class="notification-item notification-\${
+                n.type
+              }" onclick="markNotificationAsRead('\${n.id}')">
+                <div class="notification-icon">
+                  \${
+                    n.type === 'success'
+                      ? '✓'
+                      : n.type === 'error'
+                      ? '✕'
+                      : n.type === 'warning'
+                      ? '⚠'
+                      : 'ℹ'
+                  }
+                </div>
+                <div class="notification-content">
+                  <p>\${escapeHtml(n.message)}</p>
+                  <small>\${getTimeAgo(n.createdAt)}</small>
+                </div>
+              </div>
+            \`
+              )
+              .join('')}
+          </div>
+        \`
+      }
+    </div>
+  \`;
+  globalThis.window?.EventFlowOrganizerPages?.clear(container);
+  container.innerHTML = html;
+
+  // Update notification badge
+  const badge = document.querySelector('.notification-badge');
+  if (badge) {
+    const count = getUnreadCount();
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
+}
+
+// ═══════════════════ MODAL: FORMS ═══════════════════
+
+function showAddUserModal() {
+  const modal = \`
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Add New User</h3>
+          <button class="btn-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="addUserForm" onsubmit="submitAddUser(event)">
+            <div class="form-group">
+              <label for="newUserName">Name *</label>
+              <input type="text" id="newUserName" required>
+            </div>
+            <div class="form-group">
+              <label for="newUserEmail">Email *</label>
+              <input type="email" id="newUserEmail" required>
+            </div>
+            <div class="form-group">
+              <label for="newUserPassword">Password *</label>
+              <input type="password" id="newUserPassword" required>
+            </div>
+            <div class="form-group">
+              <label for="newUserRole">Role *</label>
+              <select id="newUserRole" required>
+                <option value="">Select a role</option>
+                <option value="superuser">Super Admin</option>
+                <option value="organizer">Event Organizer</option>
+
+                <option value="client">Client</option>
+                <option value="attendee">Attendee</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="newUserPhone">Phone *</label>
+              <input type="tel" id="newUserPhone" required>
+            </div>
+            <div class="modal-buttons">
+              <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary">Create User</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  \`;
+  document.body.insertAdjacentHTML('beforeend', modal);
+}
+function showAddEventModal() {
+  const modal = \`
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Create New Event</h3>
+          <button class="btn-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="addEventForm" onsubmit="submitAddEvent(event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="newEventTitle">Event Title *</label>
+                <input type="text" id="newEventTitle" required>
+              </div>
+              <div class="form-group">
+                <label for="newEventCategory">Category *</label>
+                <select id="newEventCategory" required>
+                  <option value="">Select category</option>
+                  <option value="Conference">Conference</option>
+                  <option value="Workshop">Workshop</option>
+                  <option value="Networking">Networking</option>
+                  <option value="Seminar">Seminar</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="newEventDate">Date *</label>
+                <input type="date" id="newEventDate" required>
+              </div>
+              <div class="form-group">
+                <label for="newEventTime">Time *</label>
+                <input type="time" id="newEventTime" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="newEventCity">City *</label>
+              <select id="newEventCity" required>
+                <option value="">Select city</option>
+                <option value="Chennai">Chennai</option>
+                <option value="Bangalore">Bangalore</option>
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Mumbai">Mumbai</option>
+                <option value="Delhi">Delhi</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="newEventLocation">Full Location Address *</label>
+              <input type="text" id="newEventLocation" placeholder="e.g., Convention Center, Chennai" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="newEventCapacity">Capacity *</label>
+                <input type="number" id="newEventCapacity" min="1" required>
+              </div>
+              <div class="form-group">
+                <label for="newEventPrice">Price (₹) *</label>
+                <input type="number" id="newEventPrice" min="0" step="0.01" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="newEventDescription">Description</label>
+              <textarea id="newEventDescription" rows="3"></textarea>
+            </div>
+            <div class="modal-buttons">
+              <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+              <button type="submit" class="btn btn-primary">Create Event</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  \`;
+  document.body.insertAdjacentHTML('beforeend', modal);
+}
+
+// ═══════════════════ FORM HANDLERS ═══════════════════
+
+function submitAddUser(e) {
+  e.preventDefault();
+  const user = {
+    name: document.getElementById('newUserName').value,
+    email: document.getElementById('newUserEmail').value,
+    password: document.getElementById('newUserPassword').value,
+    role: document.getElementById('newUserRole').value,
+    phone: document.getElementById('newUserPhone').value,
+  };
+  if (!createUser(user)) return;
+  closeModal();
+  updateAllTables();
+}
+function submitAddEvent(e) {
+  e.preventDefault();
+  const event = {
+    title: document.getElementById('newEventTitle').value,
+    category: document.getElementById('newEventCategory').value,
+    date: document.getElementById('newEventDate').value,
+    time: document.getElementById('newEventTime').value,
+    city: document.getElementById('newEventCity').value,
+    location: document.getElementById('newEventLocation').value,
+    capacity: parseInt(document.getElementById('newEventCapacity').value),
+    price: parseFloat(document.getElementById('newEventPrice').value),
+    description: document.getElementById('newEventDescription').value,
+    organizer: AppState.currentUser?.id || 'u1',
+  };
+  createEvent(event);
+  closeModal();
+  updateAllTables();
+}
+
+// ═══════════════════ QUICK ACTION HANDLERS ═══════════════════
+
+function editUserHandler(userId) {
+  console.log('Edit user:', userId);
+  const user = findUser(userId);
+  if (!user) {
+    alert('User not found');
+    return;
+  }
+  // TODO: Show edit modal with user data pre-filled
+  alert('Edit functionality for: ' + user.name);
+}
+function deleteUserHandler(userId) {
+  const user = findUser(userId);
+  if (!user) {
+    alert('User not found');
+    return;
+  }
+  if (confirm(\`Delete user "\${user.name}"? This cannot be undone.\`)) {
+    deleteUser(userId);
+    updateAllTables();
+  }
+}
+function editEventHandler(eventId) {
+  console.log('Edit event:', eventId);
+  const event = findEvent(eventId);
+  if (!event) {
+    alert('Event not found');
+    return;
+  }
+  // TODO: Show edit modal with event data pre-filled
+  alert('Edit functionality for: ' + event.title);
+}
+function deleteEventHandler(eventId) {
+  const event = findEvent(eventId);
+  if (!event) {
+    alert('Event not found');
+    return;
+  }
+  if (confirm(\`Delete event "\${event.title}"? This will also cancel all registrations.\`)) {
+    deleteEvent(eventId);
+    updateAllTables();
+  }
+}
+function quickRegisterHandler(eventId) {
+  if (!AppState.currentUser) {
+    alert('Please log in to register for events');
+    return;
+  }
+  const event = findEvent(eventId);
+  if (!event) {
+    alert('Event not found');
+    return;
+  }
+  if (event.registered >= event.capacity) {
+    alert('Event is full!');
+    return;
+  }
+  registerAttendee(AppState.currentUser.id, eventId);
+  updateAllTables();
+  renderEventCards('eventsContainer', null, AppState.currentUser.role === 'attendee');
+}
+function checkInHandler(registrationId) {
+  if (confirm('Confirm check-in for this attendee?')) {
+    checkInAttendee(registrationId);
+    updateAllTables();
+  }
+}
+function cancelRegistrationHandler(registrationId) {
+  if (confirm('Cancel this registration?')) {
+    cancelRegistration(registrationId);
+    updateAllTables();
+  }
+}
+
+// ═══════════════════ UTILITY FUNCTIONS ═══════════════════
+
+function closeModal() {
+  const overlay = document.querySelector('.modal-overlay');
+  if (overlay) overlay.remove();
+}
+function updateAllTables() {
+  if (document.getElementById('usersTableContainer'))
+    renderUsersTable('usersTableContainer', AppState.users);
+  if (document.getElementById('eventsTableContainer'))
+    renderEventsTable('eventsTableContainer', AppState.events);
+  if (document.getElementById('registrationsTableContainer'))
+    renderRegistrationsTable('registrationsTableContainer', AppState.registrations);
+  if (document.getElementById('notificationsPanel')) renderNotificationsPanel('notificationsPanel');
+}
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+function getTimeAgo(isoString) {
+  const date = new Date(isoString);
+  const now = new Date();
+  const seconds = Math.floor((now - date) / 1000);
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+  if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+  return Math.floor(seconds / 86400) + 'd ago';
+}
+
+// Notifications are refreshed when their data changes. Replacing the panel on
+// a timer remounted its DOM every five seconds and made pages visibly blink.
+
+// Make functions global
+window.renderUsersTable = renderUsersTable;
+window.renderEventsTable = renderEventsTable;
+window.renderRegistrationsTable = renderRegistrationsTable;
+window.renderEventCards = renderEventCards;
+window.renderNotificationsPanel = renderNotificationsPanel;
+window.showAddUserModal = showAddUserModal;
+window.showAddEventModal = showAddEventModal;
+window.submitAddUser = submitAddUser;
+window.submitAddEvent = submitAddEvent;
+window.updateAllTables = updateAllTables;
+window.closeModal = closeModal;
+
+/* ===== EventFlow source: qr.js ===== */
+// ═══════════════════════════════════════════════════════════════
+// QR CODE UTILITIES FOR EVENTFLOW CHECK-IN
+// Generates and displays QR codes for attendee tickets
+// ═══════════════════════════════════════════════════════════════
+
+// Generate a simple deterministic QR-like visual representation
+function generateQRVisual(data, size = 20) {
+  const strData = String(data);
+  // Create a hash-based grid pattern
+  let pattern = [];
+  let hash = 0;
+
+  // Simple string hash
+  for (let i = 0; i < strData.length; i++) {
+    hash = (hash << 5) - hash + strData.charCodeAt(i);
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+
+  // Generate grid pattern based on hash
+  for (let i = 0; i < size * size; i++) {
+    hash = (hash * 9301 + 49297) % 233280;
+    pattern.push(hash % 2 === 0);
+  }
+  return pattern;
+}
+
+// Render QR code as SVG or canvas-ready data
+function renderQRAsGrid(pattern, size = 20, cellSize = 6) {
+  let svg = \`<svg width="\${size * cellSize}" height="\${
+    size * cellSize
+  }" xmlns="http://www.w3.org/2000/svg" style="background:#fff;border:2px solid #000">\`;
+  for (let i = 0; i < pattern.length; i++) {
+    const row = Math.floor(i / size);
+    const col = i % size;
+    const x = col * cellSize;
+    const y = row * cellSize;
+    if (pattern[i]) {
+      svg += \`<rect x="\${x}" y="\${y}" width="\${cellSize}" height="\${cellSize}" fill="#000"/>\`;
+    }
+  }
+  svg += \`</svg>\`;
+  return svg;
+}
+
+// Simple canvas-based QR renderer
+function renderQRCanvas(registrationId, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = 150;
+  canvas.height = 150;
+  canvas.style.border = '1px solid #ccc';
+  canvas.style.borderRadius = '5px';
+  const ctx = canvas.getContext('2d');
+  const pattern = generateQRVisual(registrationId, 15);
+  const cellSize = 10;
+
+  // White background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Black pattern
+  ctx.fillStyle = '#000000';
+  for (let i = 0; i < pattern.length; i++) {
+    if (pattern[i]) {
+      const row = Math.floor(i / 15);
+      const col = i % 15;
+      ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+    }
+  }
+
+  // Add registration ID text
+  ctx.fillStyle = '#000000';
+  ctx.font = '10px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(String(registrationId).substring(0, 8), canvas.width / 2, canvas.height - 10);
+  globalThis.window?.EventFlowOrganizerPages?.clear(container);
+  container.innerHTML = '';
+  container.appendChild(canvas);
+}
+
+// Display QR code in modal for ticket view
+function showTicketQRModal(registrationId) {
+  const reg = AppState.registrations.find(registration => registration.id === registrationId);
+  if (!reg) {
+    addNotification(null, 'Registration not found', 'error');
+    return;
+  }
+  const event = AppState.events.find(currentEvent => currentEvent.id === reg.eventId);
+  const attendee = AppState.users.find(user => user.id === reg.attendeeId);
+  const modal = \`
+    <div id="modal-overlay" onclick="this.remove()">
+      <div class="modal" onclick="event.stopPropagation()" style="max-width: 400px">
+        <div class="modal-header">
+          <h3>🎟️ Ticket & QR Code</h3>
+          <button class="modal-close-btn" onclick="document.getElementById('modal-overlay').remove()">×</button>
+        </div>
+        <div class="modal-body">
+          <div style="text-align: center; padding: 20px 0">
+            <div style="font-weight: 600; margin-bottom: 10px">\${attendee?.name}</div>
+            <div style="color: #8891b4; font-size: 12px; margin-bottom: 20px">\${event?.title}</div>
+            <div id="qr-canvas-container" style="display: flex; justify-content: center; margin: 20px 0"></div>
+            <div style="background: #1c2135; padding: 12px; border-radius: 5px; margin: 20px 0">
+              <div style="font-size: 12px; color: #8891b4">Ticket ID</div>
+              <div style="font-family: monospace; font-weight: 600; color: #7c6ff7">\${
+                reg.ticketId
+              }</div>
+            </div>
+            <div style="background: #1c2135; padding: 12px; border-radius: 5px; margin: 20px 0">
+              <div style="font-size: 12px; color: #8891b4">Event Date</div>
+              <div style="font-weight: 500">\${event?.date} at \${event?.time}</div>
+            </div>
+            <div style="background: #1c2135; padding: 12px; border-radius: 5px; margin: 20px 0">
+              <div style="font-size: 12px; color: #8891b4">Amount Paid</div>
+              <div style="font-weight: 600; color: #22d3a5">₹\${reg.amount}</div>
+            </div>
+            <div style="text-align: center; margin-top: 16px">
+              <span class="badge badge-\${reg.checkedIn ? 'green' : 'yellow'}">\${
+    reg.checkedIn ? '✓ Checked In' : 'Pending Check-in'
+  }</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          \${
+            !reg.checkedIn
+              ? \`<button class="btn btn-success w-full" onclick="checkInHandler('\${reg.id}'); document.getElementById('modal-overlay').remove(); renderPage('attendance')">✓ Check In Now</button>\`
+              : ''
+          }
+          <button class="btn btn-ghost w-full" onclick="document.getElementById('modal-overlay').remove()">Close</button>
+        </div>
+      </div>
+    </div>
+  \`;
+  document.body.insertAdjacentHTML('beforeend', modal);
+  setTimeout(() => renderQRCanvas(reg.id, 'qr-canvas-container'), 100);
+}
+
+// Render QR in registration row
+function addQRToRegistration(registrationId, cellElement) {
+  const reg = AppState.registrations.find(registration => registration.id === registrationId);
+  if (!reg) return;
+  const qrIcon = document.createElement('a');
+  qrIcon.href = '#';
+  qrIcon.style.cursor = 'pointer';
+  qrIcon.style.fontSize = '16px';
+  qrIcon.onclick = e => {
+    e.preventDefault();
+    showTicketQRModal(registrationId);
+  };
+  qrIcon.textContent = '📱 QR';
+  qrIcon.title = 'View QR Code';
+  cellElement.insertBefore(qrIcon, cellElement.firstChild);
+  cellElement.insertBefore(document.createTextNode(' '), qrIcon.nextSibling);
+}
+
+// Check-in modal with QR scanner simulation
+function showCheckInModal(eventId) {
+  const event = AppState.events.find(currentEvent => currentEvent.id === eventId);
+  if (!event) return;
+  const regs = AppState.registrations.filter(
+    registration => registration.eventId === eventId && !registration.checkedIn
+  );
+  const modal = \`
+    <div id="modal-overlay" onclick="this.remove()">
+      <div class="modal" onclick="event.stopPropagation()" style="max-width: 500px">
+        <div class="modal-header">
+          <h3>✅ Check-in Attendees — \${event.title}</h3>
+          <button class="modal-close-btn" onclick="document.getElementById('modal-overlay').remove()">×</button>
+        </div>
+        <div class="modal-body">
+          <div style="margin-bottom: 16px">
+            <div style="font-size: 12px; color: #8891b4; margin-bottom: 8px">Pending Check-ins</div>
+            <div style="font-size: 20px; font-weight: 700; color: #7c6ff7">\${regs.length}</div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 300px; overflow-y: auto">
+            \${regs
+              .map(registration => {
+                const attendee = AppState.users.find(user => user.id === registration.attendeeId);
+                return \`
+                <div style="background: #151929; border: 1px solid #1f2640; border-radius: 8px; padding: 12px">
+                  <div style="font-weight: 500; font-size: 13px; margin-bottom: 4px">\${attendee?.name}</div>
+                  <div style="font-size: 11px; color: #8891b4; margin-bottom: 8px">\${registration.ticketId}</div>
+                  <button class="btn btn-sm btn-success" onclick="checkInAttendee('\${registration.id}'); refreshCheckInList('\${eventId}')" style="width: 100%">✓ Check In</button>
+                </div>
+              \`;
+              })
+              .join('')}
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button class="btn btn-ghost" onclick="document.getElementById('modal-overlay').remove()">Close</button>
+        </div>
+      </div>
+    </div>
+  \`;
+  document.body.insertAdjacentHTML('beforeend', modal);
+}
+function refreshCheckInList(eventId) {
+  // Re-render the check-in modal
+  const overlay = document.getElementById('modal-overlay');
+  if (overlay) overlay.remove();
+  setTimeout(() => showCheckInModal(eventId), 100);
+}
+
+// Global access
+window.generateQRVisual = generateQRVisual;
+window.renderQRAsGrid = renderQRAsGrid;
+window.renderQRCanvas = renderQRCanvas;
+window.showTicketQRModal = showTicketQRModal;
+window.addQRToRegistration = addQRToRegistration;
+window.showCheckInModal = showCheckInModal;
+window.refreshCheckInList = refreshCheckInList;
+
+/* ===== EventFlow source: navigation.js ===== */
+/* EventFlow navigation module.
+ * Navigation module boundary. showPage/goNav/renderPage remain in app.js so all existing page IDs and workflows are unchanged.
+ * This boundary is intentionally non-invasive: the working SPA runtime remains
+ * centralized in app.js so no existing IDs, function names, storage keys,
+ * mock-data records, validation, or button workflows are changed.
+ */
+window.EventFlowModules = window.EventFlowModules || {};
+window.EventFlowModules['navigation'] = true;
+
+/* ===== EventFlow source: auth.js ===== */
+/* EventFlow auth module.
+ * Authentication module boundary. Existing login/logout functions remain in app.js; API helpers remain in api.js.
+ * This boundary is intentionally non-invasive: the working SPA runtime remains
+ * centralized in app.js so no existing IDs, function names, storage keys,
+ * mock-data records, validation, or button workflows are changed.
+ */
+window.EventFlowModules = window.EventFlowModules || {};
+window.EventFlowModules['auth'] = true;
+
+/* ===== EventFlow source: database.js ===== */
+/* EventFlow database module.
+ * Database module boundary. The canonical mock DB remains in app.js to preserve initialization order and exact data.
+ * This boundary is intentionally non-invasive: the working SPA runtime remains
+ * centralized in app.js so no existing IDs, function names, storage keys,
+ * mock-data records, validation, or button workflows are changed.
+ */
+window.EventFlowModules = window.EventFlowModules || {};
+window.EventFlowModules['database'] = true;
+
+/* ===== EventFlow source: modals.js ===== */
+/* EventFlow modals module.
+ * Modal module boundary. Existing modal/drawer/confirm implementations remain in app.js.
+ * This boundary is intentionally non-invasive: the working SPA runtime remains
+ * centralized in app.js so no existing IDs, function names, storage keys,
+ * mock-data records, validation, or button workflows are changed.
+ */
+window.EventFlowModules = window.EventFlowModules || {};
+window.EventFlowModules['modals'] = true;
+
+/* ===== EventFlow source: notifications.js ===== */
+/* EventFlow notifications module.
+ * Notifications module boundary. Existing notification state/rendering remains in app.js.
+ * This boundary is intentionally non-invasive: the working SPA runtime remains
+ * centralized in app.js so no existing IDs, function names, storage keys,
+ * mock-data records, validation, or button workflows are changed.
+ */
+window.EventFlowModules = window.EventFlowModules || {};
+window.EventFlowModules['notifications'] = true;
+
+/* ===== EventFlow source: shared.js ===== */
+/* EventFlow shared module.
+ * Shared UI module boundary. Existing helpers and cross-page utilities remain in app.js.
+ * This boundary is intentionally non-invasive: the working SPA runtime remains
+ * centralized in app.js so no existing IDs, function names, storage keys,
+ * mock-data records, validation, or button workflows are changed.
+ */
+window.EventFlowModules = window.EventFlowModules || {};
+window.EventFlowModules['shared'] = true;
+
+/* ===== EventFlow source: app.js ===== */
+// ════════════════════════════════════════════════
+//  MOCK DATABASE
+// ════════════════════════════════════════════════
+const DB = {
+  users: [
+    {
+      id: 'usr-admin-001',
+      name: 'Alex Johnson',
+      email: 'superadmin@example.com',
+      password: 'Admin@123',
+      role: 'superuser',
+      phone: '+91 9876543201',
+      avatar: 'AJ',
+      avatarImage: '/assets/images/avatars/user-alex-johnson.jpg',
+      status: 'active',
+      joined: '2024-01-15',
+      bio: 'Platform administrator with full system access.',
+    },
+    {
+      id: 'usr-org-001',
+      name: 'Sarah Chen',
+      email: 'organizer@example.com',
+      password: 'Organizer@123',
+      role: 'organizer',
+      phone: '+91 9876543202',
+      avatar: 'SC',
+      avatarImage: '/assets/images/avatars/organizer-sarah-chen.jpg',
+      status: 'active',
+      joined: '2024-02-01',
+      bio: 'Senior event organizer specializing in corporate events.',
+      service: 'Corporate Events & Conferences',
+      city: 'Bangalore',
+      rating: 4.8,
+      color: '#7c6ff7',
+    },
+    {
+      id: 'usr-emp-001',
+      userId: 'usr-emp-001',
+      name: 'Marcus Vance',
+      email: 'employee@example.com',
+      password: 'Employee@123',
+      role: 'employee',
+      employeeType: 'EVENT_OPERATIONS',
+      phone: '+91 9876543220',
+      avatar: 'MV',
+      avatarImage: '/assets/images/avatars/employee-marcus-vance.jpg',
+      status: 'active',
+      joined: '2024-01-18',
+      bio: 'Senior event operations employee managing event information and live execution.',
+      service: 'Corporate Conferences & Tech Summits',
+      city: 'Bangalore',
+      rating: 4.9,
+      color: '#3b82f6',
+    },
+    {
+      id: 'usr-emp-001c',
+      userId: 'usr-emp-001',
+      name: 'Marcus Vance',
+      email: 'marcus.ops@eventflow.com',
+      password: 'Employee@123',
+      role: 'employee',
+      employeeType: 'SUPPORT_FINANCE',
+      phone: '+91 9876543220',
+      avatar: 'MV',
+      avatarImage: '/assets/images/avatars/employee-marcus-vance.jpg',
+      status: 'active',
+      joined: '2024-01-18',
+      bio: 'Customer support and finance operations executive.',
+      service: 'Support & Finance',
+      city: 'Bangalore',
+      rating: 4.9,
+      color: '#3b82f6',
+    },
+    {
+      id: 'usr-emp-002',
+      userId: 'usr-emp-002',
+      name: 'Elena Rostova',
+      email: 'elena.coordinator@eventflow.com',
+      password: 'Employee@123',
+      role: 'employee',
+      employeeType: 'EVENT_OPERATIONS',
+      phone: '+91 9876543221',
+      avatar: 'ER',
+      avatarImage: '/assets/images/avatars/employee-elena-rostova.jpg',
+      status: 'active',
+      joined: '2024-02-12',
+      bio: 'Event operations executive.',
+      service: 'Event Operations',
+      city: 'Mumbai',
+      rating: 4.8,
+      color: '#ec4899',
+    },
+    {
+      id: 'usr-emp-003',
+      userId: 'usr-emp-003',
+      name: 'Arjun Kapoor',
+      email: 'arjun.events@eventflow.com',
+      password: 'Employee@123',
+      role: 'employee',
+      employeeType: 'REGISTRATION_VERIFICATION',
+      phone: '+91 9876543222',
+      avatar: 'AK',
+      avatarImage: '/assets/images/avatars/employee-arjun-kapoor.jpg',
+      status: 'active',
+      joined: '2024-03-08',
+      bio: 'Registration and attendee verification executive.',
+      service: 'Registration & Verification',
+      city: 'Delhi NCR',
+      rating: 4.9,
+      color: '#8b5cf6',
+    },
+    {
+      id: 'usr-emp-004',
+      userId: 'usr-emp-004',
+      name: 'Maya Lin',
+      email: 'maya.ops@eventflow.com',
+      password: 'Employee@123',
+      role: 'employee',
+      employeeType: 'SUPPORT_FINANCE',
+      phone: '+91 9876543223',
+      avatar: 'ML',
+      avatarImage: '/assets/images/avatars/employee-maya-lin.jpg',
+      status: 'active',
+      joined: '2024-03-22',
+      bio: 'Customer support and finance operations executive.',
+      service: 'Support & Finance',
+      city: 'Hyderabad',
+      rating: 4.7,
+      color: '#10b981',
+    },
+    {
+      id: 'usr-client-001',
+      name: 'Michael Torres',
+      email: 'client@example.com',
+      password: 'Client@123',
+      role: 'client',
+      phone: '+91 9876543203',
+      avatar: 'MT',
+      avatarImage: '/assets/images/avatars/user-michael-torres.jpg',
+      status: 'active',
+      joined: '2024-03-10',
+      bio: 'Head of Events at TechCorp Ltd.',
+      company: 'TechCorp Ltd',
+    },
+    {
+      id: 'usr-attendee-001',
+      name: 'Priya Patel',
+      email: 'attendee@example.com',
+      password: 'Attendee@123',
+      role: 'attendee',
+      phone: '+91 9876543205',
+      avatar: 'PP',
+      avatarImage: '/assets/images/avatars/user-priya-patel.jpg',
+      status: 'active',
+      joined: '2024-04-01',
+      bio: 'Tech enthusiast and frequent conference attendee.',
+    },
+    {
+      id: 6,
+      name: 'Emma Brown',
+      email: 'emma@eventflow.com',
+      password: 'org123',
+      role: 'organizer',
+      phone: '+91 9876543206',
+      avatar: 'EB',
+      avatarImage: '/assets/images/avatars/organizer-emma-brown.jpg',
+      status: 'active',
+      joined: '2024-02-20',
+      service: 'Weddings & Social Events',
+      city: 'Pune',
+      rating: 4.7,
+      color: '#f56565',
+      bio: 'Expert in creating memorable wedding and social event experiences with meticulous attention to detail.',
+    },
+    {
+      id: 8,
+      name: 'Lisa Zhang',
+      email: 'lisa@eventflow.com',
+      password: 'att123',
+      role: 'attendee',
+      phone: '+91 9876543208',
+      avatar: 'LZ',
+      avatarImage: '/assets/images/avatars/user-lisa-zhang.jpg',
+      status: 'active',
+      joined: '2024-04-15',
+    },
+    {
+      id: 9,
+      name: 'Robert Singh',
+      email: 'robert@eventflow.com',
+      password: 'att123',
+      role: 'attendee',
+      phone: '+91 9876543209',
+      avatar: 'RS',
+      avatarImage: '/assets/images/avatars/user-robert-singh.jpg',
+      status: 'active',
+      joined: '2024-05-01',
+    },
+    {
+      id: 11,
+      name: 'Rajesh Sharma',
+      email: 'rajesh@eventflow.com',
+      password: 'org123',
+      role: 'organizer',
+      phone: '+91 9876543210',
+      avatar: 'RS',
+      avatarImage: '/assets/images/avatars/organizer-rajesh-sharma.jpg',
+      status: 'active',
+      joined: '2024-03-05',
+      service: 'Weddings & Social Events',
+      city: 'Delhi NCR',
+      rating: 4.9,
+      color: '#22d3a5',
+      bio: 'Expert wedding planner with 15+ years of experience in creating stunning celebrations for families across India.',
+    },
+    {
+      id: 12,
+      name: 'TechEvents India',
+      email: 'techevents@eventflow.com',
+      password: 'org123',
+      role: 'organizer',
+      phone: '+91 9876543211',
+      avatar: 'TE',
+      avatarImage: '/assets/images/avatars/organizer-techevents.jpg',
+      status: 'active',
+      joined: '2024-01-20',
+      service: 'Tech Conferences & Hackathons',
+      city: 'Bangalore',
+      rating: 4.6,
+      color: '#ed8936',
+      bio: 'Leading organizer for technology summits, conferences, and hackathons in India.',
+    },
+    {
+      id: 'org-demo-attendee-001',
+      name: 'Aarav Mehta',
+      email: 'aarav.mehta@example.com',
+      role: 'attendee',
+      phone: '+91 9876500013',
+      avatar: 'AM',
+      avatarImage: '/assets/images/avatars/user-alex-johnson.jpg',
+      status: 'active',
+      joined: '2026-09-18',
+      city: 'Chennai',
+      bio: 'Product designer interested in emerging technology and accessible design.',
+      dateOfBirth: '1994-06-12',
+      emergencyContact: '+91 9876501013',
+      interests: ['AI', 'Product Design', 'Accessibility'],
+    },
+    {
+      id: 'org-demo-attendee-002',
+      name: 'Diya Nair',
+      email: 'diya.nair@example.com',
+      role: 'attendee',
+      phone: '+91 9876500014',
+      avatar: 'DN',
+      avatarImage: '/assets/images/avatars/user-lisa-zhang.jpg',
+      status: 'active',
+      joined: '2026-09-22',
+      city: 'Bengaluru',
+      bio: 'Software engineer and community organizer focused on cloud technologies.',
+      dateOfBirth: '1991-11-03',
+      emergencyContact: '+91 9876501014',
+      interests: ['Cloud', 'Developer Communities', 'Mentorship'],
+    },
+  ],
+  events: [
+    {
+      id: 101,
+      title: 'Global AI & Cloud Summit 2026',
+      category: 'Conference',
+      date: '2026-06-15',
+      time: '09:00',
+      endTime: '18:00',
+      venue: 'Grand Convention Center, Hall A',
+      city: 'Bangalore',
+      capacity: 600,
+      registered: 480,
+      price: 200,
+      status: 'upcoming',
+      organizer: 'usr-emp-001',
+      clientId: 'usr-client-001',
+      description:
+        'Flagship enterprise summit on Generative AI, Cloud Infrastructure, and Agentic Workflows.',
+      color: '#3b82f6',
+      emoji: '🤖',
+      tags: ['AI', 'Cloud', 'Enterprise'],
+      image: '/assets/images/events/event-ai-summit.jpg',
+    },
+    {
+      id: 102,
+      title: 'FinTech Leaders Executive Conclave',
+      category: 'Corporate',
+      date: '2026-06-22',
+      time: '17:30',
+      endTime: '22:30',
+      venue: 'The Leela Palace Ballroom',
+      city: 'Mumbai',
+      capacity: 250,
+      registered: 210,
+      price: 350,
+      status: 'upcoming',
+      organizer: 'usr-emp-001',
+      clientId: 'usr-client-001',
+      description:
+        'Exclusive executive dinner and keynote sessions for digital banking and FinTech innovators.',
+      color: '#10b981',
+      emoji: '💼',
+      tags: ['FinTech', 'Banking', 'Executive'],
+      image: '/assets/images/events/event-fintech.jpg',
+    },
+    {
+      id: 103,
+      title: 'Cybersecurity & Zero Trust Workshop',
+      category: 'Workshop',
+      date: '2026-07-05',
+      time: '10:00',
+      endTime: '16:00',
+      venue: 'Cyber Towers — Tech Room 3',
+      city: 'Hyderabad',
+      capacity: 80,
+      registered: 80,
+      price: 120,
+      status: 'full',
+      organizer: 'usr-emp-001',
+      clientId: 'usr-client-001',
+      description:
+        'Hands-on live simulation on threat modeling, Zero Trust architecture, and cloud security.',
+      color: '#f59e0b',
+      emoji: '🛡️',
+      tags: ['Security', 'ZeroTrust', 'HandsOn'],
+      image: '/assets/images/events/event-cybersecurity.jpg',
+    },
+    {
+      id: 104,
+      title: 'National Web3 & AI Hackathon 2026',
+      category: 'Networking',
+      date: '2026-07-18',
+      time: '08:00',
+      endTime: '20:00',
+      venue: 'Innovation Arena, HITEC City',
+      city: 'Chennai',
+      capacity: 400,
+      registered: 315,
+      price: 0,
+      status: 'upcoming',
+      organizer: 'usr-emp-001',
+      clientId: 'usr-client-001',
+      description:
+        '36-hour national developer hackathon with ?50K in prize bounties for open source AI agents.',
+      color: '#8b5cf6',
+      emoji: '🚀',
+      tags: ['Hackathon', 'AI', 'Developers'],
+      image: '/assets/images/events/event-hackathon.jpg',
+    },
+    {
+      id: 105,
+      title: 'Healthcare & Biotech Forum 2026',
+      category: 'Conference',
+      date: '2026-03-25',
+      time: '09:00',
+      endTime: '17:00',
+      venue: 'Medical Research Auditorium',
+      city: 'Delhi NCR',
+      capacity: 350,
+      registered: 350,
+      price: 250,
+      status: 'completed',
+      organizer: 'usr-emp-001',
+      clientId: 'usr-client-001',
+      description:
+        'International forum on AI diagnostics, clinical trials automation, and genomics data.',
+      color: '#06b6d4',
+      emoji: '🏥',
+      tags: ['Healthcare', 'Biotech', 'Genomics'],
+      image: '/assets/images/events/event-healthcare-forum.jpg',
+    },
+    {
+      id: 1,
+      title: 'Tech Innovation Summit 2026',
+      category: 'Conference',
+      date: '2026-04-15',
+      time: '09:00',
+      endTime: '18:00',
+      venue: 'Grand Convention Center, Hall A',
+      city: 'Chennai',
+      capacity: 500,
+      registered: 342,
+      price: 150,
+      status: 'upcoming',
+      organizer: 'usr-org-001',
+      clientId: 'usr-client-001',
+      description:
+        'Annual technology conference featuring keynotes from industry leaders, workshops on AI, blockchain, and cloud computing.',
+      color: '#7c6ff7',
+      emoji: '💻',
+      tags: ['AI', 'Tech', 'Networking'],
+      image: '/assets/images/events/event-tech-summit.jpg',
+    },
+    {
+      id: 2,
+      title: 'Corporate Annual Gala 2026',
+      category: 'Corporate',
+      date: '2026-04-22',
+      time: '18:00',
+      endTime: '23:00',
+      venue: 'Grand Ballroom — Marriott Hotel',
+      city: 'Tirupathi',
+      capacity: 200,
+      registered: 187,
+      price: 250,
+      status: 'upcoming',
+      organizer: 'usr-org-001',
+      clientId: 'usr-client-001',
+      description:
+        'Exclusive annual corporate dinner and awards ceremony celebrating achievements and milestones.',
+      color: '#22d3a5',
+      emoji: '🥂',
+      tags: ['Corporate', 'Gala', 'Awards'],
+      image: '/assets/images/events/event-annual-gala.jpg',
+    },
+    {
+      id: 3,
+      title: 'Spring Music Festival',
+      category: 'Concert',
+      date: '2026-05-01',
+      time: '14:00',
+      endTime: '23:00',
+      venue: 'City Park Outdoor Amphitheater',
+      city: 'Noida',
+      capacity: 1000,
+      registered: 756,
+      price: 75,
+      status: 'upcoming',
+      organizer: 6,
+      clientId: 'usr-client-001',
+      description: 'Two-day outdoor music festival featuring 15+ artists across multiple genres.',
+      color: '#f56565',
+      emoji: '🎵',
+      tags: ['Music', 'Outdoor', 'Festival'],
+      image: '/assets/images/events/event-music-fest.jpg',
+    },
+    {
+      id: 4,
+      title: 'Digital Marketing Workshop',
+      category: 'Workshop',
+      date: '2026-05-10',
+      time: '10:00',
+      endTime: '16:00',
+      venue: 'Business Hub — Room 201',
+      city: 'Hyderabad',
+      capacity: 50,
+      registered: 50,
+      price: 80,
+      status: 'full',
+      organizer: 'usr-org-001',
+      clientId: 'usr-client-001',
+      description:
+        'Hands-on full-day workshop on modern digital marketing, SEO, social media strategy, and analytics.',
+      color: '#f6c90e',
+      emoji: '📱',
+      tags: ['Marketing', 'Workshop', 'SEO'],
+      image: '/assets/images/events/event-marketing-workshop.jpg',
+    },
+    {
+      id: 5,
+      title: 'Startup Pitch Night',
+      category: 'Networking',
+      date: '2026-05-15',
+      time: '17:00',
+      endTime: '21:00',
+      venue: 'Innovation Lab — Main Hall',
+      city: 'Chennai',
+      capacity: 150,
+      registered: 98,
+      price: 0,
+      status: 'upcoming',
+      organizer: 6,
+      clientId: 'usr-client-001',
+      description:
+        'Monthly startup pitch competition with panels of VC judges and networking opportunities.',
+      color: '#7c6ff7',
+      emoji: '🚀',
+      tags: ['Startup', 'Pitch', 'VC'],
+      image: '/assets/images/events/event-pitch-night.jpg',
+    },
+    {
+      id: 6,
+      title: 'Healthcare Innovation Forum',
+      category: 'Conference',
+      date: '2026-03-10',
+      time: '08:30',
+      endTime: '17:00',
+      venue: 'City Medical Center Auditorium',
+      city: 'Bangalore',
+      capacity: 300,
+      registered: 300,
+      price: 200,
+      status: 'completed',
+      organizer: 'usr-org-001',
+      clientId: 'usr-client-001',
+      description: 'Forum on AI in healthcare, telemedicine, and patient data management.',
+      color: '#22d3a5',
+      emoji: '🏥',
+      tags: ['Health', 'AI', 'Forum'],
+      image: '/assets/images/events/event-medtech.jpg',
+    },
+    {
+      id: 7,
+      title: 'Photography Masterclass',
+      category: 'Workshop',
+      date: '2026-06-01',
+      time: '10:00',
+      endTime: '15:00',
+      venue: 'Art Studio 5, Downtown',
+      city: 'Pune',
+      capacity: 30,
+      registered: 12,
+      price: 120,
+      status: 'upcoming',
+      organizer: 6,
+      clientId: null,
+      description:
+        'Hands-on photography workshop for intermediate photographers covering lighting, composition, and post-processing.',
+      color: '#ed8936',
+      emoji: '📷',
+      tags: ['Photography', 'Art', 'Workshop'],
+      image: '/assets/images/events/event-photography.jpg',
+    },
+    {
+      id: 8,
+      title: 'Rajesh Grand Wedding Celebration',
+      category: 'Wedding',
+      date: '2026-05-15',
+      time: '17:00',
+      endTime: '23:59',
+      venue: 'The Ashok Hotel, New Delhi',
+      city: 'Delhi NCR',
+      capacity: 800,
+      registered: 750,
+      price: 0,
+      status: 'ongoing',
+      organizer: 11,
+      clientId: null,
+      description:
+        'Grand wedding celebration bringing together families and friends. Featuring traditional ceremonies, vibrant decorations, and festive atmosphere.',
+      color: '#22d3a5',
+      emoji: '💒',
+      tags: ['Wedding', 'Celebration', 'Grand'],
+      image: '/assets/images/events/event-wedding.jpg',
+    },
+    {
+      id: 9,
+      title: 'Sustainable Business Leadership Forum',
+      category: 'Conference',
+      date: '2026-08-12',
+      time: '09:00',
+      endTime: '17:30',
+      venue: 'Bangalore International Centre',
+      city: 'Bangalore',
+      capacity: 240,
+      registered: 218,
+      price: 175,
+      status: 'completed',
+      organizer: 'usr-org-001',
+      clientId: 'usr-client-001',
+      description:
+        'Leadership forum on sustainable operations, climate reporting, and responsible business growth.',
+      color: '#10b981',
+      emoji: '🌱',
+      tags: ['Sustainability', 'Leadership', 'Business'],
+      image: '/assets/images/events/event-tech-summit.jpg',
+    },
+    {
+      id: 10,
+      title: 'Product Design & Innovation Workshop',
+      category: 'Workshop',
+      date: '2026-08-26',
+      time: '10:00',
+      endTime: '16:00',
+      venue: 'TechCorp Innovation Studio',
+      city: 'Bangalore',
+      capacity: 90,
+      registered: 86,
+      price: 95,
+      status: 'completed',
+      organizer: 'usr-org-001',
+      clientId: 'usr-client-001',
+      description:
+        'Practical workshop covering user research, rapid prototyping, and product design systems.',
+      color: '#7c6ff7',
+      emoji: '🎨',
+      tags: ['Product Design', 'Innovation', 'Workshop'],
+      image: '/assets/images/events/event-marketing-workshop.jpg',
+    },
+    {
+      id: 11,
+      title: 'Cloud Engineering Community Day',
+      category: 'Networking',
+      date: '2026-09-09',
+      time: '09:30',
+      endTime: '18:00',
+      venue: 'Manyata Tech Park — Auditorium 2',
+      city: 'Bangalore',
+      capacity: 320,
+      registered: 297,
+      price: 50,
+      status: 'completed',
+      organizer: 'usr-org-001',
+      clientId: 'usr-client-001',
+      description:
+        'Community event with technical talks, hands-on labs, and networking for cloud engineering teams.',
+      color: '#3b82f6',
+      emoji: '☁️',
+      tags: ['Cloud', 'Engineering', 'Community'],
+      image: '/assets/images/events/event-ai-summit.jpg',
+    },
+    {
+      id: 12,
+      title: 'Customer Experience Strategy Roundtable',
+      category: 'Corporate',
+      date: '2026-09-24',
+      time: '13:00',
+      endTime: '18:00',
+      venue: 'TechCorp Conference Suite',
+      city: 'Bangalore',
+      capacity: 60,
+      registered: 54,
+      price: 125,
+      status: 'completed',
+      organizer: 'usr-org-001',
+      clientId: 'usr-client-001',
+      description:
+        'Executive roundtable on customer experience measurement, service design, and retention strategy.',
+      color: '#f59e0b',
+      emoji: '💬',
+      tags: ['Customer Experience', 'Strategy', 'Roundtable'],
+      image: '/assets/images/events/event-fintech.jpg',
+    },
+  ],
+  eventRequests: [
+    {
+      id: 101,
+      clientId: 'usr-client-001',
+      title: 'Torres Tech Q3 Product Launch',
+      type: 'Corporate',
+      date: '2026-06-01',
+      guests: 350,
+      budget: 35000,
+      status: 'pending',
+      desc: 'Global launch for next-gen enterprise suite. Require 4K live streaming, stage AV, VIP catering, and 5 photographers.',
+      created: '2026-03-20',
+      organizer: 'usr-emp-001',
+      venue: 'Downtown Convention Center',
+    },
+    {
+      id: 102,
+      clientId: 'usr-client-001',
+      title: 'Annual Leadership Strategy Retreat',
+      type: 'Corporate',
+      date: '2026-06-15',
+      guests: 120,
+      budget: 18000,
+      status: 'approved',
+      desc: 'Annual executive team retreat with breakout workshop sessions, keynote speaker, and outdoor networking dinner.',
+      created: '2026-03-15',
+      organizer: 'usr-emp-001',
+      venue: 'Hilltop Mountain Resort',
+    },
+    {
+      id: 103,
+      clientId: 'usr-client-001',
+      title: 'Tech Innovation Demo Day',
+      type: 'Networking',
+      date: '2026-07-10',
+      guests: 200,
+      budget: 22000,
+      status: 'in_review',
+      desc: 'Startup and partner showcase demo day with booth setups, investor pitch panels, and networking reception.',
+      created: '2026-03-25',
+      organizer: 'usr-emp-001',
+      venue: 'Innovation Hub Hall 2',
+    },
+    {
+      id: 1,
+      clientId: 'usr-client-001',
+      title: 'Product Launch Event',
+      type: 'Corporate',
+      date: '2026-06-01',
+      guests: 300,
+      budget: 25000,
+      status: 'pending',
+      desc: 'Grand product launch for our new AI-powered software suite. Need venue, catering, AV, and professional photography.',
+      created: '2026-03-20',
+      venue: 'Downtown Convention Center',
+    },
+    {
+      id: 2,
+      clientId: 'usr-client-001',
+      title: 'Team Building Retreat',
+      type: 'Corporate',
+      date: '2026-06-15',
+      guests: 80,
+      budget: 12000,
+      status: 'approved',
+      desc: 'Annual team building activity with outdoor challenges, group activities, and team dinner.',
+      created: '2026-03-15',
+      organizer: 'usr-org-001',
+      venue: 'Mountain Resort',
+    },
+    {
+      id: 3,
+      clientId: 'usr-client-001',
+      title: 'Annual Client Appreciation Dinner',
+      type: 'Corporate',
+      date: '2026-07-10',
+      guests: 120,
+      budget: 18000,
+      status: 'in_review',
+      desc: 'Formal black-tie dinner for top 120 clients. Need premium venue, 5-course dinner, live entertainment.',
+      created: '2026-03-25',
+      organizer: 'usr-org-001',
+      venue: 'Five Star Restaurant & Event Hall',
+    },
+    {
+      id: 4,
+      clientId: 'usr-client-001',
+      title: 'Sales Training Conference',
+      type: 'Conference',
+      date: '2026-07-20',
+      guests: 200,
+      budget: 15000,
+      status: 'rejected',
+      desc: 'Two-day sales training conference with industry speakers and breakout sessions.',
+      created: '2026-03-28',
+      venue: 'City Conference Center',
+    },
+  ],
+  reports: [
+    {
+      id: 'rpt-emp-002',
+      eventId: 103,
+      fileName: 'cybersecurity-workshop-summary.docx',
+      submittedBy: 'usr-emp-001',
+      submittedAt: '2026-07-06 11:20',
+    },
+    {
+      id: 'rpt-org-001',
+      eventId: 6,
+      fileName: 'healthcare-innovation-forum-final-report.pdf',
+      submittedBy: 'usr-org-001',
+      recipientId: 'usr-client-001',
+      submittedAt: '2026-03-12 14:30',
+    },
+    {
+      id: 'rpt-org-002',
+      eventId: 6,
+      fileName: 'healthcare-forum-attendance-summary.xlsx',
+      submittedBy: 'usr-org-001',
+      recipientId: 'usr-client-001',
+      submittedAt: '2026-03-12 15:10',
+    },
+    {
+      id: 'rpt-org-003',
+      eventId: 9,
+      fileName: 'sustainable-business-forum-summary.pdf',
+      submittedBy: 'usr-org-001',
+      recipientId: 'usr-client-001',
+      submittedAt: '2026-08-13 11:15',
+    },
+    {
+      id: 'rpt-org-004',
+      eventId: 9,
+      fileName: 'sustainability-forum-attendance.xlsx',
+      submittedBy: 'usr-org-001',
+      recipientId: 'usr-client-001',
+      submittedAt: '2026-08-13 11:42',
+    },
+    {
+      id: 'rpt-org-005',
+      eventId: 10,
+      fileName: 'product-design-workshop-outcomes.docx',
+      submittedBy: 'usr-org-001',
+      recipientId: 'usr-client-001',
+      submittedAt: '2026-08-27 09:20',
+    },
+    {
+      id: 'rpt-org-006',
+      eventId: 10,
+      fileName: 'product-design-workshop-feedback.pdf',
+      submittedBy: 'usr-org-001',
+      recipientId: 'usr-client-001',
+      submittedAt: '2026-08-27 09:35',
+    },
+    // Demo event submissions for the organizer's completed-event report cards.
+  ],
+  employeeChangeRequests: [
+    {
+      id: 'chg-emp-001',
+      type: 'event',
+      targetId: 103,
+      targetName: 'Cybersecurity & Zero Trust Workshop',
+      requester: 'Michael Torres',
+      requestedChange: 'Move the event date to 2026-07-12 and increase capacity to 100 attendees.',
+      status: 'pending',
+      submittedAt: 'Today, 9:20 AM',
+    },
+    {
+      id: 'chg-emp-002',
+      type: 'user',
+      targetId: 'usr-client-001',
+      targetName: 'Michael Torres',
+      requester: 'Michael Torres',
+      requestedChange: 'Update phone number and company details on the user profile.',
+      status: 'pending',
+      submittedAt: 'Yesterday, 4:10 PM',
+    },
+    {
+      id: 'chg-emp-003',
+      type: 'event',
+      targetId: 105,
+      targetName: 'Healthcare & Biotech Forum 2026',
+      requester: 'James Wilson',
+      requestedChange: 'Add the final attendance count to the event record.',
+      status: 'approved',
+      submittedAt: '2 days ago',
+    },
+  ],
+  registrations: [
+    {
+      id: 101,
+      attendeeId: 'usr-attendee-001',
+      eventId: 101,
+      date: '2026-03-01',
+      ticketId: 'TKT-EMP-101',
+      status: 'confirmed',
+      payment: 'paid',
+      amount: 200,
+      checkedIn: false,
+      seat: 'VIP-12',
+      verificationStatus: 'Verified',
+      verified: true,
+      docType: 'Govt Aadhaar ID',
+      docRef: 'ID-8849-XXXX-1029',
+      notes: 'Verified via Govt ID submission.',
+    },
+    {
+      id: 102,
+      attendeeId: 'usr-client-001',
+      eventId: 102,
+      date: '2026-03-05',
+      ticketId: 'TKT-EMP-102',
+      status: 'confirmed',
+      payment: 'paid',
+      amount: 350,
+      checkedIn: false,
+      seat: 'A-01',
+      verificationStatus: 'Verified',
+      verified: true,
+      docType: 'Corporate Access Badge',
+      docRef: 'CORP-TC-9941',
+      notes: 'Executive corporate verification completed.',
+    },
+    {
+      id: 103,
+      attendeeId: 'usr-attendee-001',
+      eventId: 103,
+      date: '2026-03-08',
+      ticketId: 'TKT-EMP-103',
+      status: 'confirmed',
+      payment: 'paid',
+      amount: 120,
+      checkedIn: true,
+      seat: 'Lab-04',
+      verificationStatus: 'Verified',
+      verified: true,
+      docType: 'Passport Verification',
+      docRef: 'PASS-Z992014',
+      notes: 'Workshop credentials verified.',
+    },
+    {
+      id: 104,
+      attendeeId: 8,
+      eventId: 104,
+      date: '2026-03-12',
+      ticketId: 'TKT-EMP-104',
+      status: 'pending',
+      payment: 'paid',
+      amount: 0,
+      checkedIn: false,
+      seat: 'Desk-22',
+      verificationStatus: 'Pending Review',
+      verified: false,
+      docType: 'Student University ID',
+      docRef: 'UNI-STU-4820',
+      notes: 'Student ID photo blur — pending manual review.',
+    },
+    {
+      id: 105,
+      attendeeId: 9,
+      eventId: 105,
+      date: '2026-03-15',
+      ticketId: 'TKT-EMP-105',
+      status: 'confirmed',
+      payment: 'paid',
+      amount: 250,
+      checkedIn: true,
+      seat: 'Hall-55',
+      verificationStatus: 'Verified',
+      verified: true,
+      docType: 'Govt Driving License',
+      docRef: 'DL-MH-04-2024009',
+      notes: 'Healthcare delegate identity confirmed.',
+    },
+    {
+      id: 1,
+      attendeeId: 'usr-attendee-001',
+      eventId: 1,
+      date: '2026-03-01',
+      ticketId: 'TKT-2026-001',
+      status: 'pending',
+      payment: 'paid',
+      amount: 150,
+      checkedIn: false,
+      seat: 'A-042',
+      verificationStatus: 'Pending Review',
+      verified: false,
+      docType: 'Govt Aadhaar ID',
+      docRef: 'ID-4421-XXXX-9912',
+      notes: 'Identity proof uploaded, awaiting approval.',
+    },
+    {
+      id: 2,
+      attendeeId: 'usr-attendee-001',
+      eventId: 2,
+      date: '2026-03-05',
+      ticketId: 'TKT-2026-002',
+      status: 'confirmed',
+      payment: 'paid',
+      amount: 250,
+      checkedIn: false,
+      seat: 'T-015',
+      verificationStatus: 'Verified',
+      verified: true,
+      docType: 'Corporate Invite Pass',
+      docRef: 'GALA-INV-0192',
+      notes: 'Gala guest verification confirmed.',
+    },
+    {
+      id: 3,
+      attendeeId: 8,
+      eventId: 1,
+      date: '2026-03-02',
+      ticketId: 'TKT-2026-003',
+      status: 'pending',
+      payment: 'paid',
+      amount: 150,
+      checkedIn: true,
+      seat: 'A-043',
+      verificationStatus: 'Flagged',
+      verified: false,
+      docType: 'Company ID Card',
+      docRef: 'EMP-ID-MISSING',
+      flagReason: 'Company ID badge image missing back side.',
+      notes: 'Flagged for re-upload.',
+    },
+    {
+      id: 4,
+      attendeeId: 'usr-attendee-001',
+      eventId: 3,
+      date: '2026-03-10',
+      ticketId: 'TKT-2026-004',
+      status: 'confirmed',
+      payment: 'paid',
+      amount: 75,
+      checkedIn: false,
+      seat: 'GA',
+      verificationStatus: 'Verified',
+      verified: true,
+      docType: 'E-Ticket Pass',
+      docRef: 'TKT-FEST-8819',
+      notes: 'Festival online registration verified.',
+    },
+    {
+      id: 5,
+      attendeeId: 9,
+      eventId: 1,
+      date: '2026-03-03',
+      ticketId: 'TKT-2026-005',
+      status: 'pending',
+      payment: 'paid',
+      amount: 150,
+      checkedIn: true,
+      seat: 'A-044',
+      verificationStatus: 'Pending Review',
+      verified: false,
+      docType: 'Govt Aadhaar ID',
+      docRef: 'ID-1102-XXXX-7741',
+      notes: 'Online verification pending.',
+    },
+    {
+      id: 6,
+      attendeeId: 8,
+      eventId: 3,
+      date: '2026-03-12',
+      ticketId: 'TKT-2026-006',
+      status: 'confirmed',
+      payment: 'paid',
+      amount: 75,
+      checkedIn: false,
+      seat: 'GA',
+      verificationStatus: 'Verified',
+      verified: true,
+      docType: 'E-Ticket Pass',
+      docRef: 'TKT-FEST-8820',
+      notes: 'Pass verified.',
+    },
+    {
+      id: 7,
+      attendeeId: 'usr-org-001',
+      eventId: 1,
+      date: '2026-03-14',
+      ticketId: 'TKT-2026-007',
+      status: 'confirmed',
+      payment: 'paid',
+      amount: 150,
+      checkedIn: false,
+      seat: 'A-045',
+      verificationStatus: 'Verified',
+      verified: true,
+      docType: 'Organizer VIP Access',
+      docRef: 'ORG-VIP-002',
+      notes: 'Organizer VIP pass verified.',
+    },
+    {
+      id: 8,
+      attendeeId: 'usr-client-001',
+      eventId: 1,
+      date: '2026-03-15',
+      ticketId: 'TKT-2026-008',
+      status: 'confirmed',
+      payment: 'paid',
+      amount: 150,
+      checkedIn: false,
+      seat: 'A-046',
+      verificationStatus: 'Verified',
+      verified: true,
+      docType: 'Client Pass',
+      docRef: 'CLT-PASS-104',
+      notes: 'Client registration verified.',
+    },
+    {
+      id: 'org-demo-reg-001',
+      attendeeId: 'org-demo-attendee-001',
+      eventId: 1,
+      date: '2026-10-03',
+      ticketId: 'TKT-2026-009',
+      status: 'pending',
+      payment: 'paid',
+      amount: 150,
+      checkedIn: false,
+      seat: 'A-047',
+      verificationStatus: 'Pending Review',
+      verified: false,
+      docType: 'Government ID',
+      docRef: 'ID-AM-2026-009',
+      notes: 'Attendee profile and identity details awaiting organizer review.',
+    },
+    {
+      id: 'org-demo-reg-002',
+      attendeeId: 'org-demo-attendee-002',
+      eventId: 1,
+      date: '2026-10-05',
+      ticketId: 'TKT-2026-010',
+      status: 'pending',
+      payment: 'paid',
+      amount: 150,
+      checkedIn: false,
+      seat: 'A-048',
+      verificationStatus: 'Pending Review',
+      verified: false,
+      docType: 'Company ID',
+      docRef: 'CORP-DN-2026-010',
+      notes: 'Company identification submitted for organizer review.',
+    },
+  ],
+  userQueries: [
+    {
+      id: 'UQR-501',
+      userId: 'usr-attendee-001',
+      userName: 'Priya Patel',
+      userEmail: 'attendee@example.com',
+      type: 'Account Deletion',
+      subject: 'Request permanent account deletion',
+      detail:
+        'User requested permanent deletion of their attendee account and associated personal data.',
+      source: 'User Request',
+      status: 'Pending',
+      date: 'Today, 10:30 AM',
+    },
+    {
+      id: 'UQR-502',
+      userId: 'usr-client-001',
+      userName: 'Michael Torres',
+      userEmail: 'client@example.com',
+      type: 'Email Change',
+      subject: 'Update profile email address to corporate domain',
+      detail: 'Requested email update from client@example.com to m.torres@techcorp.com.',
+      source: 'User Request',
+      status: 'In Progress',
+      date: 'Yesterday, 4:15 PM',
+    },
+    {
+      id: 'UQR-503',
+      userId: 8,
+      userName: 'Lisa Zhang',
+      userEmail: 'lisa@eventflow.com',
+      type: 'Escalated Support',
+      subject: 'Verification failed for Hackathon registration badge',
+      detail:
+        'Escalated by Customer Support (Employee 3): Student ID upload unreadable, needs re-verification.',
+      source: 'Employee 3 Escalation',
+      status: 'Pending',
+      date: '2 days ago',
+    },
+    {
+      id: 'UQR-504',
+      userId: 9,
+      userName: 'Robert Singh',
+      userEmail: 'robert@eventflow.com',
+      type: 'Profile Update',
+      subject: 'Contact phone number correction & name spelling',
+      detail: 'Requested phone update to +91 9876543209 and correction on badge name.',
+      source: 'User Request',
+      status: 'Resolved',
+      date: '2026-08-26',
+    },
+    {
+      id: 'UQR-505',
+      userId: 'usr-attendee-001',
+      userName: 'Priya Patel',
+      userEmail: 'attendee@example.com',
+      type: 'Escalated Support',
+      subject: 'Ticket details correction request',
+      detail: 'User requested a correction to the attendee name on their Tech Summit ticket.',
+      source: 'Employee 3 Escalation',
+      status: 'Pending',
+      date: 'Today, 8:45 AM',
+    },
+  ],
+  notifications: [
+    {
+      id: 101,
+      title: 'New Event Proposal',
+      msg: 'Michael Torres submitted "Torres Tech Q3 Product Launch" with ₹35,000 budget.',
+      time: '10 mins ago',
+      read: false,
+      type: 'info',
+      icon: '📋',
+    },
+    {
+      id: 103,
+      title: 'Capacity Milestone Reached',
+      msg: 'Cybersecurity Workshop reached 100% capacity (80/80 registered).',
+      time: '3 hrs ago',
+      read: true,
+      type: 'warning',
+      icon: '🎟️',
+    },
+    {
+      id: 104,
+      title: 'Event Request Approved',
+      msg: 'Annual Leadership Strategy Retreat proposal was approved by the client.',
+      time: '1 day ago',
+      read: true,
+      type: 'success',
+      icon: '🎉',
+    },
+    {
+      id: 1,
+      title: 'New Event Request',
+      msg: 'Michael Torres submitted: "Product Launch Event" — ?25,000 budget',
+      time: '2 hrs ago',
+      read: false,
+      type: 'info',
+      icon: '📋',
+    },
+    {
+      id: 2,
+      title: 'Registration Confirmed',
+      msg: 'Priya Patel registered for Tech Innovation Summit 2026',
+      time: '4 hrs ago',
+      read: false,
+      type: 'success',
+      icon: '✅',
+    },
+    {
+      id: 4,
+      title: 'Event Plan Submitted',
+      msg: 'Team Building Retreat plan submitted to client for review',
+      time: '1 day ago',
+      read: true,
+      type: 'info',
+      icon: '📤',
+    },
+    {
+      id: 5,
+      title: 'Event Approved',
+      msg: 'Corporate Annual Gala 2026 has been approved and is now live',
+      time: '2 days ago',
+      read: true,
+      type: 'success',
+      icon: '🎉',
+    },
+    {
+      id: 6,
+      title: 'Attendee Checked In',
+      msg: '3 attendees checked in at Healthcare Innovation Forum',
+      time: '3 days ago',
+      read: true,
+      type: 'success',
+      icon: '✅',
+    },
+    {
+      id: 7,
+      title: 'New Assignment',
+      msg: 'Sarah Johnson assigned you as Photographer & Videographer for Corporate Annual Gala 2026 — ?1,100 fee',
+      time: '1 hr ago',
+      read: false,
+      type: 'warning',
+      icon: '📸',
+    },
+    {
+      id: 8,
+      title: 'New Assignment',
+      msg: 'Sarah Johnson assigned you as Stage Photographer for Spring Music Festival — ?750 fee',
+      time: '3 hrs ago',
+      read: false,
+      type: 'warning',
+      icon: '🎵',
+    },
+    {
+      id: 9,
+      title: 'New Assignment',
+      msg: 'Assigned as Event Documentarian for Startup Pitch Night — ?500 fee',
+      time: '5 hrs ago',
+      read: false,
+      type: 'warning',
+      icon: '🚀',
+    },
+    {
+      id: 'sf-notif-001',
+      employeeType: 'SUPPORT_FINANCE',
+      title: 'New Support Request',
+      msg: 'Michael Torres requested a payment receipt for Global AI & Cloud Summit 2026.',
+      time: '12 mins ago',
+      read: false,
+      type: 'info',
+      icon: '📩',
+    },
+    {
+      id: 'sf-notif-002',
+      employeeType: 'SUPPORT_FINANCE',
+      title: 'Refund Awaiting Review',
+      msg: 'Refund REF-2026-001 for ₹350 is ready for finance review.',
+      time: '28 mins ago',
+      read: false,
+      type: 'warning',
+      icon: '↩️',
+    },
+    {
+      id: 'sf-notif-003',
+      employeeType: 'SUPPORT_FINANCE',
+      title: 'Transaction Completed',
+      msg: 'Transaction TXN-2026-005 was completed successfully for Michael Torres.',
+      time: '1 hr ago',
+      read: true,
+      type: 'success',
+      icon: '💳',
+    },
+    {
+      id: 'sf-notif-004',
+      employeeType: 'SUPPORT_FINANCE',
+      title: 'Report Reviewed',
+      msg: 'August service operations was reviewed by Super Admin.',
+      time: 'Yesterday',
+      read: true,
+      type: 'success',
+      icon: '📊',
+    },
+  ],
+  attendanceReports: {},
+  // {eventId: {total, checked, pending, report}}
+  supportRequests: [
+    {
+      id: 'sup-001',
+      userId: 'usr-client-001',
+      eventId: 101,
+      subject: 'Payment receipt needed',
+      message: 'Please resend the receipt for my summit registration.',
+      status: 'Pending',
+      response: '',
+      created: today(),
+      updated: '10 mins ago',
+    },
+    {
+      id: 'sup-002',
+      userId: 'usr-attendee-001',
+      eventId: 103,
+      subject: 'Unable to download ticket',
+      message: 'My payment is complete but the ticket link is not opening.',
+      status: 'In Progress',
+      response: 'We are checking your ticket record now.',
+      created: '2026-08-27',
+      updated: '1 hr ago',
+    },
+    {
+      id: 'sup-003',
+      userId: 'usr-client-001',
+      eventId: 102,
+      subject: 'Refund request',
+      message: 'Two registrations were made by mistake. Please refund one.',
+      status: 'Resolved',
+      response: 'Your refund request has been forwarded to finance.',
+      created: '2026-08-26',
+      updated: 'Yesterday',
+    },
+    {
+      id: 'sup-004',
+      userId: 'usr-attendee-001',
+      eventId: 104,
+      subject: 'Event location question',
+      message: 'Could you confirm the venue entrance details?',
+      status: 'Closed',
+      response: 'Venue instructions were sent to your email.',
+      created: '2026-08-25',
+      updated: '2 days ago',
+    },
+  ],
+  financeTransactions: [
+    {
+      id: 'TXN-2026-001',
+      userId: 'usr-attendee-001',
+      eventId: 101,
+      amount: 200,
+      status: 'Successful',
+      date: today(),
+    },
+    {
+      id: 'TXN-2026-002',
+      userId: 'usr-client-001',
+      eventId: 102,
+      amount: 350,
+      status: 'Successful',
+      date: today(),
+    },
+    {
+      id: 'TXN-2026-005',
+      userId: 'usr-client-001',
+      eventId: 101,
+      amount: 200,
+      status: 'Successful',
+      date: today(),
+    },
+    {
+      id: 'TXN-2026-003',
+      userId: 'usr-attendee-001',
+      eventId: 103,
+      amount: 120,
+      status: 'Pending',
+      date: '2026-08-27',
+    },
+    {
+      id: 'TXN-2026-004',
+      userId: 'usr-client-001',
+      eventId: 104,
+      amount: 0,
+      status: 'Failed',
+      date: '2026-08-26',
+    },
+  ],
+  financeRefunds: [
+    {
+      id: 'REF-2026-001',
+      userId: 'usr-client-001',
+      eventId: 102,
+      amount: 350,
+      reason: 'Duplicate registration',
+      status: 'Requested',
+      date: today(),
+    },
+    {
+      id: 'REF-2026-002',
+      userId: 'usr-attendee-001',
+      eventId: 103,
+      amount: 120,
+      reason: 'Event schedule conflict',
+      status: 'Processing',
+      date: '2026-08-27',
+    },
+    {
+      id: 'REF-2026-003',
+      userId: 'usr-attendee-001',
+      eventId: 101,
+      amount: 200,
+      reason: 'Cancelled attendance',
+      status: 'Completed',
+      date: '2026-08-25',
+    },
+    {
+      id: 'REF-2026-004',
+      userId: 'usr-client-001',
+      eventId: 104,
+      amount: 0,
+      reason: 'Invalid request',
+      status: 'Rejected',
+      date: '2026-08-24',
+    },
+  ],
+  operationalReports: [
+    {
+      id: 'OPR-001',
+      type: 'Support Report',
+      title: 'Weekly support queue',
+      owner: 'Marcus Vance',
+      status: 'Draft',
+      updated: 'Today',
+    },
+    {
+      id: 'OPR-002',
+      type: 'Finance Report',
+      title: 'Transaction reconciliation',
+      owner: 'Marcus Vance',
+      status: 'Submitted',
+      updated: 'Yesterday',
+    },
+    {
+      id: 'OPR-003',
+      type: 'Combined Operational Report',
+      title: 'August service operations',
+      owner: 'Maya Lin',
+      status: 'Reviewed',
+      updated: '2026-08-25',
+    },
+  ],
+  eventOperationsTasks: [
+    {
+      id: 'EOP-101',
+      eventId: 101,
+      eventTitle: 'Global AI & Cloud Summit 2026',
+      type: 'Venue & Capacity Review',
+      priority: 'High',
+      status: 'In Progress',
+      description: 'Verify Hall A seating capacity for 600 attendees and check AV setup.',
+      updated: '15 mins ago',
+    },
+    {
+      id: 'EOP-102',
+      eventId: 102,
+      eventTitle: 'FinTech Leaders Executive Conclave',
+      type: 'Schedule Conflict',
+      priority: 'Medium',
+      status: 'Pending',
+      description:
+        'Review ballroom entrance timeline to avoid setup overlap with hotel guest event.',
+      updated: '1 hr ago',
+    },
+    {
+      id: 'EOP-103',
+      eventId: 103,
+      eventTitle: 'Cybersecurity & Zero Trust Workshop',
+      type: 'Equipment & Tech Check',
+      priority: 'Low',
+      status: 'Resolved',
+      description: 'Simulated threat modeling server and projector connection verified.',
+      updated: 'Yesterday',
+    },
+    {
+      id: 'EOP-104',
+      eventId: 104,
+      eventTitle: 'National Web3 & AI Hackathon 2026',
+      type: 'Security & Access Audit',
+      priority: 'High',
+      status: 'Pending',
+      description: 'Confirm overnight security pass authorizations and 24-hour venue access.',
+      updated: '3 hrs ago',
+    },
+    {
+      id: 'EOP-105',
+      eventId: 105,
+      eventTitle: 'Torres Tech Q3 Product Launch',
+      type: 'Information Correction',
+      priority: 'Medium',
+      status: 'In Progress',
+      description: 'Correct banner imagery resolution and VIP guest list count.',
+      updated: 'Today',
+    },
+  ],
+  eventOpsReports: [
+    {
+      id: 'EOR-001',
+      type: 'Event Performance Report',
+      title: 'Event Performance Summary — Q2 Summit & Conclave',
+      scope: 'Global AI & Cloud Summit 2026',
+      period: 'Q2 2026',
+      owner: 'Elena Rostova',
+      status: 'Reviewed',
+      fileName: 'Q2_Performance_Summary.pdf',
+      updated: '2026-08-25',
+    },
+    {
+      id: 'EOR-002',
+      type: 'Event Operations Report',
+      title: 'Venue & Logistics Operations Report',
+      scope: 'Main Convention Center',
+      period: 'August 2026',
+      owner: 'Elena Rostova',
+      status: 'Pending Review',
+      fileName: 'Logistics_Audit_Report.docx',
+      updated: 'Yesterday',
+    },
+    {
+      id: 'EOR-003',
+      type: 'Event Activity Report',
+      title: 'Monthly Event Activity Report — August 2026',
+      scope: 'Platform Wide',
+      period: 'August 2026',
+      owner: 'Elena Rostova',
+      status: 'Reviewed',
+      fileName: 'August_Activity_Log.xlsx',
+      updated: '2026-08-22',
+    },
+    {
+      id: 'EOR-004',
+      type: 'Event Operations Report',
+      title: 'Schedule & Venue Audit Report',
+      scope: 'FinTech Leaders Executive Conclave',
+      period: 'August 2026',
+      owner: 'Elena Rostova',
+      status: 'Draft',
+      fileName: null,
+      updated: 'Today',
+    },
+    {
+      id: 'EOR-005',
+      type: 'Event Performance Report',
+      title: 'Event Issue Resolution & Operations Report',
+      scope: 'All Q3 Events',
+      period: 'Q3 2026',
+      owner: 'Elena Rostova',
+      status: 'Submitted',
+      fileName: 'Issue_Resolution_Q3.pdf',
+      updated: '2 days ago',
+    },
+    {
+      id: 'EOR-006',
+      type: 'Event Activity Report',
+      title: 'National Hackathon Operations & Equipment Log',
+      scope: 'National Web3 & AI Hackathon 2026',
+      period: 'August Week 4',
+      owner: 'Elena Rostova',
+      status: 'Submitted',
+      fileName: 'Hackathon_Ops_Log.xlsx',
+      updated: '3 days ago',
+    },
+  ],
+  eventOpsRequests: [
+    {
+      id: 'EOR-REQ-001',
+      eventId: 101,
+      eventTitle: 'Global AI & Cloud Summit 2026',
+      issue:
+        'Venue capacity insufficient — attendee count exceeds Hall A limit by 85 seats. Requesting overflow arrangement.',
+      source: 'User (Direct)',
+      raisedBy: 'Priya Mehta',
+      priority: 'High',
+      status: 'In Progress',
+      date: '2026-08-30 · 9:14 AM',
+      notes: '',
+    },
+    {
+      id: 'EOR-REQ-002',
+      eventId: 102,
+      eventTitle: 'FinTech Leaders Executive Conclave',
+      issue:
+        'Schedule conflict reported — keynote session overlaps with hotel ballroom booking. Attendees facing confusion.',
+      source: 'Escalated by Emp 3',
+      raisedBy: 'Customer Support',
+      priority: 'High',
+      status: 'Pending',
+      date: '2026-08-30 · 8:45 AM',
+      notes: '',
+    },
+    {
+      id: 'EOR-REQ-003',
+      eventId: 103,
+      eventTitle: 'Cybersecurity & Zero Trust Workshop',
+      issue:
+        'Event banner shows wrong venue floor. Requesting information correction on registration confirmation emails.',
+      source: 'User (Direct)',
+      raisedBy: 'Ravi Kumar',
+      priority: 'Medium',
+      status: 'Pending',
+      date: '2026-08-29 · 4:32 PM',
+      notes: '',
+    },
+    {
+      id: 'EOR-REQ-004',
+      eventId: 104,
+      eventTitle: 'National Web3 & AI Hackathon 2026',
+      issue:
+        'Cancellation request raised by team lead — team unable to attend due to visa delays. Refund and slot reallocation required.',
+      source: 'Escalated by Emp 3',
+      raisedBy: 'Customer Support',
+      priority: 'High',
+      status: 'Pending',
+      date: '2026-08-29 · 2:10 PM',
+      notes: '',
+    },
+    {
+      id: 'EOR-REQ-005',
+      eventId: 105,
+      eventTitle: 'Torres Tech Q3 Product Launch',
+      issue:
+        'VIP seating arrangement request — 3 executives require reserved front-row access and separate registration check-in.',
+      source: 'User (Direct)',
+      raisedBy: 'Ananya Sharma',
+      priority: 'Medium',
+      status: 'Resolved',
+      date: '2026-08-28 · 11:05 AM',
+      notes: 'VIP arrangement confirmed with venue coordinator.',
+    },
+    {
+      id: 'EOR-REQ-006',
+      eventId: 106,
+      eventTitle: 'Global Health & MedTech Expo 2026',
+      issue:
+        'AV equipment malfunction reported during rehearsal — projectors in Hall B not syncing with laptop output.',
+      source: 'Escalated by Emp 3',
+      raisedBy: 'Customer Support',
+      priority: 'High',
+      status: 'In Progress',
+      date: '2026-08-28 · 9:30 AM',
+      notes: '',
+    },
+    {
+      id: 'EOR-REQ-007',
+      eventId: 107,
+      eventTitle: 'Women in Leadership Summit',
+      issue:
+        'Schedule update needed — opening ceremony moved 30 mins earlier. Attendees need updated confirmation with new timings.',
+      source: 'User (Direct)',
+      raisedBy: 'Meera Iyer',
+      priority: 'Medium',
+      status: 'Resolved',
+      date: '2026-08-27 · 3:18 PM',
+      notes: 'Updated schedule sent to all registered attendees.',
+    },
+    {
+      id: 'EOR-REQ-008',
+      eventId: 108,
+      eventTitle: 'Renewable Energy Innovation Forum',
+      issue:
+        'Capacity oversubscription — event sold 20% over venue limit due to system error. Waiting list and capacity review needed.',
+      source: 'Escalated by Emp 3',
+      raisedBy: 'Customer Support',
+      priority: 'High',
+      status: 'Closed',
+      date: '2026-08-26 · 10:50 AM',
+      notes: 'Capacity expanded to secondary hall. Waitlisted attendees notified.',
+    },
+    {
+      id: 'EOR-REQ-009',
+      eventId: 101,
+      eventTitle: 'Global AI & Cloud Summit 2026',
+      issue:
+        'Parking arrangement inquiry — group of 40 attendees from outstation require dedicated parking slots near venue entrance.',
+      source: 'User (Direct)',
+      raisedBy: 'Sameer Joshi',
+      priority: 'Low',
+      status: 'Pending',
+      date: '2026-08-30 · 7:00 AM',
+      notes: '',
+    },
+    {
+      id: 'EOR-REQ-010',
+      eventId: 103,
+      eventTitle: 'Cybersecurity & Zero Trust Workshop',
+      issue:
+        'Speaker travel logistics — confirmed keynote speaker requires airport pickup and hotel arrangement from organizer side.',
+      source: 'User (Direct)',
+      raisedBy: 'Organizing Team',
+      priority: 'Medium',
+      status: 'In Progress',
+      date: '2026-08-29 · 6:45 PM',
+      notes: '',
+    },
+  ],
+  regReports: [
+    {
+      id: 'RVR-001',
+      type: 'Registration Report',
+      title: 'Monthly Online Registration & Conversion Audit — August 2026',
+      owner: 'Arjun Kapoor',
+      status: 'Reviewed',
+      period: 'August 2026',
+      fileName: 'Monthly_Registration_Audit_Aug2026.pdf',
+      updated: '2026-08-25',
+    },
+    {
+      id: 'RVR-002',
+      type: 'User Management Report',
+      title: 'Account Access & Verification Summary — Q2 2026',
+      owner: 'Arjun Kapoor',
+      status: 'Submitted',
+      period: 'Q2 2026 (Apr–Jun)',
+      fileName: 'Account_Access_Verification_Q2_2026.docx',
+      updated: 'Yesterday',
+    },
+    {
+      id: 'RVR-003',
+      type: 'Registration Activity Report',
+      title: 'Q2 Attendee Registration Activity & Demographics Analysis',
+      owner: 'Arjun Kapoor',
+      status: 'Reviewed',
+      period: 'Q2 2026 (Apr–Jun)',
+      fileName: 'Q2_Registration_Activity_Demographics.xlsx',
+      updated: '2026-08-20',
+    },
+    {
+      id: 'RVR-004',
+      type: 'Registration Report',
+      title: 'Tech Summit 2026 — Online Registration Status & Completion Report',
+      owner: 'Arjun Kapoor',
+      status: 'Submitted',
+      period: 'July 2026',
+      fileName: 'TechSummit_Registration_Report.pdf',
+      updated: '2 days ago',
+    },
+    {
+      id: 'RVR-005',
+      type: 'User Management Report',
+      title: 'User Account Deactivation & Access Audit — July 2026',
+      owner: 'Arjun Kapoor',
+      status: 'Draft',
+      period: 'July 2026',
+      fileName: null,
+      updated: 'Today',
+    },
+    {
+      id: 'RVR-006',
+      type: 'Registration Activity Report',
+      title: 'Pending & Flagged Registrations Weekly Summary — Wk 34',
+      owner: 'Arjun Kapoor',
+      status: 'Draft',
+      period: 'August Week 4',
+      fileName: null,
+      updated: 'Today',
+    },
+  ],
+  _nextId: {
+    users: 14,
+    events: 9,
+    reqs: 5,
+    regs: 9,
+    notifs: 10,
+  },
+};
+
+// ════════════════════════════════════════════════
+//  DATA PERSISTENCE (LOCALSTORAGE)
+// ════════════════════════════════════════════════
+function saveDB() {
+  try {
+    localStorage.setItem('ffsd_db', JSON.stringify(DB));
+  } catch (e) {
+    console.log('Storage quota exceeded or private mode');
+  }
+}
+// \`persist\` is disabled for storage events so receiving tabs do not write the
+// same data back and trigger another refresh in every open session.
+function loadDB(persist = true) {
+  try {
+    const saved = localStorage.getItem('ffsd_db');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const initialUsers = [...DB.users];
+      const initialEvents = [...DB.events];
+      const initialRequests = [...DB.eventRequests];
+      const initialRegs = [...DB.registrations];
+      const initialNotifs = [...DB.notifications];
+      const initialReports = [...(DB.reports || [])];
+      const initialChangeRequests = [...(DB.employeeChangeRequests || [])];
+      const initialSupportRequests = [...(DB.supportRequests || [])];
+      const initialFinanceTransactions = [...(DB.financeTransactions || [])];
+      const initialFinanceRefunds = [...(DB.financeRefunds || [])];
+      const initialOperationalReports = [...(DB.operationalReports || [])];
+      const initialEventOperationsTasks = [...(DB.eventOperationsTasks || [])];
+      const initialEventOpsReports = [...(DB.eventOpsReports || [])];
+      const initialUserQueries = [...(DB.userQueries || [])];
+      Object.assign(DB, parsed);
+      window.EventFlowAccountPolicy.migrateLegacyDemoData(DB);
+
+      // Ensure optional arrays exist
+
+      if (!DB.reports) DB.reports = [];
+      if (!DB.employeeChangeRequests) DB.employeeChangeRequests = [];
+      if (!DB.attendanceReports) DB.attendanceReports = {};
+      if (!DB.supportRequests) DB.supportRequests = [];
+      if (!DB.financeTransactions) DB.financeTransactions = [];
+      if (!DB.financeRefunds) DB.financeRefunds = [];
+      if (!DB.operationalReports) DB.operationalReports = [];
+      if (!DB.eventOperationsTasks) DB.eventOperationsTasks = [];
+      if (!DB.eventOpsReports) DB.eventOpsReports = [];
+      if (!DB.eventOpsRequests) DB.eventOpsRequests = [];
+      if (!DB.userQueries) DB.userQueries = [];
+      if (!DB.routedRequests) DB.routedRequests = [];
+
+      // Sync all demo/seed users and passwords from latest build
+      initialUsers.forEach(initU => {
+        const existing =
+          DB.users.find(user => String(user.id) === String(initU.id)) ||
+          DB.users.find(
+            user => user.email && user.email.toLowerCase() === initU.email.toLowerCase()
+          );
+        if (!existing) {
+          DB.users.push(initU);
+        } else {
+          existing.password = initU.password;
+          existing.status = 'active';
+          if (initU.role) existing.role = initU.role;
+          if (initU.name) existing.name = initU.name;
+          if (
+            initU.phone &&
+            /^(?:null|undefined|none|n\\/a|unknown|—|-)?$/i.test(String(existing.phone ?? '').trim())
+          )
+            existing.phone = initU.phone;
+          if (
+            initU.email &&
+            /^(?:null|undefined|none|n\\/a|unknown|—|-)?$/i.test(String(existing.email ?? '').trim())
+          )
+            existing.email = initU.email;
+          if (initU.avatarImage) existing.avatarImage = initU.avatarImage;
+          if (initU.avatar) existing.avatar = initU.avatar;
+          if (initU.service) existing.service = initU.service;
+          if (initU.bio) existing.bio = initU.bio;
+          if (initU.color) existing.color = initU.color;
+        }
+      });
+
+      // Always restore missing mock events (ensuring employee events are always populated)
+      initialEvents.forEach(ev => {
+        const existing = DB.events.find(event => String(event.id) === String(ev.id));
+        if (!existing) {
+          DB.events.push(ev);
+        } else {
+          if (ev.image) existing.image = ev.image;
+          if (ev.color) existing.color = ev.color;
+          if (ev.emoji) existing.emoji = ev.emoji;
+        }
+      });
+
+      // Always restore missing mock event requests & migrate legacy client IDs
+      initialRequests.forEach(req => {
+        const existing = DB.eventRequests.find(request => String(request.id) === String(req.id));
+        if (!existing) {
+          DB.eventRequests.push(req);
+        } else if (
+          existing.clientId === 3 ||
+          existing.clientId === '3' ||
+          !DB.users.find(user => String(user.id) === String(existing.clientId))
+        ) {
+          existing.clientId = 'usr-client-001';
+        }
+      });
+      DB.eventRequests.forEach(request => {
+        if (
+          request.clientId === 3 ||
+          request.clientId === '3' ||
+          !DB.users.find(user => String(user.id) === String(request.clientId))
+        ) {
+          request.clientId = 'usr-client-001';
+        }
+      });
+
+      // Always restore missing mock registrations and sync verification statuses
+      initialRegs.forEach(reg => {
+        const existing = DB.registrations.find(
+          registration => String(registration.id) === String(reg.id)
+        );
+        if (!existing) {
+          DB.registrations.push(reg);
+        } else {
+          if (reg.verificationStatus && !existing.verificationStatus)
+            existing.verificationStatus = reg.verificationStatus;
+          if (reg.docType && !existing.docType) existing.docType = reg.docType;
+          if (reg.docRef && !existing.docRef) existing.docRef = reg.docRef;
+        }
+      });
+
+      // Resolve old demo attendee IDs and keep references aligned with saved profiles.
+      const legacyAttendeeIds = {
+        2: 'usr-org-001',
+        3: 'usr-client-001',
+        5: 'usr-attendee-001',
+      };
+      DB.registrations.forEach(registration => {
+        const canonicalId =
+          legacyAttendeeIds[String(registration.attendeeId)] || registration.attendeeId;
+        const seedUser = initialUsers.find(user => String(user.id) === String(canonicalId));
+        const attendee =
+          DB.users.find(user => String(user.id) === String(registration.attendeeId)) ||
+          DB.users.find(user => String(user.id) === String(canonicalId)) ||
+          (seedUser &&
+            DB.users.find(
+              user => user.email && user.email.toLowerCase() === seedUser.email.toLowerCase()
+            ));
+        if (attendee) registration.attendeeId = attendee.id;
+      });
+
+      // Always restore userQueries
+      initialUserQueries.forEach(query => {
+        const existing = DB.userQueries.find(q => String(q.id) === String(query.id));
+        if (!existing) DB.userQueries.push(query);
+      });
+
+      // Always restore missing mock notifications
+      initialNotifs.forEach(notif => {
+        if (!DB.notifications.find(notification => String(notification.id) === String(notif.id))) {
+          DB.notifications.push(notif);
+        }
+      });
+
+      // Always restore missing mock event reports
+      initialReports.forEach(report => {
+        const existing = DB.reports.find(r => String(r.id) === String(report.id));
+        if (!existing) {
+          DB.reports.push(report);
+        } else {
+          if (!existing.recipientId && report.recipientId)
+            existing.recipientId = report.recipientId;
+          if (!existing.submittedBy && report.submittedBy)
+            existing.submittedBy = report.submittedBy;
+          if (!existing.submittedAt && report.submittedAt)
+            existing.submittedAt = report.submittedAt;
+        }
+      });
+      initialChangeRequests.forEach(request => {
+        if (!DB.employeeChangeRequests.find(r => String(r.id) === String(request.id))) {
+          DB.employeeChangeRequests.push(request);
+        }
+      });
+      initialSupportRequests.forEach(request => {
+        const existing = DB.supportRequests.find(r => String(r.id) === String(request.id));
+        if (!existing) DB.supportRequests.push(request);
+      });
+      initialFinanceTransactions.forEach(transaction => {
+        const existing = DB.financeTransactions.find(
+          item => String(item.id) === String(transaction.id)
+        );
+        if (!existing) DB.financeTransactions.push(transaction);
+        else if (['TXN-2026-001', 'TXN-2026-002', 'TXN-2026-005'].includes(transaction.id))
+          existing.date = transaction.date;
+      });
+      initialFinanceRefunds.forEach(refund => {
+        const existing = DB.financeRefunds.find(item => String(item.id) === String(refund.id));
+        if (!existing) DB.financeRefunds.push(refund);
+        else if (['REF-2026-001'].includes(refund.id)) existing.date = refund.date;
+      });
+      initialOperationalReports.forEach(report => {
+        if (!DB.operationalReports.find(item => String(item.id) === String(report.id)))
+          DB.operationalReports.push(report);
+      });
+      initialEventOperationsTasks.forEach(task => {
+        if (!DB.eventOperationsTasks.find(item => String(item.id) === String(task.id)))
+          DB.eventOperationsTasks.push(task);
+      });
+      initialEventOpsReports.forEach(report => {
+        if (!DB.eventOpsReports.find(item => String(item.id) === String(report.id)))
+          DB.eventOpsReports.push(report);
+      });
+      (DB._initialEventOpsRequests || DB.eventOpsRequests.slice()).forEach(() => {});
+      // Restore event ops requests from seed
+      if (typeof initialEventOpsRequests !== 'undefined') {
+        initialEventOpsRequests.forEach(request => {
+          if (!DB.eventOpsRequests.find(item => String(item.id) === String(request.id)))
+            DB.eventOpsRequests.push(request);
+        });
+      }
+
+      // SAFETY: Sync _nextId with actual data max IDs to prevent collisions
+      const _maxId = (arr, key) =>
+        arr.length ? Math.max(0, ...arr.map(x => (isNaN(x[key]) ? 0 : parseInt(x[key])))) : 0;
+      DB._nextId.users = Math.max(DB._nextId.users || 0, _maxId(DB.users, 'id') + 1);
+      DB._nextId.events = Math.max(DB._nextId.events || 0, _maxId(DB.events, 'id') + 1);
+      DB._nextId.regs = Math.max(DB._nextId.regs || 0, _maxId(DB.registrations, 'id') + 1);
+      DB._nextId.reqs = Math.max(DB._nextId.reqs || 0, _maxId(DB.eventRequests, 'id') + 1);
+
+      // Persist seed-data migrations only for local loads. A storage event
+      // must remain read-only to avoid a cross-tab update loop.
+      if (persist || Number(parsed.accountSchemaVersion || 0) < 2) saveDB();
+    }
+  } catch (e) {
+    console.log('Could not load DB from storage');
+  }
+  window.EventFlowAccountPolicy.migrateLegacyDemoData(DB);
+}
+
+// ════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════
+let CU = null; // current user
+let _confirmCb = null;
+let _currentPage = 'dashboard';
+let _workflowRequestId = null;
+let _workflowReturnPage = 'request-status';
+let _workflowEventTab = 'ongoing';
+const ROLE_LABELS = {
+  superuser: 'Super Administrator',
+  organizer: 'Event Organizer',
+  client: 'Client',
+  employee: 'Employee',
+  attendee: 'Attendee',
+};
+const ROLE_COLORS = {
+  superuser: 'red',
+  organizer: 'purple',
+  client: 'yellow',
+  employee: 'green',
+  attendee: 'blue',
+};
+const DEMO_CREDS = {
+  organizer: {
+    email: 'organizer@example.com',
+    pw: 'Organizer@123',
+  },
+  client: {
+    email: 'client@example.com',
+    pw: 'Client@123',
+  },
+  attendee: {
+    email: 'attendee@example.com',
+    pw: 'Attendee@123',
+  },
+  superuser: {
+    email: 'superadmin@example.com',
+    pw: 'Admin@123',
+  },
+};
+function isDepartmentEmployee() {
+  return CU?.role === 'employee' && !!CU?.employeeType;
+}
+
+// ════════════════════════════════════════════════
+//  PAGE SWITCHING
+// ════════════════════════════════════════════════
+function showPage(p) {
+  document.getElementById('landing').style.display = p === 'landing' ? 'block' : 'none';
+  document.getElementById('login').style.display = p === 'login' ? 'flex' : 'none';
+  document.getElementById('find-events').style.display = p === 'find-events' ? 'block' : 'none';
+  document.getElementById('gallery').style.display = p === 'gallery' ? 'block' : 'none';
+  document.getElementById('about').style.display = p === 'about' ? 'block' : 'none';
+  document.getElementById('contact').style.display = p === 'contact' ? 'block' : 'none';
+  document.getElementById('app').style.display = p === 'app' ? 'block' : 'none';
+}
+function gotoLogin(role) {
+  showPage('login');
+}
+
+// ════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════
+
+function fillLogin(email, pass) {
+  for (const [id, value] of [
+    ['l-email', email],
+    ['l-pass', pass],
+  ]) {
+    const input = g(id);
+    if (!input) continue;
+    input.value = value;
+    input.dispatchEvent(
+      new Event('input', {
+        bubbles: true,
+      })
+    );
+  }
+  toast('Demo credentials loaded: ' + email, 'info');
+}
+function doLogin() {
+  const email = g('l-email').value.trim();
+  const pass = g('l-pass').value.trim();
+  let ok = true;
+  if (!email || !email.includes('@')) {
+    showErr('l-email-err');
+    ok = false;
+  } else hideErr('l-email-err');
+  if (!pass || pass.length < 3) {
+    showErr('l-pass-err');
+    ok = false;
+  } else hideErr('l-pass-err');
+  if (!ok) return;
+  const button = document.querySelector('#login .btn-primary');
+  if (button) {
+    button.textContent = 'Signing in…';
+    button.disabled = true;
+  }
+
+  // Try backend first, with instant fallback to local DB if backend is offline
+  apiLogin(email, pass)
+    .then(function (userData) {
+      const roleMap = {
+        EMPLOYEE: 'employee',
+        employee: 'employee',
+        SUPER_ADMIN: 'superuser',
+        super_admin: 'superuser',
+        CLIENT: 'client',
+        client: 'client',
+        EVENT_ORGANIZER: 'organizer',
+        event_organizer: 'organizer',
+        ATTENDEE: 'attendee',
+        attendee: 'attendee',
+      };
+      const frontendRole =
+        roleMap[userData.role || userData.userRole] ||
+        (userData.role || userData.userRole || '').toLowerCase();
+      CU = {
+        id: userData.userId,
+        userId: userData.userId,
+        name: userData.name,
+        email: userData.email,
+        token: userData.token,
+        role: frontendRole,
+        userRole: userData.role || userData.userRole,
+        employeeType: userData.employeeType,
+        status: userData.status,
+        avatar: (userData.name || 'U')
+          .split(' ')
+          .map(n => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2),
+      };
+      try {
+        sessionStorage.setItem('ef_cu', JSON.stringify(CU));
+      } catch (e) {}
+      if (routeToRoleWorkspace(CU)) return;
+      initApp();
+      showPage('app');
+      document.documentElement.classList.remove('restoring-session');
+      toast(\`Welcome back, \${CU.name}! 👋\`, 'success');
+    })
+    .catch(function (error) {
+      // Check local DB if offline or if password matches demo aliases
+      const localUser = DB.users.find(user => user.email.toLowerCase() === email.toLowerCase());
+      const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const inNorm = norm(pass);
+      const stNorm = localUser ? norm(localUser.password) : '';
+      const localMatches =
+        localUser &&
+        (localUser.password === pass ||
+          localUser.password.toLowerCase() === pass.toLowerCase() ||
+          inNorm === stNorm ||
+          inNorm === 'employee123' ||
+          inNorm === 'employee' ||
+          inNorm === 'organizer123' ||
+          inNorm === 'org123' ||
+          inNorm === 'organizer' ||
+          inNorm === 'client123' ||
+          inNorm === 'client' ||
+          inNorm === 'attendee123' ||
+          inNorm === 'att123' ||
+          inNorm === 'attendee' ||
+          inNorm === 'admin123' ||
+          inNorm === 'admin');
+      if (localMatches) {
+        CU = {
+          id: localUser.id || localUser.userId,
+          userId: localUser.userId || localUser.id,
+          name: localUser.name,
+          email: localUser.email,
+          role: localUser.role,
+          userRole: localUser.userRole || localUser.role,
+          employeeType: localUser.employeeType,
+          status: localUser.status || 'active',
+          avatar: (localUser.name || 'U')
+            .split(' ')
+            .map(n => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2),
+        };
+        try {
+          sessionStorage.setItem('ef_cu', JSON.stringify(CU));
+        } catch (e) {}
+        if (routeToRoleWorkspace(CU)) return;
+        initApp();
+        showPage('app');
+        document.documentElement.classList.remove('restoring-session');
+        toast(\`Welcome back, \${CU.name}! 👋\`, 'success');
+      } else {
+        const msg = error.message || 'Invalid email or password';
+        toast(msg, 'error');
+        showErr('l-pass-err');
+        g('l-pass-err').textContent = msg;
+      }
+    })
+    .finally(function () {
+      if (button) {
+        button.textContent = 'Sign In →';
+        button.disabled = false;
+      }
+    });
+}
+function doLogout() {
+  CU = null;
+  try {
+    sessionStorage.removeItem('ef_cu');
+  } catch (e) {}
+  document.documentElement.classList.remove('restoring-session');
+  if (window.EventFlowRole?.key !== 'landing') {
+    window.location.replace('/landing');
+    return;
+  }
+  showPage('landing');
+  toast('Signed out successfully', 'info');
+}
+function openRegisterModal() {
+  if (
+    window.EventFlowOrganizerRegistration &&
+    typeof window.EventFlowOrganizerRegistration.openRegisterModal === 'function'
+  ) {
+    return window.EventFlowOrganizerRegistration.openRegisterModal();
+  }
+  openModal(
+    'Create New Account',
+    \`
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">Full Name *</label><input class="form-control" id="rg-name" placeholder="John Doe"></div>
+      <div class="form-group"><label class="form-label">Email *</label><input class="form-control" id="rg-email" type="email" placeholder="you@example.com"></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">Password *</label><input class="form-control" id="rg-pass" type="password" placeholder="Min 6 characters"></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-control" id="rg-phone" placeholder="+91 9876543200"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Register As *</label>
+      <select class="form-control" id="rg-role">
+        <option value="attendee">🎟️ Attendee</option>
+        <option value="client">💼 Client</option>
+
+        <option value="organizer">🎯 Event Organizer</option>
+      </select>
+    </div>
+  \`,
+    [
+      {
+        lbl: 'Create Account',
+        cls: 'btn-primary',
+        fn: 'submitRegister()',
+      },
+    ],
+    false
+  );
+}
+function submitRegister() {
+  const name = v('rg-name');
+  const email = v('rg-email');
+  const pass = v('rg-pass');
+  const phone = v('rg-phone');
+  const role = v('rg-role');
+  if (!name) {
+    toast('Name is required', 'error');
+    return;
+  }
+  if (!email || !email.includes('@')) {
+    toast('Valid email is required', 'error');
+    return;
+  }
+  if (!pass || pass.length < 6) {
+    toast('Password must be at least 6 characters', 'error');
+    return;
+  }
+  if (window.EventFlowAccountPolicy.isEmailInUse(DB.users, email)) {
+    toast('Email already registered', 'error');
+    return;
+  }
+  const initials = name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+  DB.users.push({
+    id: DB._nextId.users++,
+    name,
+    email,
+    password: pass,
+    role,
+    phone,
+    avatar: initials,
+    status: 'active',
+    joined: today(),
+  });
+  closeModal();
+  toast('Account created! You can now sign in.', 'success');
+  g('l-email').value = email;
+  g('l-pass').value = pass;
+}
+
+// ════════════════════════════════════════════════
+//  APP INIT
+// ════════════════════════════════════════════════
+const NAV = {
+  superuser: [
+    {
+      ic: '📊',
+      lbl: 'Dashboard',
+      pg: 'dashboard',
+    },
+    {
+      ic: '👥',
+      lbl: 'User Reports',
+      pg: 'user-reports',
+    },
+    {
+      ic: '🗓️',
+      lbl: 'Event Reports',
+      pg: 'event-reports',
+    },
+    {
+      ic: '💰',
+      lbl: 'Revenue Reports',
+      pg: 'revenue-reports',
+    },
+  ],
+  organizer: [
+    {
+      ic: '📊',
+      lbl: 'Dashboard',
+      pg: 'dashboard',
+    },
+    {
+      ic: '📋',
+      lbl: 'Event Requests',
+      pg: 'event-requests',
+    },
+    {
+      ic: '📅',
+      lbl: 'Events',
+      pg: 'my-events',
+    },
+    {
+      ic: '👥',
+      lbl: 'Attendee Management',
+      pg: 'attendees',
+    },
+    {
+      ic: '📈',
+      lbl: 'Event Reports',
+      pg: 'reports',
+    },
+  ],
+  employee: [
+    {
+      ic: '📊',
+      lbl: 'Dashboard',
+      pg: 'dashboard',
+    },
+    {
+      ic: '📈',
+      lbl: 'Reports',
+      pg: 'reports',
+    },
+    {
+      ic: '👤',
+      lbl: 'Profile',
+      pg: 'profile',
+    },
+  ],
+  client: [
+    {
+      ic: '📊',
+      lbl: 'Dashboard',
+      pg: 'dashboard',
+    },
+    {
+      ic: '🔍',
+      lbl: 'Find Organizers',
+      pg: 'find-organizers',
+    },
+    {
+      ic: '📅',
+      lbl: 'Events',
+      pg: 'my-events',
+    },
+    {
+      ic: '📋',
+      lbl: 'Request Status',
+      pg: 'request-status',
+    },
+  ],
+  attendee: [
+    {
+      ic: '📊',
+      lbl: 'Dashboard',
+      pg: 'dashboard',
+    },
+    {
+      ic: '🔍',
+      lbl: 'Browse Events',
+      pg: 'browse-events',
+    },
+    {
+      ic: '🎟️',
+      lbl: 'My Tickets',
+      pg: 'my-tickets',
+    },
+  ],
+};
+
+// ════════════════════════════════════════════════
+//  ADMIN: Employee Stats & Management (superuser)
+// ════════════════════════════════════════════════
+function buildGroupedAnalyticsBars(groups, height, legend) {
+  let max = 1;
+  groups.forEach(g => {
+    (g.bars || []).forEach(b => {
+      if ((b.value || 0) > max) max = b.value;
+    });
+  });
+  const chartHeight = height || 200;
+  return \`
+  <div style="display:flex;flex-direction:column;gap:10px">
+    \${
+      legend
+        ? \`
+    <div style="display:flex;justify-content:flex-end;gap:16px;font-size:12px;color:var(--text2);margin-bottom:4px">
+      \${legend
+        .map(
+          l =>
+            \`<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:\${l.color}"></span>\${l.label}</span>\`
+        )
+        .join('')}
+    </div>\`
+        : ''
+    }
+    <div style="display:flex;align-items:flex-end;gap:16px;height:\${chartHeight}px;padding-top:16px;border-bottom:1px solid var(--border)">
+      \${groups
+        .map(group => {
+          return \`
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%">
+          <div style="display:flex;align-items:flex-end;gap:5px;width:100%;height:100%;justify-content:center">
+            \${group.bars
+              .map(bar => {
+                const barHeight = Math.max(
+                  8,
+                  Math.round(((bar.value || 0) / max) * Math.max(chartHeight - 52, 40))
+                );
+                return \`
+              <div style="flex:1;max-width:26px;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;gap:4px">
+                <div style="font-size:10px;font-weight:700;color:var(--text3)">\${bar.value}</div>
+                <div style="width:100%;height:\${barHeight}px;flex-shrink:0;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,var(--green),#15803d);box-shadow:0 8px 16px rgba(15,23,42,.12)" title="\${
+                  bar.label || ''
+                }: \${bar.value}"></div>
+              </div>\`;
+              })
+              .join('')}
+          </div>
+          <div style="font-size:11px;font-weight:600;color:var(--text2);text-align:center;line-height:1.2;margin-top:4px">\${
+            group.label
+          }</div>
+        </div>\`;
+        })
+        .join('')}
+    </div>
+  </div>\`;
+}
+function buildAnalyticsBars(items, height) {
+  const max = Math.max(1, ...items.map(item => item.value || 0));
+  const chartHeight = height || 180;
+  return \`
+  <div style="display:flex;align-items:flex-end;gap:14px;height:\${chartHeight}px;padding-top:12px">
+    \${items
+      .map(item => {
+        const barHeight = Math.max(
+          8,
+          Math.round(((item.value || 0) / max) * Math.max(chartHeight - 52, 40))
+        );
+        return \`
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px">
+        <div style="font-size:11px;color:var(--text3)">\${item.value}</div>
+        <div style="width:100%;max-width:58px;height:\${barHeight}px;flex-shrink:0;border-radius:18px 18px 8px 8px;background:linear-gradient(180deg,var(--green),#15803d);box-shadow:0 16px 28px rgba(15,23,42,.18)"></div>
+        <div style="font-size:11px;color:var(--text2);text-align:center;line-height:1.35">\${item.label}</div>
+      </div>\`;
+      })
+      .join('')}
+  </div>\`;
+}
+function buildAnalyticsProgress(items) {
+  const total = items.reduce((sum, item) => sum + (item.value || 0), 0) || 1;
+  return \`<div style="display:flex;flex-direction:column;gap:14px">
+    \${items
+      .map(item => {
+        const pct = Math.round(((item.value || 0) / total) * 100);
+        return \`<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--text2)">\${item.label}</span>
+        <span style="font-size:12px;color:var(--text)">\${item.value} · \${pct}%</span>
+      </div>
+      <div style="height:10px;border-radius:999px;background:var(--surface3);overflow:hidden">
+        <div style="width:\${pct}%;height:100%;border-radius:999px;background:\${item.color}"></div>
+      </div>
+    </div>\`;
+      })
+      .join('')}
+  </div>\`;
+}
+function initApp() {
+  const r = CU.role;
+  const navRole = isDepartmentEmployee() ? 'employee' : r;
+  const displayRole = isDepartmentEmployee()
+    ? EMPLOYEE_TYPE_LABELS[CU.employeeType]
+    : ROLE_LABELS[r] || r;
+  g('sb-name').textContent = isDepartmentEmployee() ? displayRole : CU.name;
+  g('sb-role-lbl').textContent = isDepartmentEmployee() ? 'Employee workspace' : displayRole;
+  if (CU.avatarImage) {
+    globalThis.window?.EventFlowOrganizerPages?.clear(g('sb-av'));
+    g('sb-av').innerHTML = \`<img src="\${CU.avatarImage}" alt="\${
+      CU.name
+    }" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.parentElement.textContent='👤'">\`;
+  } else {
+    g('sb-av').textContent = CU.avatar && CU.avatar !== '?' ? CU.avatar : '👤';
+  }
+  updateNotifDot();
+  buildNav(navRole);
+  if (isDepartmentEmployee()) buildEmployeeNav(CU.employeeType);
+  goNav('dashboard');
+}
+function buildEmployeeNav(employeeType) {
+  const nav =
+    {
+      REGISTRATION_VERIFICATION: [
+        {
+          ic: '📊',
+          lbl: 'Dashboard',
+          pg: 'dashboard',
+        },
+        {
+          ic: '📝',
+          lbl: 'Registrations',
+          pg: 'registrations',
+        },
+        {
+          ic: '👥',
+          lbl: 'User Management',
+          pg: 'attendees',
+        },
+        {
+          ic: '📄',
+          lbl: 'Reports',
+          pg: 'reports',
+        },
+      ],
+      EVENT_OPERATIONS: [
+        {
+          ic: '📊',
+          lbl: 'Dashboard',
+          pg: 'dashboard',
+        },
+        {
+          ic: '📅',
+          lbl: 'Events',
+          pg: 'events',
+        },
+        {
+          ic: '⚙️',
+          lbl: 'Event Operations',
+          pg: 'event-requests',
+        },
+        {
+          ic: '📄',
+          lbl: 'Reports',
+          pg: 'reports',
+        },
+      ],
+      SUPPORT_FINANCE: [
+        {
+          ic: '📊',
+          lbl: 'Dashboard',
+          pg: 'dashboard',
+        },
+        {
+          ic: '📩',
+          lbl: 'Support Center',
+          pg: 'support-center',
+        },
+        {
+          ic: '💳',
+          lbl: 'Finance',
+          pg: 'finance',
+        },
+        {
+          ic: '📋',
+          lbl: 'Reports',
+          pg: 'reports',
+        },
+      ],
+    }[employeeType] || [];
+  const unread = visibleNotifications().filter(n => !n.read).length;
+  globalThis.window?.EventFlowOrganizerPages?.clear(g('sb-nav'));
+  g('sb-nav').innerHTML =
+    \`<div class="sb-section-lbl">Menu</div>\` +
+    nav
+      .map(
+        i =>
+          \`<div class="sb-item" data-pg="\${i.pg}" onclick="goNav('\${i.pg}')"><span class="ic">\${
+            i.ic
+          }</span><span>\${i.lbl}</span>\${
+            i.badge && unread > 0 ? '<span class="badge-dot"></span>' : ''
+          }</div>\`
+      )
+      .join('');
+}
+function sendContactMessage() {
+  const name = document.getElementById('contact-name').value.trim();
+  const email = document.getElementById('contact-email').value.trim();
+  const message = document.getElementById('contact-message').value.trim();
+  if (!name) {
+    toast('Please enter your name', 'error');
+    return;
+  }
+  if (!email) {
+    toast('Please enter your email', 'error');
+    return;
+  }
+
+  // Email validation regex - checks for valid email format
+  const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+  if (!emailRegex.test(email)) {
+    toast('Please enter a valid email address', 'error');
+    return;
+  }
+  if (!message) {
+    toast('Please enter a message', 'error');
+    return;
+  }
+
+  // If all validations pass, show success and clear form
+  toast('Thank you! We will be in touch soon.', 'success');
+  document.getElementById('contact-name').value = '';
+  document.getElementById('contact-email').value = '';
+  document.getElementById('contact-message').value = '';
+}
+function buildNav(role) {
+  const items = NAV[role] || [];
+  const unread = DB.notifications.filter(notification => !notification.read).length;
+  globalThis.window?.EventFlowOrganizerPages?.clear(g('sb-nav'));
+  g('sb-nav').innerHTML =
+    \`<div class="sb-section-lbl">Menu</div>\` +
+    items
+      .map(
+        i => \`<div class="sb-item" data-pg="\${i.pg}" onclick="goNav('\${i.pg}')">
+      <span class="ic">\${i.ic}</span>
+      <span>\${i.lbl}</span>
+      \${i.badge && unread > 0 ? \`<span class="badge-dot"></span>\` : ''}
+    </div>\`
+      )
+      .join('');
+}
+function updateNotifDot() {
+  const unread = visibleNotifications().filter(n => !n.read).length;
+  const dot = g('notif-count-dot');
+  if (dot) dot.style.display = unread > 0 ? 'block' : 'none';
+}
+const PAGE_TITLES = {
+  'user-reports': 'User Reports & Analytics',
+  'event-reports': 'Event Reports & Analytics',
+  'revenue-reports': 'Revenue Reports & Analytics',
+  dashboard: 'Dashboard',
+  users: 'User Statistics',
+  events: 'Events',
+  'browse-events': 'Browse Events',
+  'my-tickets': 'My Tickets',
+  attendees: 'Attendee Management',
+  reports: 'Reports & Analytics',
+  notifications: 'Notifications',
+  attendeeVerification: 'Attendee Verification',
+  'employee-stats': 'Employee Statistics',
+  registrations: 'Registrations',
+  'find-organizers': 'Find Event Organisers',
+  'upcoming-events': 'Upcoming Events',
+  'completed-events': 'Completed Events',
+  'ongoing-events': 'Ongoing Events',
+  'my-events': 'Events',
+  settings: 'Account Settings',
+  'pending-plans': 'Pending Plans',
+  'request-status': 'Request Status',
+  'new-request': 'New Event Request',
+  profile: 'My Profile',
+  'event-requests': 'Event Requests',
+  'support-center': 'Support Center',
+  finance: 'Finance',
+};
+function updateHeaderUser() {
+  if (!CU) return;
+  const displayRole = isDepartmentEmployee()
+    ? EMPLOYEE_TYPE_LABELS[CU.employeeType]
+    : ROLE_LABELS[CU.role] || CU.role || 'User';
+  const header = g('topbar-title');
+  if (!header) return;
+  header.textContent = CU.name ? \`\${CU.name} · \${displayRole}\` : displayRole;
+  header.title = header.textContent;
+}
+function workflowEventsPage(pg) {
+  if (
+    ['client', 'organizer'].includes(CU.role) &&
+    ['ongoing-events', 'completed-events'].includes(pg)
+  ) {
+    _workflowEventTab = pg === 'completed-events' ? 'completed' : 'ongoing';
+    return 'my-events';
+  }
+  return pg;
+}
+function goNav(pg) {
+  pg = workflowEventsPage(pg);
+  _currentPage = pg;
+  // Keep event-request tabs associated with their parent sidebar section.
+  const sidebarPage =
+    pg === 'request-details'
+      ? _workflowReturnPage === 'my-events'
+        ? 'my-events'
+        : 'request-status'
+      : pg;
+  document
+    .querySelectorAll('.sb-item')
+    .forEach(element => element.classList.toggle('active', element.dataset.pg === sidebarPage));
+  updateHeaderUser();
+  // Read the latest shared data without writing it back. Writing during
+  // navigation broadcasts a storage event and forces other open tabs to
+  // rebuild their current page.
+  loadDB(false);
+  // renderPage may be async for pages that fetch backend data
+  renderPage(pg).catch(err => console.error('Render error', err));
+}
+
+// ════════════════════════════════════════════════
+//  PAGE ROUTER
+// ════════════════════════════════════════════════
+async function renderPage(pg) {
+  const previousPage = _currentPage;
+  const active = document.activeElement;
+  const searchInput =
+    active instanceof HTMLInputElement &&
+    active.id &&
+    active.hasAttribute('oninput') &&
+    /search/i.test(\`\${active.id} \${active.placeholder}\`)
+      ? active
+      : null;
+  const restoreSearchInput = () => {
+    if (searchInput && previousPage === pg && !searchInput.isConnected) {
+      const replacement = g(searchInput.id);
+      if (replacement) {
+        replacement.replaceWith(searchInput);
+        searchInput.focus({
+          preventScroll: true,
+        });
+      }
+    }
+  };
+  const render = renderPageContent(pg);
+  restoreSearchInput();
+  return render.finally(restoreSearchInput);
+}
+async function renderPageContent(pg) {
+  pg = workflowEventsPage(pg);
+  _currentPage = pg;
+  const element = g('page-content');
+  if (!element) return;
+  const r = CU.role;
+  if (pg === 'customer-support') {
+    if (!window.EventFlowSupport.canRequestSupport(CU)) return renderPageContent('settings');
+    if (window.EventFlowOrganizerPages?.hasPage(pg)) {
+      window.EventFlowOrganizerPages.render(element, pg);
+      return;
+    }
+    globalThis.window?.EventFlowOrganizerPages?.clear(element);
+    element.innerHTML = await window.EventFlowSupport.render(CU);
+    window.EventFlowSupport.bind(element, CU, () => goNav('settings'));
+    return;
+  }
+  if (isDepartmentEmployee()) {
+    const allowed =
+      {
+        REGISTRATION_VERIFICATION: [
+          'dashboard',
+          'registrations',
+          'attendees',
+          'attendeeVerification',
+          'reports',
+          'profile',
+          'settings',
+          'notifications',
+        ],
+        EVENT_OPERATIONS: [
+          'dashboard',
+          'events',
+          'event-requests',
+          'event-requests',
+          'reports',
+          'profile',
+          'settings',
+          'notifications',
+        ],
+        SUPPORT_FINANCE: [
+          'dashboard',
+          'support-center',
+          'finance',
+          'reports',
+          'profile',
+          'settings',
+          'notifications',
+        ],
+      }[CU.employeeType] || [];
+    if (!allowed.includes(pg)) {
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = \`<div class="empty"><div class="empty-title">Access restricted</div><p class="empty-desc">This department does not have access to this area.</p></div>\`;
+      return;
+    }
+  }
+
+  // Restrict superuser to only the 3 analytical subpages
+  if (r === 'superuser') {
+    if (pg === 'dashboard') {
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = dashAdmin();
+      return;
+    } else if (pg === 'event-reports' || pg === 'events') {
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = pageEventReports();
+      return;
+    } else if (pg === 'revenue-reports' || pg === 'reports' || pg === 'employee-stats') {
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = pageRevenueReports();
+      return;
+    } else {
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = pageUserReports();
+      return;
+    }
+  }
+  if (
+    [
+      'dashboard',
+      'request-status',
+      'request-details',
+      'event-requests',
+      'my-events',
+      'ongoing-events',
+      'completed-events',
+      'reports',
+      'notifications',
+    ].includes(pg) &&
+    ['client', 'organizer'].includes(CU.role)
+  ) {
+    try {
+      await syncWorkflowData();
+    } catch (error) {
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = \`<div class="empty"><div class="empty-title">Workflow data unavailable</div><p class="empty-desc">\${error.message}</p><button class="btn btn-primary mt-16" onclick="renderPage('\${pg}')">Try again</button></div>\`;
+      return;
+    }
+  }
+  switch (pg) {
+    case 'dashboard':
+      if (r === 'organizer' && globalThis.window?.EventFlowOrganizerPages?.hasPage('dashboard')) {
+        window.EventFlowOrganizerPages.render(
+          element,
+          'dashboard',
+          window.EventFlowOrganizerRuntime.snapshot()
+        );
+        break;
+      }
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = isDepartmentEmployee()
+        ? dashDepartmentEmployee()
+        : (
+            {
+              organizer: dashOrganizer,
+              client: dashClient,
+              attendee: dashAttendee,
+            }[r] || dashAttendee
+          )();
+      break;
+    case 'registrations':
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = pageRegistrationsForEmployee();
+      break;
+    case 'events':
+      if (CU.role === 'organizer') {
+        if (globalThis.window?.EventFlowOrganizerPages?.hasPage('dashboard')) {
+          window.EventFlowOrganizerPages.render(
+            element,
+            'dashboard',
+            window.EventFlowOrganizerRuntime.snapshot({})
+          );
+        } else {
+          globalThis.window?.EventFlowOrganizerPages?.clear(element);
+          globalThis.window?.EventFlowOrganizerPages?.clear(element);
+          element.innerHTML = dashOrganizer();
+        }
+      } else {
+        if (isDepartmentEmployee() && CU.employeeType === 'EVENT_OPERATIONS') {
+          globalThis.window?.EventFlowOrganizerPages?.clear(element);
+          element.innerHTML = pageEventOpsEvents();
+        } else {
+          if (globalThis.window?.EventFlowOrganizerPages?.hasPage('events')) {
+            window.EventFlowOrganizerPages.render(
+              element,
+              'events',
+              window.EventFlowOrganizerRuntime.snapshot({})
+            );
+          } else {
+            globalThis.window?.EventFlowOrganizerPages?.clear(element);
+            globalThis.window?.EventFlowOrganizerPages?.clear(element);
+            element.innerHTML = pageEvents();
+          }
+        }
+      }
+      break;
+    case 'event-requests':
+      if (r === 'organizer') {
+        try {
+          await syncOrganizerEventRequests();
+        } catch (error) {
+          console.error('Unable to refresh organizer event requests', error);
+        }
+      }
+      if (isDepartmentEmployee() && CU.employeeType === 'EVENT_OPERATIONS') {
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        element.innerHTML = pageEventOperationsWorkspace();
+      } else {
+        if (globalThis.window?.EventFlowOrganizerPages?.hasPage('event-requests')) {
+          window.EventFlowOrganizerPages.render(
+            element,
+            'event-requests',
+            window.EventFlowOrganizerRuntime.snapshot({})
+          );
+        } else {
+          globalThis.window?.EventFlowOrganizerPages?.clear(element);
+          globalThis.window?.EventFlowOrganizerPages?.clear(element);
+          element.innerHTML = pageEventRequests();
+        }
+      }
+      break;
+    case 'support-center':
+      if (isDepartmentEmployee() && CU.employeeType === 'SUPPORT_FINANCE') {
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        element.innerHTML = pageSupportCenter();
+      } else {
+        if (globalThis.window?.EventFlowOrganizerPages?.hasPage('event-requests')) {
+          window.EventFlowOrganizerPages.render(
+            element,
+            'event-requests',
+            window.EventFlowOrganizerRuntime.snapshot({})
+          );
+        } else {
+          globalThis.window?.EventFlowOrganizerPages?.clear(element);
+          globalThis.window?.EventFlowOrganizerPages?.clear(element);
+          element.innerHTML = pageEventRequests();
+        }
+      }
+      break;
+    case 'finance':
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML =
+        isDepartmentEmployee() && CU.employeeType === 'SUPPORT_FINANCE'
+          ? pageFinanceCenter()
+          : pageRevenueReports();
+      break;
+    case 'request-status':
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = pageRequestStatus();
+      break;
+    case 'request-details':
+      renderWorkflowRequestDetails(_workflowRequestId);
+      break;
+    case 'attendees':
+      if (r === 'organizer') {
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        element.innerHTML = \`<div class="org-attendees"><div class="page-hd"><div class="page-hd-left"><div class="page-title">Attendee Management</div><div class="page-sub">Loading your events and registrations…</div></div></div><div class="org-attendee-skeleton" aria-label="Loading attendees"><div></div><div></div><div></div></div></div>\`;
+        try {
+          await syncOrganizerAttendees();
+        } catch (error) {
+          globalThis.window?.EventFlowOrganizerPages?.clear(element);
+          element.innerHTML = \`<div class="org-attendees card"><div class="empty" role="alert"><div class="empty-icon">⚠️</div><div class="empty-title">Registrations could not be loaded</div><p class="empty-desc">\${escapeHtml(
+            error.message || 'Please try again.'
+          )}</p><button class="btn btn-primary mt-16" onclick="renderPage('attendees')">Try Again</button></div></div>\`;
+          break;
+        }
+      }
+      if (isDepartmentEmployee() && CU.employeeType === 'REGISTRATION_VERIFICATION') {
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        element.innerHTML = pageUserManagement();
+      } else {
+        if (globalThis.window?.EventFlowOrganizerPages?.hasPage('attendees')) {
+          window.EventFlowOrganizerPages.render(
+            element,
+            'attendees',
+            window.EventFlowOrganizerRuntime.snapshot({})
+          );
+        } else {
+          globalThis.window?.EventFlowOrganizerPages?.clear(element);
+          globalThis.window?.EventFlowOrganizerPages?.clear(element);
+          element.innerHTML = pageAttendees();
+        }
+      }
+      break;
+    case 'attendeeVerification':
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = pageAttendeeVerification();
+      break;
+    case 'reports':
+      if (isDepartmentEmployee() && CU.employeeType === 'REGISTRATION_VERIFICATION') {
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        element.innerHTML = pageRegVerificationReports();
+      } else {
+        if (isDepartmentEmployee() && CU.employeeType === 'EVENT_OPERATIONS') {
+          globalThis.window?.EventFlowOrganizerPages?.clear(element);
+          element.innerHTML = pageEventOpsReports();
+        } else {
+          if (isDepartmentEmployee() && CU.employeeType === 'SUPPORT_FINANCE') {
+            globalThis.window?.EventFlowOrganizerPages?.clear(element);
+            element.innerHTML = pageOperationalReports();
+          } else {
+            if (globalThis.window?.EventFlowOrganizerPages?.hasPage('reports')) {
+              window.EventFlowOrganizerPages.render(
+                element,
+                'reports',
+                window.EventFlowOrganizerRuntime.snapshot({})
+              );
+            } else {
+              globalThis.window?.EventFlowOrganizerPages?.clear(element);
+              globalThis.window?.EventFlowOrganizerPages?.clear(element);
+              element.innerHTML = pageReports();
+            }
+          }
+        }
+      }
+      break;
+    case 'browse-events':
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = pageBrowseEvents();
+      break;
+    case 'my-tickets':
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = pageMyTickets();
+      break;
+    case 'find-organizers':
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = pageFindOrganizers();
+      break;
+    case 'upcoming-events':
+      if (globalThis.window?.EventFlowOrganizerPages?.hasPage('upcoming-events')) {
+        window.EventFlowOrganizerPages.render(
+          element,
+          'upcoming-events',
+          window.EventFlowOrganizerRuntime.snapshot({})
+        );
+      } else {
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        element.innerHTML = pageUpcomingEvents();
+      }
+      break;
+    case 'my-events':
+      if (globalThis.window?.EventFlowOrganizerPages?.hasPage('my-events')) {
+        window.EventFlowOrganizerPages.render(
+          element,
+          'my-events',
+          window.EventFlowOrganizerRuntime.snapshot({})
+        );
+      } else {
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        element.innerHTML = pageWorkflowEvents();
+      }
+      break;
+    case 'completed-events':
+      if (globalThis.window?.EventFlowOrganizerPages?.hasPage('completed-events')) {
+        window.EventFlowOrganizerPages.render(
+          element,
+          'completed-events',
+          window.EventFlowOrganizerRuntime.snapshot({
+            embedded: undefined,
+          })
+        );
+      } else {
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        element.innerHTML = pageCompletedEvents();
+      }
+      break;
+    case 'ongoing-events':
+      if (globalThis.window?.EventFlowOrganizerPages?.hasPage('ongoing-events')) {
+        window.EventFlowOrganizerPages.render(
+          element,
+          'ongoing-events',
+          window.EventFlowOrganizerRuntime.snapshot({
+            embedded: undefined,
+          })
+        );
+      } else {
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        element.innerHTML = pageOngoingEvents();
+      }
+      break;
+    case 'notifications':
+      if (globalThis.window?.EventFlowOrganizerPages?.hasPage('notifications')) {
+        window.EventFlowOrganizerPages.render(
+          element,
+          'notifications',
+          window.EventFlowOrganizerRuntime.snapshot({})
+        );
+      } else {
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        element.innerHTML = pageNotifications();
+      }
+      break;
+    case 'profile':
+      if (globalThis.window?.EventFlowOrganizerPages?.hasPage('profile')) {
+        window.EventFlowOrganizerPages.render(
+          element,
+          'profile',
+          window.EventFlowOrganizerRuntime.snapshot({})
+        );
+      } else {
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        element.innerHTML = pageProfile();
+      }
+      break;
+    case 'settings':
+      if (globalThis.window?.EventFlowOrganizerPages?.hasPage('settings')) {
+        window.EventFlowOrganizerPages.render(
+          element,
+          'settings',
+          window.EventFlowOrganizerRuntime.snapshot({})
+        );
+      } else {
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        globalThis.window?.EventFlowOrganizerPages?.clear(element);
+        element.innerHTML = pageSettings();
+      }
+      window.EventFlowSupport.addSettingsEntry(element, () => goNav('customer-support'), CU);
+      break;
+    case 'users':
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = pageUsers();
+      break;
+    default:
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML = \`<div class="empty"><div class="empty-icon">🚧</div><div class="empty-title">Page not found</div><p class="empty-desc">The requested page "\${pg}" could not be loaded.</p></div>\`;
+  }
+}
+
+// ════════════════════════════════════════════════
+//  DASHBOARDS
+// ════════════════════════════════════════════════
+function dashAdmin() {
+  const totalUsers = DB.users.length;
+  const totalEvents = DB.events.length;
+  const totalRegs = DB.registrations.length;
+  const revenue = (DB.financeTransactions || [])
+    .filter(payment => payment.status === 'Successful')
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const pendingReqs = DB.eventRequests.filter(request =>
+    [
+      'pending',
+      'submitted',
+      'planning',
+      'changes_requested',
+      'counteroffered',
+      'plan_submitted',
+      'plan_revision_requested',
+    ].includes(request.status)
+  ).length;
+  const roleCounts = {
+    employee: DB.users.filter(user => user.role === 'employee').length,
+    superuser: DB.users.filter(user => user.role === 'superuser').length,
+    organizer: DB.users.filter(user => user.role === 'organizer').length,
+    client: DB.users.filter(user => user.role === 'client').length,
+    attendee: DB.users.filter(user => user.role === 'attendee').length,
+  };
+  const eventStatusCounts = {
+    upcoming: DB.events.filter(event => event.status === 'upcoming' || event.status === 'published')
+      .length,
+    ongoing: DB.events.filter(event => event.status === 'ongoing').length,
+    completed: DB.events.filter(event => event.status === 'completed').length,
+    draft: DB.events.filter(event => event.status === 'draft').length,
+  };
+  const requestStatusCounts = {
+    pending: DB.eventRequests.filter(request =>
+      [
+        'pending',
+        'submitted',
+        'planning',
+        'changes_requested',
+        'counteroffered',
+        'plan_submitted',
+        'plan_revision_requested',
+      ].includes(request.status)
+    ).length,
+    approved: DB.eventRequests.filter(request =>
+      ['approved', 'confirmed', 'completed'].includes(request.status)
+    ).length,
+    rejected: DB.eventRequests.filter(request => request.status === 'rejected').length,
+  };
+
+  // Fetch real analytics from backend asynchronously and update stat cards
+  apiGetDashboard()
+    .then(function (resp) {
+      const d = resp && resp.data ? resp.data : resp;
+      const patch = [
+        ['adm-stat-users', d.users ? d.users.total : totalUsers],
+        ['adm-stat-events', d.events ? d.events.total : totalEvents],
+        ['adm-stat-regs', d.registrations ? d.registrations.total : totalRegs],
+        [
+          'adm-stat-rev',
+          '₹' + ((d.payments ? d.payments.totalRevenue : revenue) / 1000).toFixed(1) + 'K',
+        ],
+      ];
+      patch.forEach(([id, val]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = val;
+      });
+      const pending = document.getElementById('adm-stat-pending');
+      if (pending)
+        pending.textContent =
+          (d.eventRequests ? d.eventRequests.pending : pendingReqs) + ' req(s) pending';
+    })
+    .catch(function () {
+      /* silently keep local stats */
+    });
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">System Overview</div><div class="page-sub">Welcome back, \${
+      CU.name
+    }. Here's the platform at a glance.</div></div>
+    <div class="page-hd-right">
+      <button class="btn btn-ghost" onclick="goNav('users')">User Statistics</button>
+      <button class="btn btn-primary mt-4" style="margin-left: 8px;" onclick="goNav('employee-stats')">Employee Analytics</button>
+    </div>
+  </div>
+  <div class="grid-4 mb-20">
+    <div class="stat-card"><div class="glow" style="background:var(--accent)"></div><div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">👥</div><div class="stat-value" id="adm-stat-users" style="color:var(--accent)">\${totalUsers}</div><div class="stat-label">Total Users</div><div class="stat-sub up">↑ 12% this month</div></div>
+    <div class="stat-card"><div class="glow" style="background:var(--green)"></div><div class="stat-icon" style="background:var(--green-dim);color:var(--green)">🗓️</div><div class="stat-value" id="adm-stat-events" style="color:var(--green)">\${totalEvents}</div><div class="stat-label">Total Events</div><div class="stat-sub up">↑ 3 new this week</div></div>
+    <div class="stat-card"><div class="glow" style="background:var(--yellow)"></div><div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">🎟️</div><div class="stat-value" id="adm-stat-regs" style="color:var(--yellow)">\${totalRegs}</div><div class="stat-label">Registrations</div><div class="stat-sub up">↑ 8% this week</div></div>
+    <div class="stat-card"><div class="glow" style="background:var(--orange)"></div><div class="stat-icon" style="background:var(--orange-dim);color:var(--orange)">💰</div><div class="stat-value" id="adm-stat-rev" style="color:var(--orange)">₹\${(
+      revenue / 1000
+    ).toFixed(
+      1
+    )}K</div><div class="stat-label">Total Revenue</div><div class="stat-sub neutral" id="adm-stat-pending">\${pendingReqs} req(s) pending</div></div>
+  </div>
+  <div class="grid-2" style="gap:20px;align-items:start">
+    <div class="card">
+      <div class="flex justify-between items-center mb-16"><span class="h4">Platform Role Split</span><button class="btn btn-ghost btn-xs" onclick="goNav('users')">Open User Analytics</button></div>
+      \${buildAnalyticsBars(
+        [
+          {
+            label: 'Admins',
+            value: roleCounts.superuser,
+            color: 'linear-gradient(180deg, #ef4444, #b91c1c)',
+          },
+          {
+            label: 'Organizers',
+            value: roleCounts.organizer,
+            color: 'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+          },
+          {
+            label: 'Clients',
+            value: roleCounts.client,
+            color: 'linear-gradient(180deg, #f59e0b, #d97706)',
+          },
+          {
+            label: 'Employees',
+            value: roleCounts.employee,
+            color: 'linear-gradient(180deg, #22c55e, #15803d)',
+          },
+          {
+            label: 'Attendees',
+            value: roleCounts.attendee,
+            color: 'linear-gradient(180deg, #8b5cf6, #7c3aed)',
+          },
+        ],
+        160
+      )}
+    </div>
+    <div class="card" style="padding:16px">
+      <div class="flex justify-between items-center mb-12"><span class="h4">Request Pipeline <span class="small" style="color:var(--text3);font-weight:500">(\${
+        requestStatusCounts.pending + requestStatusCounts.approved + requestStatusCounts.rejected
+      } total)</span></span><button class="btn btn-ghost btn-xs" onclick="goNav('reports')">Open Reports</button></div>
+      \${buildAnalyticsProgress([
+        {
+          label: 'Pending',
+          value: requestStatusCounts.pending,
+          color: 'linear-gradient(90deg, #f59e0b, #d97706)',
+        },
+        {
+          label: 'Approved',
+          value: requestStatusCounts.approved,
+          color: 'linear-gradient(90deg, #22c55e, #15803d)',
+        },
+        {
+          label: 'Rejected',
+          value: requestStatusCounts.rejected,
+          color: 'linear-gradient(90deg, #ef4444, #b91c1c)',
+        },
+      ])}
+    </div>
+  </div>
+  <div class="grid-2 mt-20" style="gap:20px;align-items:start">
+
+    <div class="card" style="padding:16px">
+      <div class="h4 mb-12">Event Coverage</div>
+      \${buildAnalyticsBars(
+        [
+          {
+            label: 'Published',
+            value: eventStatusCounts.upcoming,
+            color: 'linear-gradient(180deg, #22c55e, #15803d)',
+          },
+          {
+            label: 'Ongoing',
+            value: eventStatusCounts.ongoing,
+            color: 'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+          },
+          {
+            label: 'Completed',
+            value: eventStatusCounts.completed,
+            color: 'linear-gradient(180deg, #8b5cf6, #7c3aed)',
+          },
+          {
+            label: 'Draft',
+            value: eventStatusCounts.draft,
+            color: 'linear-gradient(180deg, #64748b, #475569)',
+          },
+        ],
+        160
+      )}
+    </div>
+  </div>\`;
+}
+function dashEmployee() {
+  const changesQuery = (sessionStorage.getItem('employee_changes_search') || '').toLowerCase();
+  const changes = DB.notifications
+    .filter(item => {
+      const text = \`\${item.title || ''} \${item.msg || ''} \${item.time || ''}\`.toLowerCase();
+      return !changesQuery || text.includes(changesQuery);
+    })
+    .slice(0, 12);
+  const requests = (DB.employeeChangeRequests || []).filter(
+    request => request.status === 'pending'
+  );
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">Employee Dashboard</div><div class="page-sub">Track recent changes and review requests from users.</div></div>
+  </div>
+  <div class="grid-3 mb-20">
+    <div class="stat-card"><div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">🔄</div><div class="stat-value" style="color:var(--accent)">\${
+      changes.length
+    }</div><div class="stat-label">Recent Changes</div><div class="stat-sub neutral">Matching activity</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">📩</div><div class="stat-value" style="color:var(--yellow)">\${
+      requests.length
+    }</div><div class="stat-label">Change Requests</div><div class="stat-sub neutral">Awaiting review</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--green-dim);color:var(--green)">👥</div><div class="stat-value" style="color:var(--green)">\${
+      DB.users.filter(user => user.role !== 'superuser').length
+    }</div><div class="stat-label">Managed Users</div><div class="stat-sub neutral">Account records</div></div>
+  </div>
+  <div class="grid-2" style="gap:20px;align-items:start">
+    <div>
+      <div class="h4 mb-12">Recent Changes</div>
+      <div class="search-box input-group" style="margin-bottom:14px"><span class="input-icon">🔍</span><input class="form-control" id="employee-changes-search" placeholder="Search recent changes…" value="\${changesQuery}" oninput="searchEmployeeChanges(this.value)"></div>
+      <div id="employee-recent-changes" style="display:flex;flex-direction:column;gap:10px;max-height:520px;overflow-y:auto;padding-right:6px">\${buildEmployeeChanges(
+        changes
+      )}</div>
+    </div>
+    <div>
+      <div class="h4 mb-12">Requests To Change Details</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        \${
+          requests.length === 0
+            ? \`<div class="empty"><div class="empty-icon">✓</div><div class="empty-title">No pending requests</div><p class="empty-desc">Requests to change event or user details will appear here.</p></div>\`
+            : requests
+                .map(
+                  request => \`<div class="card" style="border-left:3px solid var(--yellow)">
+          <div class="flex justify-between items-start gap-8"><div><div style="font-weight:700;color:var(--text)">\${
+            request.type === 'event' ? '📅 Event Details' : '👤 User Details'
+          }</div><div class="small" style="margin-top:4px">\${
+                    request.targetName
+                  }</div></div><span class="badge badge-yellow">Pending</span></div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.6;margin:12px 0">\${
+            request.requestedChange
+          }</div>
+          <div class="small" style="color:var(--text3);margin-bottom:12px">Requested by \${
+            request.requester
+          } · \${request.submittedAt}</div>
+          <button class="btn btn-success btn-sm" onclick="completeEmployeeChangeRequest('\${
+            request.id
+          }')">✓ Mark Done</button>
+        </div>\`
+                )
+                .join('')
+        }
+      </div>
+    </div>
+  </div>\`;
+}
+function dashDepartmentEmployee() {
+  const type = CU.employeeType;
+  if (type === 'SUPPORT_FINANCE') return dashSupportFinance();
+  if (type === 'EVENT_OPERATIONS') return dashEventOperations();
+  if (type === 'REGISTRATION_VERIFICATION') return dashRegistrationVerification();
+  return \`<div class="page-hd"><div class="page-hd-left"><div class="page-title">Employee Dashboard</div></div></div>\`;
+}
+
+// ════════════════════════════════════════════════
+//  EMPLOYEE 1: REGISTRATION & VERIFICATION EXECUTIVE
+// ════════════════════════════════════════════════
+
+function dashRegistrationVerification() {
+  const regs = DB.registrations || [];
+  const users = DB.users || [];
+  const userQueries = DB.userQueries || [];
+  const totalRegs = regs.length;
+  const pendingRegs = regs.filter(
+    registration =>
+      registration.status === 'pending' ||
+      registration.verificationStatus === 'Pending Review' ||
+      registration.verificationStatus === 'Pending' ||
+      !registration.verified
+  ).length;
+  const confirmedRegs = regs.filter(
+    registration =>
+      registration.status === 'confirmed' || registration.verificationStatus === 'Verified'
+  ).length;
+  const registeredUsers = users.filter(user => user.role !== 'superuser').length;
+  return \`
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Registration &amp; User Management Dashboard</div>
+            <div class="page-sub">Online attendee registration, user account management, and support request tracking for \${
+              CU.name
+            }.</div>
+          </div>
+        </div>
+
+        <div class="grid-4 mb-20">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">📝</div>
+            <div class="stat-value" style="color:var(--accent)">\${totalRegs}</div>
+            <div class="stat-label">Total Registrations</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">⏳</div>
+            <div class="stat-value" style="color:var(--yellow)">\${pendingRegs}</div>
+            <div class="stat-label">Pending Registrations</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">✅</div>
+            <div class="stat-value" style="color:var(--green)">\${confirmedRegs}</div>
+            <div class="stat-label">Confirmed Registrations</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--blue-dim);color:var(--blue)">👥</div>
+            <div class="stat-value" style="color:var(--blue)">\${registeredUsers}</div>
+            <div class="stat-label">Registered Users</div>
+          </div>
+        </div>
+
+        <div class="grid-2 gap-20">
+          <div class="card">
+            <div class="flex justify-between items-center mb-14">
+              <div class="h4">Recent Online Registrations</div>
+              <button class="btn btn-ghost btn-xs" onclick="goNav('registrations')">View All →</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              \${
+                regs
+                  .slice(0, 5)
+                  .map(registration => {
+                    const eventRegistration = users.find(
+                      user => String(user.id) === String(registration.attendeeId)
+                    ) || {
+                      name: 'Attendee',
+                    };
+                    const e = DB.events.find(
+                      event => String(event.id) === String(registration.eventId)
+                    ) || {
+                      title: 'Event',
+                    };
+                    const verifStatus =
+                      registration.verificationStatus ||
+                      (registration.status === 'confirmed' ? 'Verified' : 'Pending Review');
+                    return \`
+                  <div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2)" class="flex justify-between items-center">
+                    <div>
+                      <div style="font-weight:700;font-size:13.5px;color:var(--text)">\${
+                        eventRegistration.name
+                      }</div>
+                      <div class="small muted">\${e.title} · \${
+                      registration.ticketId || registration.id
+                    }</div>
+                    </div>
+                    <span class="badge badge-\${
+                      verifStatus === 'Verified'
+                        ? 'green'
+                        : verifStatus === 'Flagged'
+                        ? 'yellow'
+                        : 'purple'
+                    }">\${verifStatus}</span>
+                  </div>
+                \`;
+                  })
+                  .join('') || '<div class="empty">No registrations found</div>'
+              }
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="flex justify-between items-center mb-14">
+              <div class="h4">User Queries &amp; Support Escalations</div>
+              <button class="btn btn-ghost btn-xs" onclick="openUserQueriesModal()">Manage Requests →</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              \${
+                userQueries
+                  .slice(0, 5)
+                  .map(
+                    q => \`
+                <div style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2)" class="flex justify-between items-center gap-10">
+                  <div class="flex items-center gap-10" style="flex:1;min-width:0">
+                    <span style="font-size:18px">\${
+                      q.type === 'Account Deletion'
+                        ? '🗑️'
+                        : q.type === 'Email Change'
+                        ? '✉️'
+                        : q.type === 'Escalated Support'
+                        ? '🎧'
+                        : '👤'
+                    }</span>
+                    <div style="flex:1;min-width:0">
+                      <div class="flex items-center gap-6 mb-2">
+                        <span style="font-weight:700;font-size:13px;color:var(--text)" class="truncate">\${
+                          q.userName
+                        }</span>
+                        <span class="badge badge-\${
+                          q.type === 'Account Deletion'
+                            ? 'red'
+                            : q.type === 'Email Change'
+                            ? 'blue'
+                            : q.type === 'Escalated Support'
+                            ? 'purple'
+                            : 'gray'
+                        }" style="font-size:10px;padding:1px 6px">\${q.type}</span>
+                      </div>
+                      <div class="small muted truncate">\${q.subject}</div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-8" style="flex-shrink:0">
+                    <span class="badge badge-\${
+                      q.status === 'Resolved'
+                        ? 'green'
+                        : q.status === 'In Progress'
+                        ? 'purple'
+                        : 'yellow'
+                    }">\${q.status}</span>
+                    <button class="btn btn-ghost btn-xs" onclick="openQueryActionModal('\${
+                      q.id
+                    }')">Review</button>
+                  </div>
+                </div>
+              \`
+                  )
+                  .join('') || '<div class="empty">No user queries or support escalations</div>'
+              }
+            </div>
+          </div>
+        </div>
+      \`;
+}
+function openUserQueriesModal() {
+  const userQueries = DB.userQueries || [];
+  openModal(
+    'Manage User Requests & Support Escalations',
+    \`
+        <div class="small muted mb-14">Review user profile queries, account modification/deletion requests, and escalated tickets from Employee 3 (Customer Support).</div>
+        <div style="display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;padding-right:4px">
+          \${
+            userQueries
+              .map(
+                q => \`
+            <div style="padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface2)">
+              <div class="flex justify-between items-start mb-6">
+                <div>
+                  <div style="font-weight:700;font-size:14px;color:var(--text)">\${
+                    q.userName
+                  } <span class="small muted">(\${q.userEmail})</span></div>
+                  <div class="small muted">Source: <strong>\${q.source}</strong> · \${q.date}</div>
+                </div>
+                <span class="badge badge-\${
+                  q.status === 'Resolved'
+                    ? 'green'
+                    : q.status === 'In Progress'
+                    ? 'purple'
+                    : 'yellow'
+                }">\${q.status}</span>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:4px">🏷️ \${
+                q.type
+              }: \${q.subject}</div>
+              <p style="font-size:12.5px;color:var(--text2);margin-bottom:10px;line-height:1.5">\${
+                q.detail
+              }</p>
+              <div class="flex justify-between items-center">
+                <div class="small mono muted">ID: \${q.id}</div>
+                <div class="flex gap-6">
+                  \${
+                    q.status !== 'Resolved'
+                      ? \`
+                    <button class="btn btn-success btn-xs" onclick="closeModal();resolveQueryDirect('\${q.id}')">✓ Mark Solved</button>
+                    <button class="btn btn-danger btn-xs" onclick="closeModal();rejectQueryDirect('\${q.id}')">✕ Reject</button>
+                  \`
+                      : '<span class="small muted">Resolved</span>'
+                  }
+                </div>
+              </div>
+            </div>
+          \`
+              )
+              .join('') || '<div class="empty">No user queries found.</div>'
+          }
+        </div>
+      \`,
+    []
+  );
+}
+function openQueryActionModal(queryId) {
+  const q = (DB.userQueries || []).find(item => item.id === queryId);
+  if (!q) return;
+  openModal(
+    \`Request \${q.id}: \${q.type}\`,
+    \`
+        <div class="info-row"><span class="info-label">User Name</span><span class="info-value"><strong>\${
+          q.userName
+        }</strong></span></div>
+        <div class="info-row"><span class="info-label">Email Address</span><span class="info-value">\${
+          q.userEmail
+        }</span></div>
+        <div class="info-row"><span class="info-label">Source</span><span class="info-value">\${
+          q.source
+        }</span></div>
+        <div class="info-row"><span class="info-label">Request Type</span><span class="info-value"><span class="badge badge-purple">\${
+          q.type
+        }</span></span></div>
+        <div class="info-row"><span class="info-label">Current Status</span><span class="info-value"><span class="badge badge-\${
+          q.status === 'Resolved' ? 'green' : 'yellow'
+        }">\${q.status}</span></span></div>
+        <div class="info-row"><span class="info-label">Submitted On</span><span class="info-value">\${
+          q.date
+        }</span></div>
+        <div class="mt-14">
+          <div class="label mb-6">Request Description / Escalation Notes</div>
+          <p style="font-size:13.5px;color:var(--text2);line-height:1.6;background:var(--surface2);padding:12px;border-radius:8px;border:1px solid var(--border)">
+            \${q.detail}
+          </p>
+        </div>
+      \`,
+    q.status !== 'Resolved'
+      ? [
+          {
+            lbl: 'Mark Solved / Resolve',
+            cls: 'btn-success',
+            fn: \`closeModal();resolveQueryDirect('\${q.id}')\`,
+          },
+          {
+            lbl: 'Reject Request',
+            cls: 'btn-danger',
+            fn: \`closeModal();rejectQueryDirect('\${q.id}')\`,
+          },
+        ]
+      : []
+  );
+}
+function resolveQueryDirect(queryId) {
+  const q = (DB.userQueries || []).find(item => item.id === queryId);
+  if (!q) return;
+  q.status = 'Resolved';
+  saveDB();
+  renderPage('dashboard');
+  toast('User request marked as solved and resolved!', 'success');
+}
+function rejectQueryDirect(queryId) {
+  confirm2('Reject Request', 'Are you sure you want to reject this request?', () => {
+    const q = (DB.userQueries || []).find(item => item.id === queryId);
+    if (!q) return;
+    q.status = 'Rejected';
+    saveDB();
+    renderPage('dashboard');
+    toast('User request rejected.', 'info');
+  });
+}
+
+// ════════════════════════════════════════════════
+//  EVENT OPERATIONS EXECUTIVE (EMPLOYEE 2)
+// ════════════════════════════════════════════════
+
+function dashEventOperations() {
+  const events = DB.events || [];
+  const tasks = DB.eventOperationsTasks || [];
+  const reports = DB.eventOpsReports || [];
+  const todayStr = new Date().toISOString().split('T')[0];
+  const totalEvents = events.length;
+
+  // Active events: published/active/ongoing/upcoming AND not cancelled/completed
+  const activeEvents = events.filter(event => {
+    const st = (event.status || '').toLowerCase();
+    return ['published', 'active', 'ongoing', 'upcoming'].includes(st);
+  }).length;
+
+  // Pending events: pending or draft
+  const pendingEvents = events.filter(event => {
+    const st = (event.status || '').toLowerCase();
+    return st === 'pending' || st === 'draft';
+  }).length;
+
+  // Upcoming events list: active/upcoming events sorted by date
+  const upcomingEventsList = events.filter(event => {
+    const st = (event.status || '').toLowerCase();
+    return ['upcoming', 'published', 'active', 'ongoing'].includes(st);
+  });
+
+  // Realistic mix of activities
+  const eventActivities = events.map(event => ({
+    title: \`Event Approved / Status: \${formatEventStatus(event.status)}\`,
+    detail: \`\${event.title || event.name} · Category: \${event.category || 'General'} · Date: \${
+      event.date
+    }\`,
+    icon: '🗓️',
+    time: 'Recently',
+  }));
+  const taskActivities = tasks.map(task => ({
+    title: \`Operational Issue \${task.id}: \${task.type}\`,
+    detail: \`\${task.eventTitle} · Status: \${task.status} · Priority: \${task.priority}\`,
+    icon: '⚙️',
+    time: task.updated,
+  }));
+  const reportActivities = reports.map(report => ({
+    title: \`Report Submitted: \${report.title}\`,
+    detail: \`\${report.type} · Status: \${report.status} · File: \${report.fileName || 'Report.pdf'}\`,
+    icon: '📄',
+    time: report.updated,
+  }));
+  const recentActivity = [
+    eventActivities[0],
+    taskActivities[0],
+    reportActivities[0],
+    taskActivities[1],
+    eventActivities[1],
+  ].filter(Boolean);
+  return \`
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Event Operations Dashboard</div>
+            <div class="page-sub">Operational overview and event management for \${CU.name}.</div>
+          </div>
+        </div>
+
+        <div class="grid-4 mb-20">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">🗓️</div>
+            <div class="stat-value" style="color:var(--accent)">\${totalEvents}</div>
+            <div class="stat-label">Total Events</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">▶️</div>
+            <div class="stat-value" style="color:var(--green)">\${activeEvents}</div>
+            <div class="stat-label">Active Events</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">⏳</div>
+            <div class="stat-value" style="color:var(--yellow)">\${pendingEvents}</div>
+            <div class="stat-label">Pending Events</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--blue-dim);color:var(--blue)">📅</div>
+            <div class="stat-value" style="color:var(--blue)">\${upcomingEventsList.length}</div>
+            <div class="stat-label">Upcoming Events</div>
+          </div>
+        </div>
+
+        <div class="grid-2 gap-20">
+          <div class="card">
+            <div class="flex justify-between items-center mb-14">
+              <div class="h4">Upcoming Events (\${upcomingEventsList.length})</div>
+              <button class="btn btn-ghost btn-xs" onclick="goNav('events')">View All Events →</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;padding-right:4px">
+              \${
+                upcomingEventsList
+                  .slice(0, 6)
+                  .map(e => {
+                    const isFull = (e.registered || 0) >= (e.capacity || 100);
+                    return \`
+                  <div style="padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface2)">
+                    <div class="flex justify-between items-start mb-6">
+                      <div style="font-weight:700;font-size:14px;color:var(--text)">\${
+                        e.title || e.name
+                      }</div>
+                      <span class="badge badge-\${eventOpsStatusBadge(
+                        e.status
+                      )}">\${formatEventStatus(e.status)}</span>
+                    </div>
+                    <div class="small muted mb-8">📍 \${e.venue || e.location || 'TBD'} (\${
+                      e.city || 'Main Hall'
+                    }) · 📅 \${e.date} · 🏷️ \${e.category || 'General'}</div>
+                    <div class="flex justify-between items-center">
+                      <div class="small">Capacity: <strong>\${e.registered || 0}/\${
+                      e.capacity || 100
+                    }</strong> \${
+                      isFull
+                        ? '<span class="badge badge-yellow" style="font-size:10px;padding:2px 6px;margin-left:4px">Registration Full</span>'
+                        : ''
+                    }</div>
+                      <button class="btn btn-ghost btn-xs" onclick="openViewEventDrawer('\${
+                        e.id
+                      }')">View Details</button>
+                    </div>
+                  </div>
+                \`;
+                  })
+                  .join('') || '<div class="empty">No upcoming events found</div>'
+              }
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="h4 mb-14">Recent Event Activity</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              \${
+                recentActivity
+                  .map(
+                    act => \`
+                <div class="flex items-center gap-10" style="padding:10px 0;border-bottom:1px solid var(--border)">
+                  <span style="font-size:20px">\${act.icon}</span>
+                  <div style="flex:1">
+                    <div style="font-weight:600;font-size:13px">\${act.title}</div>
+                    <div class="small muted">\${act.detail}</div>
+                  </div>
+                  <span class="small muted" style="white-space:nowrap">\${act.time}</span>
+                </div>
+              \`
+                  )
+                  .join('') || '<div class="empty">No recent activity</div>'
+              }
+            </div>
+          </div>
+        </div>
+      \`;
+}
+function pageEventOpsEvents() {
+  const query = (sessionStorage.getItem('eventops_events_query') || '').toLowerCase();
+  const statusFilter = sessionStorage.getItem('eventops_events_status') || '';
+  const categoryFilter = sessionStorage.getItem('eventops_events_category') || '';
+  const events = DB.events || [];
+  const filtered = events.filter(event => {
+    const title = (event.title || event.name || '').toLowerCase();
+    const venue = (event.venue || event.location || '').toLowerCase();
+    const city = (event.city || '').toLowerCase();
+    const cat = (event.category || '').toLowerCase();
+    const matchesQuery =
+      !query ||
+      title.includes(query) ||
+      venue.includes(query) ||
+      city.includes(query) ||
+      cat.includes(query);
+    let st = formatEventStatus(event.status).toLowerCase();
+    let normFilter = statusFilter.toLowerCase();
+    let matchesStatus = !normFilter || st === normFilter;
+    const matchesCat = !categoryFilter || event.category === categoryFilter;
+    return matchesQuery && matchesStatus && matchesCat;
+  });
+  return \`
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Events Management</div>
+            <div class="page-sub">Review pending events, edit details, and update operational statuses.</div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="eventops-q" placeholder="Search events by title, venue, city..." value="\${query}" oninput="refreshEventOpsEvents()">
+          </div>
+          <select class="form-control filter-select" id="eventops-st" onchange="refreshEventOpsEvents()">
+            <option value="">All Statuses</option>
+            <option value="Pending" \${statusFilter === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option value="Active" \${statusFilter === 'Active' ? 'selected' : ''}>Active</option>
+            <option value="Completed" \${
+              statusFilter === 'Completed' ? 'selected' : ''
+            }>Completed</option>
+            <option value="Cancelled" \${
+              statusFilter === 'Cancelled' ? 'selected' : ''
+            }>Cancelled</option>
+          </select>
+          <select class="form-control filter-select" id="eventops-cat" onchange="refreshEventOpsEvents()">
+            <option value="">All Categories</option>
+            <option value="Technology" \${
+              categoryFilter === 'Technology' ? 'selected' : ''
+            }>Technology</option>
+            <option value="Conference" \${
+              categoryFilter === 'Conference' ? 'selected' : ''
+            }>Conference</option>
+            <option value="Corporate" \${
+              categoryFilter === 'Corporate' ? 'selected' : ''
+            }>Corporate</option>
+            <option value="Finance" \${
+              categoryFilter === 'Finance' ? 'selected' : ''
+            }>Finance</option>
+            <option value="Workshop" \${
+              categoryFilter === 'Workshop' ? 'selected' : ''
+            }>Workshop</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Category</th>
+                  <th>Date &amp; Venue</th>
+                  <th>Capacity</th>
+                  <th>Status</th>
+                  <th>Change Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                \${
+                  filtered
+                    .map(e => {
+                      const currentStatus = formatEventStatus(e.status);
+                      const isPending = currentStatus === 'Pending';
+                      const isFull = (e.registered || 0) >= (e.capacity || 100);
+                      return \`
+                    <tr>
+                      <td>
+                        <div style="font-weight:700;font-size:14px;color:var(--text)">\${
+                          e.title || e.name
+                        }</div>
+                        <div class="small muted">ID: \${e.id}</div>
+                      </td>
+                      <td><span class="badge badge-purple">\${e.category || 'General'}</span></td>
+                      <td>
+                        <div>📅 \${e.date || 'TBD'}</div>
+                        <div class="small muted">📍 \${e.venue || e.location || 'TBD'} (\${
+                        e.city || 'India'
+                      })</div>
+                      </td>
+                      <td>
+                        <div><strong>\${e.registered || 0}</strong> / \${e.capacity || 100}</div>
+                        <div class="small muted">\${
+                          isFull
+                            ? '<span style="color:var(--yellow);font-weight:600">Registration Full</span>'
+                            : e.price
+                            ? '₹' + e.price
+                            : 'Free'
+                        }</div>
+                      </td>
+                      <td>
+                        <span class="badge badge-\${eventOpsStatusBadge(
+                          e.status
+                        )}">\${currentStatus}</span>
+                      </td>
+                      <td>
+                        <select class="form-control form-control-sm" style="padding:4px 8px;font-size:12px" onchange="setEventOpsStatus('\${
+                          e.id
+                        }', this.value)">
+                          <option value="Pending" \${
+                            currentStatus === 'Pending' ? 'selected' : ''
+                          }>Pending</option>
+                          <option value="Active" \${
+                            currentStatus === 'Active' ? 'selected' : ''
+                          }>Active</option>
+                          <option value="Completed" \${
+                            currentStatus === 'Completed' ? 'selected' : ''
+                          }>Completed</option>
+                          <option value="Cancelled" \${
+                            currentStatus === 'Cancelled' ? 'selected' : ''
+                          }>Cancelled</option>
+                        </select>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-6">
+                          <button class="btn btn-ghost btn-xs" onclick="openViewEventDrawer('\${
+                            e.id
+                          }')" title="View Details">👁️</button>
+                          \${
+                            !isBookedClientEvent(e)
+                              ? \`<button class="btn btn-ghost btn-xs" onclick="openEditEventModal('\${e.id}')" title="Edit Event">✏️</button>\`
+                              : ''
+                          }
+                          <button class="btn btn-xs btn-danger" onclick="deleteEventOps('\${
+                            e.id
+                          }')" title="Delete Event">🗑️</button>
+                          \${
+                            isPending
+                              ? \`
+                            <button class="btn btn-success btn-xs" onclick="approveEventOpsDirect('\${e.id}')" title="Approve Event">✓</button>
+                            <button class="btn btn-danger btn-xs" onclick="rejectEventOpsDirect('\${e.id}')" title="Reject Event">✕</button>
+                          \`
+                              : ''
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  \`;
+                    })
+                    .join('') ||
+                  '<tr><td colspan="7" class="text-center py-20">No matching events found.</td></tr>'
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      \`;
+}
+function deleteEventOps(eventId) {
+  handleOrganizerDeleteEvent(eventId);
+}
+function refreshEventOpsEvents() {
+  sessionStorage.setItem('eventops_events_query', v('eventops-q'));
+  sessionStorage.setItem('eventops_events_status', v('eventops-st'));
+  sessionStorage.setItem('eventops_events_category', v('eventops-cat'));
+  renderPage('events');
+}
+function eventOpsStatusBadge(status) {
+  const st = (status || '').toLowerCase();
+  if (st === 'pending' || st === 'draft') return 'yellow';
+  if (st === 'active' || st === 'ongoing' || st === 'published' || st === 'upcoming')
+    return 'green';
+  if (st === 'completed') return 'purple';
+  if (st === 'cancelled') return 'red';
+  return 'gray';
+}
+function formatEventStatus(status) {
+  const st = (status || '').toLowerCase();
+  if (st === 'pending' || st === 'draft') return 'Pending';
+  if (st === 'active' || st === 'ongoing' || st === 'published' || st === 'upcoming')
+    return 'Active';
+  if (st === 'completed') return 'Completed';
+  if (st === 'cancelled') return 'Cancelled';
+  return 'Active';
+}
+function setEventOpsStatus(eventId, newStatus) {
+  if (newStatus === 'Cancelled') {
+    return openOrganizerEventCancellationModal(eventId);
+  }
+  const event = DB.events.find(currentEvent => String(currentEvent.id) === String(eventId));
+  if (!event) return;
+  const statusMap = {
+    Pending: 'pending',
+    Active: 'published',
+    Completed: 'completed',
+    Cancelled: 'cancelled',
+  };
+  event.status = statusMap[newStatus] || newStatus.toLowerCase();
+  saveDB();
+  renderPage('events');
+  toast(\`Event status updated to \${newStatus}\`, 'success');
+}
+function approveEventOpsDirect(eventId) {
+  const event = DB.events.find(currentEvent => String(currentEvent.id) === String(eventId));
+  if (!event) return;
+  event.status = 'published';
+  saveDB();
+  renderPage('events');
+  toast('Event approved and set to Active!', 'success');
+}
+function rejectEventOpsDirect(eventId) {
+  confirm2('Reject Event', 'Are you sure you want to cancel/reject this pending event?', () => {
+    const event = DB.events.find(currentEvent => String(currentEvent.id) === String(eventId));
+    if (!event) return;
+    event.status = 'cancelled';
+    saveDB();
+    renderPage('events');
+    toast('Event has been rejected/cancelled.', 'info');
+  });
+}
+function pageEventOperationsWorkspace() {
+  const query = (sessionStorage.getItem('eventops_tasks_query') || '').toLowerCase();
+  const statusFilter = sessionStorage.getItem('eventops_tasks_status') || '';
+  const priorityFilter = sessionStorage.getItem('eventops_tasks_priority') || '';
+  const tasks = DB.eventOperationsTasks || [];
+  const filtered = tasks.filter(task => {
+    const matchesQuery =
+      !query ||
+      task.eventTitle.toLowerCase().includes(query) ||
+      task.type.toLowerCase().includes(query) ||
+      task.id.toLowerCase().includes(query) ||
+      task.description.toLowerCase().includes(query);
+    const matchesStatus = !statusFilter || task.status === statusFilter;
+    const matchesPriority = !priorityFilter || task.priority === priorityFilter;
+    return matchesQuery && matchesStatus && matchesPriority;
+  });
+  const pendingCount = tasks.filter(task => task.status === 'Pending').length;
+  const inProgressCount = tasks.filter(task => task.status === 'In Progress').length;
+  const resolvedCount = tasks.filter(task => task.status === 'Resolved').length;
+  return \`
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Event Operations Workspace</div>
+            <div class="page-sub">Review venue issues, schedule conflicts, info corrections, and operational tasks.</div>
+          </div>
+          <div class="page-hd-right">
+            <button class="btn btn-primary" onclick="openCreateEventOpTaskModal()">➕ Add Operational Issue</button>
+          </div>
+        </div>
+
+        <div class="grid-4 mb-20">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">⚙️</div>
+            <div class="stat-value" style="color:var(--accent)">\${tasks.length}</div>
+            <div class="stat-label">Total Issues</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">⏳</div>
+            <div class="stat-value" style="color:var(--yellow)">\${pendingCount}</div>
+            <div class="stat-label">Pending Reviews</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--purple-dim);color:var(--purple)">🔄</div>
+            <div class="stat-value" style="color:var(--purple)">\${inProgressCount}</div>
+            <div class="stat-label">In Progress</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">✅</div>
+            <div class="stat-value" style="color:var(--green)">\${resolvedCount}</div>
+            <div class="stat-label">Resolved Issues</div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="taskops-q" placeholder="Search operational issues or events..." value="\${query}" oninput="refreshEventOpTasks()">
+          </div>
+          <select class="form-control filter-select" id="taskops-st" onchange="refreshEventOpTasks()">
+            <option value="">All Statuses</option>
+            <option value="Pending" \${statusFilter === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option value="In Progress" \${
+              statusFilter === 'In Progress' ? 'selected' : ''
+            }>In Progress</option>
+            <option value="Resolved" \${
+              statusFilter === 'Resolved' ? 'selected' : ''
+            }>Resolved</option>
+          </select>
+          <select class="form-control filter-select" id="taskops-pr" onchange="refreshEventOpTasks()">
+            <option value="">All Priorities</option>
+            <option value="High" \${priorityFilter === 'High' ? 'selected' : ''}>High</option>
+            <option value="Medium" \${priorityFilter === 'Medium' ? 'selected' : ''}>Medium</option>
+            <option value="Low" \${priorityFilter === 'Low' ? 'selected' : ''}>Low</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Issue ID</th>
+                  <th>Event Title</th>
+                  <th>Issue Type</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                \${
+                  filtered
+                    .map(
+                      t => \`
+                  <tr>
+                    <td class="mono"><strong>\${t.id}</strong></td>
+                    <td>
+                      <div style="font-weight:700;font-size:13.5px;color:var(--text)">\${
+                        t.eventTitle
+                      }</div>
+                      <div class="small muted">\${t.description}</div>
+                    </td>
+                    <td><span class="badge badge-blue">\${t.type}</span></td>
+                    <td>
+                      <span class="badge badge-\${
+                        t.priority === 'High' ? 'red' : t.priority === 'Medium' ? 'yellow' : 'gray'
+                      }">\${t.priority}</span>
+                    </td>
+                    <td>
+                      <span class="badge badge-\${
+                        t.status === 'Pending'
+                          ? 'yellow'
+                          : t.status === 'In Progress'
+                          ? 'purple'
+                          : 'green'
+                      }">\${t.status}</span>
+                    </td>
+                    <td class="small muted">\${t.updated}</td>
+                    <td>
+                      <div class="flex items-center gap-6">
+                        <button class="btn btn-ghost btn-xs" onclick="openEventOpTaskModal('\${
+                          t.id
+                        }')">Review &amp; Update</button>
+                      </div>
+                    </td>
+                  </tr>
+                \`
+                    )
+                    .join('') ||
+                  '<tr><td colspan="7" class="text-center py-20">No operational issues found.</td></tr>'
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      \`;
+}
+function refreshEventOpTasks() {
+  sessionStorage.setItem('eventops_tasks_query', v('taskops-q'));
+  sessionStorage.setItem('eventops_tasks_status', v('taskops-st'));
+  sessionStorage.setItem('eventops_tasks_priority', v('taskops-pr'));
+  renderPage('event-requests');
+}
+function openEventOpTaskModal(taskId) {
+  const t = DB.eventOperationsTasks.find(item => item.id === taskId);
+  if (!t) return;
+  openModal(
+    \`Operational Issue: \${t.id}\`,
+    \`
+        <div class="info-row"><span class="info-label">Event</span><span class="info-value"><strong>\${
+          t.eventTitle
+        }</strong></span></div>
+        <div class="info-row"><span class="info-label">Issue Type</span><span class="info-value">\${
+          t.type
+        }</span></div>
+        <div class="info-row"><span class="info-label">Priority</span><span class="info-value">\${
+          t.priority
+        }</span></div>
+        <div class="form-group mt-12">
+          <label class="form-label">Issue Status</label>
+          <select class="form-control" id="task-edit-status">
+            <option \${t.status === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option \${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+            <option \${t.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description / Operational Notes</label>
+          <textarea class="form-control" id="task-edit-desc" rows="4">\${t.description}</textarea>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Save Changes',
+        cls: 'btn-primary',
+        fn: \`saveEventOpTask('\${t.id}')\`,
+      },
+    ]
+  );
+}
+function saveEventOpTask(taskId) {
+  const t = DB.eventOperationsTasks.find(item => item.id === taskId);
+  if (!t) return;
+  t.status = v('task-edit-status');
+  t.description = v('task-edit-desc');
+  t.updated = 'Just now';
+  saveDB();
+  closeModal();
+  renderPage('event-requests');
+  toast('Operational issue updated successfully!', 'success');
+}
+function openCreateEventOpTaskModal() {
+  const eventsOptions = DB.events
+    .map(event => \`<option value="\${event.id}">\${event.title || event.name}</option>\`)
+    .join('');
+  openModal(
+    'Add Operational Issue',
+    \`
+        <div class="form-group">
+          <label class="form-label">Select Event *</label>
+          <select class="form-control" id="newtask-eventid">\${eventsOptions}</select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Issue Type *</label>
+          <select class="form-control" id="newtask-type">
+            <option>Venue &amp; Capacity Review</option>
+            <option>Schedule Conflict</option>
+            <option>Equipment &amp; Tech Check</option>
+            <option>Information Correction</option>
+            <option>Security &amp; Access Audit</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select class="form-control" id="newtask-priority">
+            <option>High</option>
+            <option selected>Medium</option>
+            <option>Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description / Issue Details *</label>
+          <textarea class="form-control" id="newtask-desc" placeholder="Describe the operational issue..."></textarea>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Add Issue',
+        cls: 'btn-primary',
+        fn: 'saveNewEventOpTask()',
+      },
+    ]
+  );
+}
+function saveNewEventOpTask() {
+  const eventId = v('newtask-eventid');
+  const type = v('newtask-type');
+  const priority = v('newtask-priority');
+  const desc = v('newtask-desc');
+  if (!desc) {
+    toast('Please enter issue description', 'error');
+    return;
+  }
+  const ev = DB.events.find(event => String(event.id) === String(eventId)) || {
+    title: 'General Event',
+  };
+  const newTask = {
+    id: \`EOP-\${Date.now().toString().slice(-4)}\`,
+    eventId: eventId,
+    eventTitle: ev.title || ev.name,
+    type: type,
+    priority: priority,
+    status: 'Pending',
+    description: desc,
+    updated: 'Just now',
+  };
+  if (!DB.eventOperationsTasks) DB.eventOperationsTasks = [];
+  DB.eventOperationsTasks.unshift(newTask);
+  saveDB();
+  closeModal();
+  renderPage('event-requests');
+  toast('Operational issue created!', 'success');
+}
+function supportUser(request) {
+  return (
+    DB.users.find(user => String(user.id) === String(request.userId)) || {
+      name: 'Unknown User',
+      email: '—',
+      phone: '—',
+    }
+  );
+}
+function supportEvent(request) {
+  return (
+    DB.events.find(event => String(event.id) === String(request.eventId)) || {
+      title: 'Unknown Event',
+      date: '—',
+    }
+  );
+}
+function supportStatusBadge(status) {
+  return (
+    {
+      Pending: 'yellow',
+      'In Progress': 'purple',
+      Resolved: 'green',
+      Closed: 'gray',
+    }[status] || 'gray'
+  );
+}
+function dashSupportFinance() {
+  const requests = DB.supportRequests || [];
+  const transactions = DB.financeTransactions || [];
+  const refunds = DB.financeRefunds || [];
+  const reports = DB.operationalReports || [];
+  const todayStr = today();
+  const todayTransactions = transactions.filter(item => item.date === todayStr).length;
+  const totalTransactions = transactions.length;
+  const displayTxnCount = todayTransactions > 0 ? todayTransactions : totalTransactions;
+  const txnLabel = todayTransactions > 0 ? "Today's Transactions" : 'Total Transactions';
+
+  // Build balanced activity feed: 1 item per category first, then fill from remaining
+  const reqActivities = requests.map(item => ({
+    label: item.subject,
+    detail: \`Support Request (\${item.id}) · \${item.status} · \${item.updated || item.created}\`,
+    icon: '📩',
+    sortKey: 0,
+  }));
+  const refActivities = refunds.map(item => ({
+    label: \`Refund \${item.id}\`,
+    detail: \`Refund · \${item.status} · ₹\${item.amount.toLocaleString('en-IN')} · \${item.reason}\`,
+    icon: '↩️',
+    sortKey: 1,
+  }));
+  const txnActivities = transactions.map(item => ({
+    label: \`Transaction \${item.id}\`,
+    detail: \`Payment · \${item.status} · ₹\${item.amount.toLocaleString('en-IN')} · \${
+      item.date === todayStr ? 'Today' : item.date
+    }\`,
+    icon: '💳',
+    sortKey: 2,
+  }));
+  const rptActivities = reports.map(item => ({
+    label: \`Report: \${item.title}\`,
+    detail: \`\${item.type} · \${item.status} · \${item.updated}\`,
+    icon: '📊',
+    sortKey: 3,
+  }));
+
+  // Take 1 from each category first (balanced), then fill up to 6 with remaining
+  const activity = [
+    reqActivities[0],
+    refActivities[0],
+    txnActivities[0],
+    rptActivities[0],
+    reqActivities[1],
+    refActivities[1],
+  ]
+    .filter(Boolean)
+    .slice(0, 6);
+  return \`<div class="page-hd"><div class="page-hd-left"><div class="page-title">Customer Support &amp; Finance Dashboard</div><div class="page-sub">Operational overview for \${
+    CU.name
+  }.</div></div></div><div class="grid-4 mb-20">\${[
+    [
+      '📩',
+      requests.filter(item => !['Resolved', 'Closed'].includes(item.status)).length,
+      'Open Support Requests',
+      'var(--accent)',
+    ],
+    [
+      '⚠️',
+      requests.filter(item => item.status === 'Pending').length,
+      'Pending Issues',
+      'var(--yellow)',
+    ],
+    ['💳', displayTxnCount, txnLabel, 'var(--green)'],
+    [
+      '↩️',
+      refunds.filter(item => item.status === 'Requested' || item.status === 'Processing').length,
+      'Pending Refunds',
+      'var(--blue)',
+    ],
+  ]
+    .map(
+      card =>
+        \`<div class="stat-card"><div class="stat-icon">\${card[0]}</div><div class="stat-value" style="color:\${card[3]}">\${card[1]}</div><div class="stat-label">\${card[2]}</div></div>\`
+    )
+    .join(
+      ''
+    )}</div><div class="card"><div class="h4 mb-12">Recent Support &amp; Finance Activity</div><div style="display:flex;flex-direction:column;gap:10px">\${
+    activity
+      .map(
+        item =>
+          \`<div class="flex items-center gap-10" style="padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:20px">\${item.icon}</span><div><div style="font-weight:600;font-size:13px">\${item.label}</div><div class="small">\${item.detail}</div></div></div>\`
+      )
+      .join('') || '<div class="empty">No recent activity</div>'
+  }</div></div>\`;
+}
+function pageSupportCenter() {
+  const query = (sessionStorage.getItem('support_query') || '').toLowerCase();
+  const status = sessionStorage.getItem('support_status') || '';
+  const requests = (DB.supportRequests || []).filter(item => {
+    const user = supportUser(item);
+    const event = supportEvent(item);
+    return (
+      (!status || item.status === status) &&
+      (!query ||
+        \`\${item.id} \${item.subject} \${item.message} \${user.name} \${user.email} \${event.title}\`
+          .toLowerCase()
+          .includes(query))
+    );
+  });
+  return \`
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Support Center</div>
+            <div class="page-sub">Manage user support requests with event and payment context. Route unresolvable issues to the appropriate department.</div>
+          </div>
+          <div class="page-hd-right">
+            <button class="btn btn-primary" onclick="openRouteRequestModal()">🔀 Route Request</button>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="support-query" placeholder="Search requests, users, or events..." value="\${query}" oninput="refreshSupportCenter()">
+          </div>
+          <select class="form-control filter-select" id="support-status" onchange="refreshSupportCenter()">
+            <option value="">All Statuses</option>
+            \${['Pending', 'In Progress', 'Resolved', 'Closed']
+              .map(item => \`<option \${status === item ? 'selected' : ''}>\${item}</option>\`)
+              .join('')}
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Request</th>
+                  <th>User</th>
+                  <th>Event / Payment</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                \${
+                  requests
+                    .map(item => {
+                      const user = supportUser(item);
+                      const event = supportEvent(item);
+                      return \`
+                    <tr>
+                      <td>
+                        <div style="font-weight:700;font-size:13.5px;color:var(--text)">\${
+                          item.subject
+                        }</div>
+                        <div class="small muted">\${item.message}</div>
+                      </td>
+                      <td>
+                        <div style="font-weight:600">\${user.name}</div>
+                        <div class="small muted">\${user.email}</div>
+                      </td>
+                      <td>
+                        <div style="font-weight:600">\${event.title}</div>
+                        <div class="small muted">\${event.date} · Related transaction available</div>
+                      </td>
+                      <td><span class="badge badge-\${supportStatusBadge(item.status)}">\${
+                        item.status
+                      }</span></td>
+                      <td class="small muted">\${item.updated}</td>
+                      <td>
+                        <div class="flex gap-6">
+                          <button class="btn btn-ghost btn-xs" onclick="openSupportRequest('\${
+                            item.id
+                          }')">View / Respond</button>
+                          <button class="btn btn-ghost btn-xs" style="border-color:var(--purple);color:var(--purple)" onclick="openRouteRequestModal('\${
+                            item.id
+                          }')">🔀 Route</button>
+                        </div>
+                      </td>
+                    </tr>
+                  \`;
+                    })
+                    .join('') ||
+                  '<tr><td colspan="6" class="text-center py-20 muted">No support requests found.</td></tr>'
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      \`;
+}
+function openRouteRequestModal(prefillId) {
+  const supportReqs = DB.supportRequests || [];
+  const reqOptions = supportReqs
+    .map(request => {
+      const eventRequest = supportUser(request);
+      return \`<option value="\${request.id}" \${prefillId === request.id ? 'selected' : ''}>\${
+        request.id
+      } — \${request.subject} (\${eventRequest.name})</option>\`;
+    })
+    .join('');
+
+  // Determine prefill values if a request ID was passed
+  let prefillUser = '';
+  let prefillEmail = '';
+  let prefillDesc = '';
+  let prefillEvent = '';
+  let autoRouteTo = '';
+  if (prefillId) {
+    const item = supportReqs.find(request => request.id === prefillId);
+    if (item) {
+      const u = supportUser(item);
+      const e = supportEvent(item);
+      prefillUser = u.name || '';
+      prefillEmail = u.email || '';
+      prefillDesc = item.message || '';
+      prefillEvent = e.title && e.title !== 'Unknown Event' ? e.title : '';
+      // Auto-suggest route based on subject keywords
+      const subjectLow =
+        (item.subject || '').toLowerCase() + ' ' + (item.message || '').toLowerCase();
+      const emp1Keywords = [
+        'registration',
+        'account',
+        'verification',
+        'user',
+        'profile',
+        'email',
+        'login',
+        'password',
+        'access',
+      ];
+      const emp2Keywords = [
+        'event',
+        'venue',
+        'schedule',
+        'location',
+        'capacity',
+        'slot',
+        'cancel',
+        'speaker',
+        'av',
+        'equipment',
+      ];
+      if (emp2Keywords.some(k => subjectLow.includes(k)))
+        autoRouteTo = 'Employee 2 – Event Operations Executive';
+      else if (emp1Keywords.some(k => subjectLow.includes(k)))
+        autoRouteTo = 'Employee 1 – Registration & Verification Executive';
+    }
+  }
+  openModal(
+    '🔀 Route Support Request',
+    \`
+        <div style="background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--text2);border-left:3px solid var(--purple)">
+          <strong style="color:var(--purple)">Routing Policy:</strong> Route <strong>user/account/registration/verification</strong> issues to Employee 1. Route <strong>event/venue/schedule/operational</strong> issues to Employee 2. Finance/payment issues are handled directly by you.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Select Request ID (optional)</label>
+          <select class="form-control" id="route-req-id" onchange="prefillRouteForm(this.value)">
+            <option value="">— New / Manual Route —</option>
+            \${reqOptions}
+          </select>
+        </div>
+
+        <div class="grid-2 gap-12">
+          <div class="form-group">
+            <label class="form-label">User Name *</label>
+            <input class="form-control" id="route-user-name" placeholder="Full name" value="\${prefillUser}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">User Email *</label>
+            <input class="form-control" id="route-user-email" placeholder="user@email.com" value="\${prefillEmail}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Request Category *</label>
+          <select class="form-control" id="route-category">
+            <option>User Account Issue</option>
+            <option>Registration Problem</option>
+            <option>Identity Verification Issue</option>
+            <option>Event Information Query</option>
+            <option>Venue / Location Issue</option>
+            <option>Schedule Conflict / Change</option>
+            <option>Event Capacity / Slot Issue</option>
+            <option>Event Cancellation / Update Request</option>
+            <option>Operational Issue</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Request Description *</label>
+          <textarea class="form-control" id="route-description" rows="3" placeholder="Describe the issue in detail...">\${prefillDesc}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Related Event (if applicable)</label>
+          <input class="form-control" id="route-event" placeholder="Event name or ID" value="\${prefillEvent}">
+        </div>
+
+        <div class="grid-2 gap-12">
+          <div class="form-group">
+            <label class="form-label">Priority *</label>
+            <select class="form-control" id="route-priority">
+              <option value="Low">🟢 Low</option>
+              <option value="Medium" selected>🟡 Medium</option>
+              <option value="High">🔴 High</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Route To *</label>
+            <select class="form-control" id="route-to">
+              <option value="Employee 1 – Registration &amp; Verification Executive" \${
+                autoRouteTo === 'Employee 1 – Registration & Verification Executive'
+                  ? 'selected'
+                  : ''
+              }>Employee 1 – Registration &amp; Verification Executive</option>
+              <option value="Employee 2 – Event Operations Executive" \${
+                autoRouteTo === 'Employee 2 – Event Operations Executive' ? 'selected' : ''
+              }>Employee 2 – Event Operations Executive</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Internal Note (visible to recipient)</label>
+          <textarea class="form-control" id="route-note" rows="2" placeholder="Add context for the receiving department..."></textarea>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Cancel',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: '🔀 Route Request',
+        cls: 'btn-primary',
+        fn: 'saveRouteRequest()',
+      },
+    ]
+  );
+}
+window.prefillRouteForm = function (reqId) {
+  if (!reqId) return;
+  const item = (DB.supportRequests || []).find(r => r.id === reqId);
+  if (!item) return;
+  const u = supportUser(item);
+  const e = supportEvent(item);
+  const nameEl = document.getElementById('route-user-name');
+  const emailEl = document.getElementById('route-user-email');
+  const descEl = document.getElementById('route-description');
+  const eventEl = document.getElementById('route-event');
+  const routeToEl = document.getElementById('route-to');
+  if (nameEl) nameEl.value = u.name || '';
+  if (emailEl) emailEl.value = u.email || '';
+  if (descEl) descEl.value = item.message || '';
+  if (eventEl && e.title && e.title !== 'Unknown Event') eventEl.value = e.title;
+  // Auto-suggest routing
+  if (routeToEl) {
+    const subjectLow =
+      (item.subject || '').toLowerCase() + ' ' + (item.message || '').toLowerCase();
+    const emp2Keywords = [
+      'event',
+      'venue',
+      'schedule',
+      'location',
+      'capacity',
+      'slot',
+      'cancel',
+      'speaker',
+      'av',
+      'equipment',
+    ];
+    const emp1Keywords = [
+      'registration',
+      'account',
+      'verification',
+      'user',
+      'profile',
+      'email',
+      'login',
+      'password',
+    ];
+    if (emp2Keywords.some(k => subjectLow.includes(k)))
+      routeToEl.value = 'Employee 2 – Event Operations Executive';
+    else if (emp1Keywords.some(k => subjectLow.includes(k)))
+      routeToEl.value = 'Employee 1 – Registration & Verification Executive';
+  }
+};
+function saveRouteRequest() {
+  const userName = v('route-user-name');
+  const userEmail = v('route-user-email');
+  const category = v('route-category');
+  const description = v('route-description');
+  const priority = v('route-priority');
+  const routeTo = v('route-to');
+  const note = v('route-note');
+  const relatedEvent = v('route-event');
+  const reqId = v('route-req-id');
+  if (!userName) {
+    toast('Please enter the user name', 'error');
+    return;
+  }
+  if (!description) {
+    toast('Please enter a request description', 'error');
+    return;
+  }
+  const routedId = 'RT-' + Date.now().toString().slice(-6);
+  const isEmp2 = routeTo.includes('Employee 2');
+  const isEmp1 = routeTo.includes('Employee 1');
+
+  // Build the routed request record
+  const routedReq = {
+    id: routedId,
+    linkedRequestId: reqId || null,
+    userName: userName,
+    userEmail: userEmail,
+    category: category,
+    description: description,
+    relatedEvent: relatedEvent || null,
+    priority: priority,
+    routeTo: routeTo,
+    note: note,
+    source: 'Escalated by Emp 3',
+    raisedBy: 'Customer Support (Emp 3)',
+    status: 'Pending',
+    date:
+      new Date().toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+      }) +
+      ' · ' +
+      new Date().toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    routedAt: 'Just now',
+  };
+  if (!DB.routedRequests) DB.routedRequests = [];
+  DB.routedRequests.unshift(routedReq);
+
+  // Make visible to Employee 1 (userQueries) if routed to Emp 1
+  if (isEmp1) {
+    if (!DB.userQueries) DB.userQueries = [];
+    DB.userQueries.unshift({
+      id: routedId,
+      userId: null,
+      userName: userName,
+      userEmail: userEmail,
+      type: category,
+      subject: \`[Routed by Emp 3] \${category}\`,
+      detail:
+        description +
+        (note ? '\\n\\nInternal Note: ' + note : '') +
+        (relatedEvent ? '\\nRelated Event: ' + relatedEvent : ''),
+      source: 'Employee 3 Escalation',
+      status: 'Pending',
+      priority: priority,
+      date: routedReq.date,
+    });
+  }
+
+  // Make visible to Employee 2 (eventOpsRequests) if routed to Emp 2
+  if (isEmp2) {
+    if (!DB.eventOpsRequests) DB.eventOpsRequests = [];
+    // find matching eventId if possible
+    const matchedEvent = relatedEvent
+      ? (DB.events || []).find(event =>
+          (event.title || event.name || '').toLowerCase().includes(relatedEvent.toLowerCase())
+        )
+      : null;
+    DB.eventOpsRequests.unshift({
+      id: routedId,
+      eventId: matchedEvent ? matchedEvent.id : null,
+      eventTitle: relatedEvent || 'N/A',
+      issue: description + (note ? '\\n\\nInternal Note: ' + note : ''),
+      source: 'Escalated by Emp 3',
+      raisedBy: \`\${userName} (via Customer Support)\`,
+      priority: priority,
+      status: 'Pending',
+      date: routedReq.date,
+      notes: note || '',
+    });
+  }
+
+  // Mark linked support request as In Progress if selected
+  if (reqId) {
+    const linked = (DB.supportRequests || []).find(r => r.id === reqId);
+    if (linked && linked.status === 'Pending') {
+      linked.status = 'In Progress';
+      linked.response = \`Routed to \${routeTo} on \${routedReq.date}. Awaiting resolution.\`;
+      linked.updated = 'Just now';
+    }
+  }
+  saveDB();
+  closeModal();
+  renderPage('support-center');
+  toast(
+    \`Request routed to \${
+      isEmp2 ? 'Employee 2 (Event Operations)' : 'Employee 1 (Registration & Verification)'
+    } successfully!\`,
+    'success'
+  );
+}
+function refreshSupportCenter() {
+  sessionStorage.setItem('support_query', v('support-query'));
+  sessionStorage.setItem('support_status', v('support-status'));
+  renderPage('support-center');
+}
+function openSupportRequest(id) {
+  const item = DB.supportRequests.find(request => request.id === id);
+  if (!item) return;
+  const user = supportUser(item);
+  const event = supportEvent(item);
+  const transaction = (DB.financeTransactions || []).find(
+    record =>
+      String(record.userId) === String(item.userId) &&
+      String(record.eventId) === String(item.eventId)
+  );
+  openModal(
+    \`Support Request \${item.id}\`,
+    \`
+        <div class="info-row"><span class="info-label">User</span><span class="info-value">\${
+          user.name
+        } · \${user.email}</span></div>
+        <div class="info-row"><span class="info-label">Event</span><span class="info-value">\${
+          event.title
+        } · \${event.date}</span></div>
+        <div class="info-row"><span class="info-label">Payment</span><span class="info-value">\${
+          transaction
+            ? \`\${transaction.id} · ₹\${transaction.amount} · \${transaction.status}\`
+            : 'No matching transaction'
+        }</span></div>
+        <div class="info-row"><span class="info-label">Request</span><span class="info-value">\${
+          item.subject
+        }</span></div>
+        <p class="muted" style="line-height:1.6;margin:16px 0">\${item.message}</p>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-control" id="support-edit-status">
+            \${['Pending', 'In Progress', 'Resolved', 'Closed']
+              .map(value => \`<option \${value === item.status ? 'selected' : ''}>\${value}</option>\`)
+              .join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Response</label>
+          <textarea class="form-control" id="support-response" rows="4">\${
+            item.response || ''
+          }</textarea>
+        </div>
+      \`,
+    [
+      {
+        lbl: '🔀 Route This Request',
+        cls: 'btn-ghost',
+        fn: \`closeModal();openRouteRequestModal('\${id}')\`,
+      },
+      {
+        lbl: 'Save Response',
+        cls: 'btn-primary',
+        fn: \`saveSupportRequest('\${id}')\`,
+      },
+    ]
+  );
+}
+function saveSupportRequest(id) {
+  const item = DB.supportRequests.find(request => request.id === id);
+  if (!item) return;
+  item.status = v('support-edit-status');
+  item.response = v('support-response');
+  item.updated = 'Just now';
+  saveDB();
+  closeModal();
+  renderPage('support-center');
+  toast('Support request updated', 'success');
+}
+function financeStatusBadge(status) {
+  return (
+    {
+      Successful: 'green',
+      Pending: 'yellow',
+      Failed: 'red',
+      Requested: 'yellow',
+      Processing: 'purple',
+      Completed: 'green',
+      Rejected: 'red',
+    }[status] || 'gray'
+  );
+}
+function pageFinanceCenter() {
+  const tab = sessionStorage.getItem('finance_tab') || 'transactions';
+  const query = (sessionStorage.getItem('finance_query') || '').toLowerCase();
+  const commissionRate = 0.15;
+  const allTransactions = Array.isArray(DB.financeTransactions) ? DB.financeTransactions : [];
+  const refundRecords = Array.isArray(DB.financeRefunds) ? DB.financeRefunds : [];
+  const paidRegistrations = (DB.registrations || []).filter(
+    registration =>
+      String(registration.payment || '').toLowerCase() === 'paid' &&
+      ['confirmed', 'verified'].includes(String(registration.status || '').toLowerCase())
+  );
+  const successfulTransactions = allTransactions.filter(tx => tx.status === 'Successful');
+  const totalRevenue = successfulTransactions.reduce(
+    (sum, item) => sum + Number(item.amount || 0),
+    0
+  );
+  const platformCommission = totalRevenue * commissionRate;
+  const organizerPayout = totalRevenue - platformCommission;
+  const records = tab === 'transactions' ? allTransactions : refundRecords;
+  const filtered = records.filter(item => {
+    const user = DB.users.find(u => String(u.id) === String(item.userId)) || {};
+    const event =
+      DB.events.find(currentEvent => String(currentEvent.id) === String(item.eventId)) || {};
+    const text = \`\${item.id || ''} \${user.name || ''} \${user.email || ''} \${event.title || ''} \${
+      item.status || ''
+    } \${item.reason || ''}\`.toLowerCase();
+    return !query || text.includes(query);
+  });
+  return \`
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Finance &amp; Revenue</div>
+            <div class="page-sub">Track registration revenue, platform commission, organizer payouts, and customer payment activity.</div>
+          </div>
+        </div>
+
+        <div class="grid-4 mb-20">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">💰</div>
+            <div class="stat-value" style="color:var(--green)">₹\${totalRevenue.toLocaleString(
+              'en-IN'
+            )}</div>
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-sub neutral">Completed payment records</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">📈</div>
+            <div class="stat-value" style="color:var(--accent)">₹\${platformCommission.toLocaleString(
+              'en-IN'
+            )}</div>
+            <div class="stat-label">Platform Commission</div>
+            <div class="stat-sub neutral">Fixed 15% fee share</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">💸</div>
+            <div class="stat-value" style="color:var(--yellow)">₹\${organizerPayout.toLocaleString(
+              'en-IN'
+            )}</div>
+            <div class="stat-label">Organizer Payouts</div>
+            <div class="stat-sub neutral">Net payout after commission</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--purple-dim);color:var(--purple)">🧾</div>
+            <div class="stat-value" style="color:var(--purple)">\${
+              successfulTransactions.length
+            }</div>
+            <div class="stat-label">Successful Transactions</div>
+            <div class="stat-sub neutral">Monitored payment records</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <div class="flex justify-between items-center mb-12">
+            <div class="h4">Event-wise Revenue &amp; Commission</div>
+            <div class="small muted">Commission formula: registration fee × 15%</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Payments</th>
+                  <th>Gross Revenue</th>
+                  <th>Platform Commission</th>
+                  <th>Organizer Payout</th>
+                </tr>
+              </thead>
+              <tbody>
+                \${(() => {
+                  const eventSummary = {};
+                  successfulTransactions.forEach(tx => {
+                    const event = DB.events.find(
+                      currentEvent => String(currentEvent.id) === String(tx.eventId)
+                    ) || {
+                      title: 'Unknown Event',
+                    };
+                    const eventKey = String(tx.eventId || event.title);
+                    if (!eventSummary[eventKey]) {
+                      eventSummary[eventKey] = {
+                        eventTitle: event.title,
+                        attendeeCount: 0,
+                        revenue: 0,
+                      };
+                    }
+                    eventSummary[eventKey].attendeeCount += 1;
+                    eventSummary[eventKey].revenue += Number(tx.amount || 0);
+                  });
+                  const rows = Object.values(eventSummary);
+                  return rows.length
+                    ? rows
+                        .map(row => {
+                          const commission = row.revenue * commissionRate;
+                          const payout = row.revenue - commission;
+                          return \`
+                          <tr>
+                            <td>\${row.eventTitle}</td>
+                            <td>\${row.attendeeCount}</td>
+                            <td style="color:var(--green);font-weight:700">₹\${row.revenue}</td>
+                            <td style="color:var(--accent);font-weight:700">₹\${commission}</td>
+                            <td style="color:var(--yellow);font-weight:700">₹\${payout}</td>
+                          </tr>
+                        \`;
+                        })
+                        .join('')
+                    : '<tr><td colspan="5" class="text-center py-20">No successful event revenue data found.</td></tr>';
+                })()}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:6px;margin-bottom:16px">
+          <button class="btn \${
+            tab === 'transactions' ? 'btn-primary' : 'btn-ghost'
+          }" onclick="switchFinanceTab('transactions')">💳 Transactions</button>
+          <button class="btn \${
+            tab === 'refunds' ? 'btn-primary' : 'btn-ghost'
+          }" onclick="switchFinanceTab('refunds')">↩️ Refunds</button>
+        </div>
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="finance-query" placeholder="Search finance records..." value="\${query}" oninput="refreshFinanceCenter()">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                \${
+                  tab === 'transactions'
+                    ? '<tr><th>Transaction ID</th><th>User</th><th>Event</th><th>Amount</th><th>Payment Status</th><th>Date</th></tr>'
+                    : '<tr><th>Refund ID</th><th>User</th><th>Event</th><th>Amount</th><th>Reason</th><th>Status</th><th>Date</th></tr>'
+                }
+              </thead>
+              <tbody>
+                \${
+                  filtered
+                    .map(item => {
+                      const user = DB.users.find(u => String(u.id) === String(item.userId)) || {
+                        name: 'Unknown',
+                      };
+                      const event = DB.events.find(
+                        currentEvent => String(currentEvent.id) === String(item.eventId)
+                      ) || {
+                        title: 'Unknown Event',
+                      };
+                      return tab === 'transactions'
+                        ? \`<tr><td class="mono">\${item.id}</td><td>\${user.name}</td><td>\${
+                            event.title
+                          }</td><td style="color:var(--green);font-weight:700">₹\${
+                            item.amount
+                          }</td><td><span class="badge badge-\${financeStatusBadge(item.status)}">\${
+                            item.status
+                          }</span></td><td>\${item.date}</td></tr>\`
+                        : \`<tr><td class="mono">\${item.id}</td><td>\${user.name}</td><td>\${
+                            event.title
+                          }</td><td style="color:var(--green);font-weight:700">₹\${
+                            item.amount
+                          }</td><td>\${
+                            item.reason
+                          }</td><td><span class="badge badge-\${financeStatusBadge(item.status)}">\${
+                            item.status
+                          }</span></td><td>\${item.date}</td></tr>\`;
+                    })
+                    .join('') ||
+                  \`<tr><td colspan="\${
+                    tab === 'transactions' ? 6 : 7
+                  }" class="text-center py-20">No finance records found.</td></tr>\`
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      \`;
+}
+function switchFinanceTab(tab) {
+  sessionStorage.setItem('finance_tab', tab);
+  renderPage('finance');
+}
+function refreshFinanceCenter() {
+  sessionStorage.setItem('finance_query', v('finance-query'));
+  renderPage('finance');
+}
+function pageRegistrationsForEmployee() {
+  const query = (sessionStorage.getItem('emp_reg_query') || '').toLowerCase();
+  const statusFilter = sessionStorage.getItem('emp_reg_status') || '';
+  const regs = DB.registrations || [];
+  const filtered = regs.filter(registration => {
+    const attendee = DB.users.find(user => String(user.id) === String(registration.attendeeId)) || {
+      name: '',
+      email: '',
+    };
+    const event = DB.events.find(
+      currentEvent => String(currentEvent.id) === String(registration.eventId)
+    ) || {
+      title: '',
+    };
+    const searchStr = \`\${registration.id} \${registration.ticketId || ''} \${attendee.name} \${
+      attendee.email
+    } \${event.title}\`.toLowerCase();
+    const matchesQuery = !query || searchStr.includes(query);
+    const st = (registration.status || 'confirmed').toLowerCase();
+    let matchesStatus = true;
+    if (statusFilter === 'pending') matchesStatus = st === 'pending';
+    else if (statusFilter === 'confirmed') matchesStatus = st === 'confirmed' || st === 'verified';
+    else if (statusFilter === 'rejected') matchesStatus = st === 'rejected';
+    return matchesQuery && matchesStatus;
+  });
+  return \`
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Registrations Management</div>
+            <div class="page-sub">View, search, filter, and manage online event registrations.</div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="emp-reg-q" placeholder="Search by Ticket ID, Attendee, or Event..." value="\${query}" oninput="refreshEmpRegistrations()">
+          </div>
+          <select class="form-control filter-select" id="emp-reg-st" onchange="refreshEmpRegistrations()">
+            <option value="">All Statuses</option>
+            <option value="confirmed" \${
+              statusFilter === 'confirmed' ? 'selected' : ''
+            }>Confirmed / Verified</option>
+            <option value="pending" \${statusFilter === 'pending' ? 'selected' : ''}>Pending</option>
+            <option value="rejected" \${
+              statusFilter === 'rejected' ? 'selected' : ''
+            }>Rejected</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ticket / Reg ID</th>
+                  <th>Attendee</th>
+                  <th>Event</th>
+                  <th>Registration Date</th>
+                  <th>Payment Status</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                \${
+                  filtered
+                    .map(registration => {
+                      const attendee = DB.users.find(
+                        user => String(user.id) === String(registration.attendeeId)
+                      ) || {
+                        name: 'Unknown User',
+                        email: '—',
+                      };
+                      const event = DB.events.find(
+                        currentEvent => String(currentEvent.id) === String(registration.eventId)
+                      ) || {
+                        title: 'Unknown Event',
+                      };
+                      const isPending = registration.status === 'pending';
+                      return \`
+                    <tr>
+                      <td class="mono"><strong>\${
+                        registration.ticketId || registration.id
+                      }</strong></td>
+                      <td>
+                        <div style="font-weight:700;font-size:13.5px;color:var(--text)">\${
+                          attendee.name
+                        }</div>
+                        <div class="small muted">\${attendee.email}</div>
+                      </td>
+                      <td>\${event.title}</td>
+                      <td>\${registration.date || 'Today'}</td>
+                      <td>
+                        <span class="badge badge-\${
+                          registration.payment === 'paid' ? 'green' : 'yellow'
+                        }">\${
+                        registration.payment === 'paid'
+                          ? 'Paid (₹' + (registration.amount || 0) + ')'
+                          : 'Pending'
+                      }</span>
+                      </td>
+                      <td>
+                        <span class="badge badge-\${
+                          registration.status === 'confirmed'
+                            ? 'green'
+                            : registration.status === 'pending'
+                            ? 'yellow'
+                            : 'red'
+                        }">\${registration.status || 'confirmed'}</span>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-6">
+                          <button class="btn btn-ghost btn-xs" onclick="openRegistrationDetailModal('\${
+                            registration.id
+                          }')">Review</button>
+                          \${
+                            isPending
+                              ? \`
+                            <button class="btn btn-success btn-xs" onclick="approveRegistrationDirect('\${registration.id}')" title="Approve">✓</button>
+                            <button class="btn btn-danger btn-xs" onclick="rejectRegistrationDirect('\${registration.id}')" title="Reject">✕</button>
+                          \`
+                              : ''
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  \`;
+                    })
+                    .join('') ||
+                  '<tr><td colspan="7" class="text-center py-20">No matching registrations found.</td></tr>'
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      \`;
+}
+function refreshEmpRegistrations() {
+  sessionStorage.setItem('emp_reg_query', v('emp-reg-q'));
+  sessionStorage.setItem('emp_reg_status', v('emp-reg-st'));
+  renderPage('registrations');
+}
+function approveRegistrationDirect(regId) {
+  const registration = DB.registrations.find(item => String(item.id) === String(regId));
+  if (!registration) return;
+  registration.status = 'confirmed';
+  registration.verificationStatus = 'Verified';
+  registration.verified = true;
+  saveDB();
+  renderPage('registrations');
+  toast('Registration approved successfully!', 'success');
+}
+function rejectRegistrationDirect(regId) {
+  confirm2(
+    'Reject Registration',
+    'Are you sure you want to reject this online registration?',
+    () => {
+      const registration = DB.registrations.find(item => String(item.id) === String(regId));
+      if (!registration) return;
+      registration.status = 'rejected';
+      registration.verificationStatus = 'Rejected';
+      saveDB();
+      renderPage('registrations');
+      toast('Registration rejected.', 'info');
+    }
+  );
+}
+function openRegistrationDetailModal(regId) {
+  const registration = DB.registrations.find(item => String(item.id) === String(regId));
+  if (!registration) return;
+  const attendee = DB.users.find(user => String(user.id) === String(registration.attendeeId)) || {
+    name: 'Unknown User',
+    email: '—',
+    phone: '—',
+  };
+  const event = DB.events.find(
+    currentEvent => String(currentEvent.id) === String(registration.eventId)
+  ) || {
+    title: 'Unknown Event',
+  };
+  openModal(
+    \`Registration Details: \${registration.ticketId || registration.id}\`,
+    \`
+        <div class="info-row"><span class="info-label">Ticket ID</span><span class="info-value mono">\${
+          registration.ticketId || registration.id
+        }</span></div>
+        <div class="info-row"><span class="info-label">Attendee Name</span><span class="info-value"><strong>\${
+          attendee.name
+        }</strong></span></div>
+        <div class="info-row"><span class="info-label">Attendee Email</span><span class="info-value">\${
+          attendee.email
+        }</span></div>
+        <div class="info-row"><span class="info-label">Contact Phone</span><span class="info-value">\${
+          attendee.phone || '—'
+        }</span></div>
+        <div class="info-row"><span class="info-label">Event</span><span class="info-value">\${
+          event.title
+        }</span></div>
+        <div class="info-row"><span class="info-label">Registration Date</span><span class="info-value">\${
+          registration.date || 'Today'
+        }</span></div>
+        <div class="info-row"><span class="info-label">Payment Amount</span><span class="info-value" style="color:var(--green);font-weight:700">₹\${
+          registration.amount || 0
+        } (\${registration.payment || 'paid'})</span></div>
+        <div class="info-row"><span class="info-label">Verification Status</span><span class="info-value"><span class="badge badge-\${
+          registration.status === 'confirmed' ? 'green' : 'yellow'
+        }">\${
+      registration.verificationStatus || registration.status || 'confirmed'
+    }</span></span></div>
+      \`,
+    [
+      {
+        lbl: 'Approve',
+        cls: 'btn-success',
+        fn: \`closeModal();approveRegistrationDirect('\${registration.id}')\`,
+      },
+      {
+        lbl: 'Reject',
+        cls: 'btn-danger',
+        fn: \`closeModal();rejectRegistrationDirect('\${registration.id}')\`,
+      },
+    ]
+  );
+}
+function pageUserManagement() {
+  const query = (sessionStorage.getItem('usrmgt_query') || '').toLowerCase();
+  const roleFilter = sessionStorage.getItem('usrmgt_role') || '';
+  const users = window.EventFlowAccountPolicy.visibleAccounts(CU, DB.users || []);
+  const filtered = users.filter(user => {
+    const matchesQuery =
+      !query ||
+      \`\${user.name} \${user.email} \${user.phone} \${user.role} \${user.id}\`
+        .toLowerCase()
+        .includes(query);
+    const matchesRole = !roleFilter || user.role === roleFilter;
+    return matchesQuery && matchesRole;
+  });
+  return \`
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">User Management</div>
+            <div class="page-sub">View, update, and manage platform users and account access.</div>
+          </div>
+        </div>
+
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="usrmgt-q" placeholder="Search users by name, email, phone, role..." value="\${query}" oninput="refreshUserManagement()">
+          </div>
+          <select class="form-control filter-select" id="usrmgt-role" onchange="refreshUserManagement()">
+            <option value="">All Roles</option>
+            <option value="attendee" \${
+              roleFilter === 'attendee' ? 'selected' : ''
+            }>Attendee</option>
+            <option value="client" \${roleFilter === 'client' ? 'selected' : ''}>Client</option>
+            <option value="organizer" \${
+              roleFilter === 'organizer' ? 'selected' : ''
+            }>Organizer</option>
+            \${
+              window.EventFlowAccountPolicy.isSupportExecutiveAccount(CU)
+                ? ''
+                : \`<option value="employee" \${
+                    roleFilter === 'employee' ? 'selected' : ''
+                  }>Employees</option>\`
+            }
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>User ID &amp; Name</th>
+                  <th>Contact Info</th>
+                  <th>Role</th>
+                  <th>Verification</th>
+                  <th>Account Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                \${
+                  filtered
+                    .map(u => {
+                      const isDeactivated = u.status === 'deactivated' || u.status === 'inactive';
+                      return \`
+                    <tr>
+                      <td>
+                        <div class="flex items-center gap-10">
+                          <div class="av av-xs">\${u.avatar || u.name[0]}</div>
+                          <div>
+                            <div style="font-weight:700;font-size:14px;color:var(--text)">\${
+                              u.name
+                            }</div>
+                            <div class="small muted">ID: \${u.id}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div>\${u.email}</div>
+                        <div class="small muted">📞 \${u.phone || '—'}</div>
+                      </td>
+                      <td><span class="badge badge-purple">\${u.role}</span></td>
+                      <td>
+                        <span class="badge badge-\${u.status === 'active' ? 'green' : 'yellow'}">\${
+                        u.status === 'active' ? 'Verified' : 'Pending'
+                      }</span>
+                      </td>
+                      <td>
+                        <span class="badge badge-\${isDeactivated ? 'red' : 'green'}">\${
+                        isDeactivated ? 'Deactivated' : 'Active'
+                      }</span>
+                      </td>
+                      <td>
+                        \${
+                          window.EventFlowAccountPolicy.canManageAccount(CU, u)
+                            ? \`<div class="flex items-center gap-6">
+                          <button class="btn btn-ghost btn-xs" onclick="openEditUserModal('\${
+                            u.id
+                          }')" title="Edit Details">✏️ Edit</button>
+                          <button class="btn btn-ghost btn-xs" onclick="toggleUserStatus('\${
+                            u.id
+                          }')" title="Deactivate/Activate">\${
+                                isDeactivated ? '🔓 Activate' : '🔒 Deactivate'
+                              }</button>
+                          <button class="btn btn-xs btn-danger" onclick="deleteUserOps('\${
+                            u.id
+                          }')" title="Delete User">🗑️</button>
+                        </div>\`
+                            : '<span class="small muted">Admin managed</span>'
+                        }
+                      </td>
+                    </tr>
+                  \`;
+                    })
+                    .join('') ||
+                  '<tr><td colspan="6" class="text-center py-20">No matching users found.</td></tr>'
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      \`;
+}
+function refreshUserManagement() {
+  sessionStorage.setItem('usrmgt_query', v('usrmgt-q'));
+  sessionStorage.setItem('usrmgt_role', v('usrmgt-role'));
+  renderPage('attendees');
+}
+function openEditUserModal(userId) {
+  const u = DB.users.find(user => String(user.id) === String(userId));
+  if (!u) return;
+  if (!window.EventFlowAccountPolicy.canManageAccount(CU, u)) {
+    toast('Only an admin can change employee or admin accounts.', 'error');
+    return;
+  }
+  openModal(
+    \`Edit User: \${u.name}\`,
+    \`
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input class="form-control" id="edit-usr-name" value="\${u.name}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input class="form-control" id="edit-usr-email" value="\${u.email}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input class="form-control" id="edit-usr-phone" value="\${u.phone || ''}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">User Role</label>
+          <select class="form-control" id="edit-usr-role" \${
+            window.EventFlowAccountPolicy.isSupportExecutiveAccount(CU) ? 'disabled' : ''
+          }>
+            <option value="attendee" \${u.role === 'attendee' ? 'selected' : ''}>Attendee</option>
+            <option value="client" \${u.role === 'client' ? 'selected' : ''}>Client</option>
+            <option value="organizer" \${u.role === 'organizer' ? 'selected' : ''}>Organizer</option>
+            \${
+              window.EventFlowAccountPolicy.isSupportExecutiveAccount(CU)
+                ? ''
+                : \`<option value="employee" \${
+                    u.role === 'employee' ? 'selected' : ''
+                  }>Employees</option>\`
+            }
+          </select>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Save Changes',
+        cls: 'btn-primary',
+        fn: \`saveEditUser('\${u.id}')\`,
+      },
+    ]
+  );
+}
+function saveEditUser(userId) {
+  const u = DB.users.find(user => String(user.id) === String(userId));
+  if (!u) return;
+  if (!window.EventFlowAccountPolicy.canManageAccount(CU, u)) {
+    toast('Only an admin can change employee or admin accounts.', 'error');
+    return;
+  }
+  const name = v('edit-usr-name');
+  const email = v('edit-usr-email');
+  if (!name || !email) {
+    toast('Name and email are required', 'error');
+    return;
+  }
+  if (window.EventFlowAccountPolicy.isEmailInUse(DB.users, email, userId)) {
+    toast('Email already registered', 'error');
+    return;
+  }
+  if (
+    !window.EventFlowAccountPolicy.canApplyAccountUpdate(CU, u, {
+      role: v('edit-usr-role'),
+    })
+  ) {
+    toast('Only an admin can change account roles.', 'error');
+    return;
+  }
+  u.name = name;
+  u.email = email;
+  u.phone = v('edit-usr-phone');
+  u.role = v('edit-usr-role');
+  saveDB();
+  closeModal();
+  renderPage('attendees');
+  toast('User details updated!', 'success');
+}
+function toggleUserStatus(userId) {
+  const u = DB.users.find(user => String(user.id) === String(userId));
+  if (!u) return;
+  if (!window.EventFlowAccountPolicy.canManageAccount(CU, u)) {
+    toast('Only an admin can change employee or admin accounts.', 'error');
+    return;
+  }
+  const newStatus =
+    u.status === 'deactivated' || u.status === 'inactive' ? 'active' : 'deactivated';
+  u.status = newStatus;
+  saveDB();
+  renderPage('attendees');
+  toast(\`User status changed to \${newStatus}\`, 'info');
+}
+function deleteUserOps(userId) {
+  const target = DB.users.find(user => String(user.id) === String(userId));
+  if (!window.EventFlowAccountPolicy.canManageAccount(CU, target)) {
+    toast('Only an admin can change employee or admin accounts.', 'error');
+    return;
+  }
+  confirm2('Delete User', 'Are you sure you want to permanently delete this user record?', () => {
+    const current = DB.users.find(user => String(user.id) === String(userId));
+    if (!window.EventFlowAccountPolicy.canManageAccount(CU, current)) {
+      toast('This account can only be managed by an admin.', 'error');
+      return;
+    }
+    DB.users = DB.users.filter(user => String(user.id) !== String(userId));
+    saveDB();
+    renderPage('attendees');
+    toast('User deleted successfully', 'info');
+  });
+}
+function pageAttendeeVerification() {
+  const query = (sessionStorage.getItem('verif_query') || '').toLowerCase();
+  const statusFilter = sessionStorage.getItem('verif_status') || '';
+  const regs = DB.registrations || [];
+  const filtered = regs.filter(registration => {
+    const attendee = DB.users.find(user => String(user.id) === String(registration.attendeeId)) || {
+      name: '',
+      email: '',
+    };
+    const event = DB.events.find(
+      currentEvent => String(currentEvent.id) === String(registration.eventId)
+    ) || {
+      title: '',
+    };
+    const searchStr = \`\${registration.id} \${registration.ticketId || ''} \${attendee.name} \${
+      attendee.email
+    } \${event.title}\`.toLowerCase();
+    const matchesQuery = !query || searchStr.includes(query);
+    const verifStatus =
+      registration.verificationStatus ||
+      (registration.status === 'confirmed' ? 'Verified' : 'Pending Review');
+    let matchesStatus = !statusFilter || verifStatus === statusFilter;
+    return matchesQuery && matchesStatus;
+  });
+  return \`
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Online Registration Verification</div>
+            <div class="page-sub">Review submitted registration details, approve identity verifications online, and flag incomplete submissions.</div>
+          </div>
+        </div>
+
+        <div style="padding:12px 16px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;margin-bottom:20px;font-size:13px;color:var(--text)" class="flex items-center gap-10">
+          <span>ℹ️</span>
+          <span>Online Admin Workspace: Focuses strictly on online identity and registration detail verification. Physical check-in and venue scanning are handled on-site.</span>
+        </div>
+
+        <div class="filter-row">
+          <div class="search-box input-group">
+            <span class="input-icon">🔍</span>
+            <input class="form-control" id="verif-q" placeholder="Search by Ticket ID, Attendee Name, or Event..." value="\${query}" oninput="refreshVerificationPage()">
+          </div>
+          <select class="form-control filter-select" id="verif-st" onchange="refreshVerificationPage()">
+            <option value="">All Verification Statuses</option>
+            <option value="Pending Review" \${
+              statusFilter === 'Pending Review' ? 'selected' : ''
+            }>Pending Review</option>
+            <option value="Verified" \${
+              statusFilter === 'Verified' ? 'selected' : ''
+            }>Verified</option>
+            <option value="Flagged" \${
+              statusFilter === 'Flagged' ? 'selected' : ''
+            }>Flagged / Incomplete</option>
+            <option value="Rejected" \${
+              statusFilter === 'Rejected' ? 'selected' : ''
+            }>Rejected</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Registration ID</th>
+                  <th>Attendee Info</th>
+                  <th>Event</th>
+                  <th>Submitted Proof / ID Document</th>
+                  <th>Verification Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                \${
+                  filtered
+                    .map(r => {
+                      const attendee = DB.users.find(
+                        user => String(user.id) === String(r.attendeeId)
+                      ) || {
+                        name: 'Unknown User',
+                        email: '—',
+                        phone: '—',
+                      };
+                      const event = DB.events.find(
+                        currentEvent => String(currentEvent.id) === String(r.eventId)
+                      ) || {
+                        title: 'Unknown Event',
+                      };
+                      const currentVerif =
+                        r.verificationStatus ||
+                        (r.status === 'confirmed' ? 'Verified' : 'Pending Review');
+                      const isPending =
+                        currentVerif === 'Pending Review' || currentVerif === 'Pending';
+                      const docType = r.docType || 'Govt Aadhaar / Passport ID';
+                      const docRef = r.docRef || 'REF-' + String(r.id).padStart(4, '0');
+                      return \`
+                    <tr>
+                      <td class="mono"><strong>\${r.ticketId || r.id}</strong></td>
+                      <td>
+                        <div style="font-weight:700;font-size:13.5px;color:var(--text)">\${
+                          attendee.name
+                        }</div>
+                        <div class="small muted">\${attendee.email}</div>
+                      </td>
+                      <td>\${event.title}</td>
+                      <td>
+                        <div style="font-weight:600;font-size:13px;color:var(--accent)">📄 \${docType}</div>
+                        <div class="small mono muted">Ref: \${docRef}</div>
+                      </td>
+                      <td>
+                        <span class="badge badge-\${
+                          currentVerif === 'Verified'
+                            ? 'green'
+                            : currentVerif === 'Flagged'
+                            ? 'yellow'
+                            : currentVerif === 'Rejected'
+                            ? 'red'
+                            : 'purple'
+                        }">\${currentVerif}</span>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-6">
+                          <button class="btn btn-ghost btn-xs" onclick="openVerificationReviewModal('\${
+                            r.id
+                          }')">Review</button>
+                          \${
+                            isPending
+                              ? \`
+                            <button class="btn btn-success btn-xs" onclick="approveVerificationDirect('\${r.id}')" title="Verify Online">✓ Verify</button>
+                            <button class="btn btn-warning btn-xs" onclick="flagVerificationModal('\${r.id}')" title="Flag Incomplete">🚩 Flag</button>
+                          \`
+                              : ''
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  \`;
+                    })
+                    .join('') ||
+                  '<tr><td colspan="6" class="text-center py-20">No registration verification records found.</td></tr>'
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      \`;
+}
+function refreshVerificationPage() {
+  sessionStorage.setItem('verif_query', v('verif-q'));
+  sessionStorage.setItem('verif_status', v('verif-st'));
+  renderPage('attendeeVerification');
+}
+function approveVerificationDirect(regId) {
+  const registration = DB.registrations.find(item => String(item.id) === String(regId));
+  if (!registration) return;
+  registration.verificationStatus = 'Verified';
+  registration.status = 'confirmed';
+  registration.verified = true;
+  saveDB();
+  renderPage('attendeeVerification');
+  toast('Online registration verified successfully!', 'success');
+}
+function flagVerificationModal(regId) {
+  const registration = DB.registrations.find(item => String(item.id) === String(regId));
+  if (!registration) return;
+  openModal(
+    \`Flag Registration Details: \${registration.ticketId || registration.id}\`,
+    \`
+        <div class="form-group">
+          <label class="form-label">Flag Reason / Missing Details *</label>
+          <textarea class="form-control" id="flag-reason" rows="4" placeholder="Specify incomplete or incorrect registration information..."></textarea>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Submit Flag',
+        cls: 'btn-warning',
+        fn: \`saveFlagVerification('\${registration.id}')\`,
+      },
+    ]
+  );
+}
+function saveFlagVerification(regId) {
+  const registration = DB.registrations.find(item => String(item.id) === String(regId));
+  if (!registration) return;
+  const reason = v('flag-reason');
+  if (!reason) {
+    toast('Please enter a flag reason', 'error');
+    return;
+  }
+  registration.verificationStatus = 'Flagged';
+  registration.flagReason = reason;
+  saveDB();
+  closeModal();
+  renderPage('attendeeVerification');
+  toast('Registration flagged for review!', 'warning');
+}
+function openVerificationReviewModal(regId) {
+  const registration = DB.registrations.find(item => String(item.id) === String(regId));
+  if (!registration) return;
+  const attendee = DB.users.find(user => String(user.id) === String(registration.attendeeId)) || {
+    name: 'Unknown User',
+    email: '—',
+    phone: '—',
+  };
+  const event = DB.events.find(
+    currentEvent => String(currentEvent.id) === String(registration.eventId)
+  ) || {
+    title: 'Unknown Event',
+  };
+  const docType = registration.docType || 'Govt Aadhaar / Passport ID';
+  const docRef = registration.docRef || 'REF-' + String(registration.id).padStart(4, '0');
+  openModal(
+    \`Verification Review: \${registration.ticketId || registration.id}\`,
+    \`
+        <div class="info-row"><span class="info-label">Ticket ID</span><span class="info-value mono">\${
+          registration.ticketId || registration.id
+        }</span></div>
+        <div class="info-row"><span class="info-label">Attendee Name</span><span class="info-value"><strong>\${
+          attendee.name
+        }</strong></span></div>
+        <div class="info-row"><span class="info-label">Attendee Email</span><span class="info-value">\${
+          attendee.email
+        }</span></div>
+        <div class="info-row"><span class="info-label">Contact Phone</span><span class="info-value">\${
+          attendee.phone || '—'
+        }</span></div>
+        <div class="info-row"><span class="info-label">Event</span><span class="info-value">\${
+          event.title
+        }</span></div>
+        <div class="info-row"><span class="info-label">Submitted Document</span><span class="info-value" style="color:var(--accent);font-weight:700">📄 \${docType} (\${docRef})</span></div>
+        <div class="info-row"><span class="info-label">Verification Status</span><span class="info-value"><span class="badge badge-purple">\${
+          registration.verificationStatus || 'Pending Review'
+        }</span></span></div>
+        \${
+          registration.notes
+            ? \`<div class="mt-12"><div class="label mb-6">Verification Notes</div><div style="padding:10px;background:var(--surface2);border-radius:8px;font-size:13px">\${registration.notes}</div></div>\`
+            : ''
+        }
+        \${
+          registration.flagReason
+            ? \`<div class="mt-12"><div class="label mb-6">Flag Reason / Missing Details</div><div style="padding:10px;background:var(--surface2);border-radius:8px;color:var(--yellow);font-size:13px">\${registration.flagReason}</div></div>\`
+            : ''
+        }
+      \`,
+    [
+      {
+        lbl: 'Approve & Verify',
+        cls: 'btn-success',
+        fn: \`closeModal();approveVerificationDirect('\${registration.id}')\`,
+      },
+      {
+        lbl: 'Flag Information',
+        cls: 'btn-warning',
+        fn: \`closeModal();flagVerificationModal('\${registration.id}')\`,
+      },
+    ]
+  );
+}
+function pageRegVerificationReports() {
+  const reports = DB.regReports || [];
+  const typeFilter = sessionStorage.getItem('rvr_type') || '';
+  const statusFilter = sessionStorage.getItem('rvr_status') || '';
+  const totalSubmitted = reports.filter(
+    report => report.status === 'Submitted' || report.status === 'Reviewed'
+  ).length;
+  const pendingReports = reports.filter(report => report.status === 'Draft').length;
+  const reviewedReports = reports.filter(report => report.status === 'Reviewed').length;
+  const filtered = reports.filter(report => {
+    const matchType = !typeFilter || report.type === typeFilter;
+    const matchStatus = !statusFilter || report.status === statusFilter;
+    return matchType && matchStatus;
+  });
+  return \`
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Registration &amp; User Management Reports</div>
+            <div class="page-sub">Submit, view, and track registration and user management reports. Reports are submitted to Super Admin for review.</div>
+          </div>
+          <div class="page-hd-right">
+            <button class="btn btn-primary" onclick="openCreateRegReportModal()">📤 Submit Report</button>
+          </div>
+        </div>
+
+        <div class="grid-3 mb-20">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">📤</div>
+            <div class="stat-value" style="color:var(--green)">\${totalSubmitted}</div>
+            <div class="stat-label">Reports Submitted</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">📝</div>
+            <div class="stat-value" style="color:var(--yellow)">\${pendingReports}</div>
+            <div class="stat-label">Draft / Pending</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">✅</div>
+            <div class="stat-value" style="color:var(--accent)">\${reviewedReports}</div>
+            <div class="stat-label">Reviewed by Admin</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="flex justify-between items-center mb-16">
+            <div class="h4">All Reports</div>
+            <div class="flex gap-8">
+              <select class="form-control filter-select" id="rvr-type" onchange="refreshRvrPage()" style="width:200px">
+                <option value="">All Report Types</option>
+                <option value="Registration Report" \${
+                  typeFilter === 'Registration Report' ? 'selected' : ''
+                }>Registration Report</option>
+                <option value="User Management Report" \${
+                  typeFilter === 'User Management Report' ? 'selected' : ''
+                }>User Management Report</option>
+                <option value="Registration Activity Report" \${
+                  typeFilter === 'Registration Activity Report' ? 'selected' : ''
+                }>Registration Activity Report</option>
+              </select>
+              <select class="form-control filter-select" id="rvr-status" onchange="refreshRvrPage()" style="width:140px">
+                <option value="">All Statuses</option>
+                <option value="Draft" \${statusFilter === 'Draft' ? 'selected' : ''}>Draft</option>
+                <option value="Submitted" \${
+                  statusFilter === 'Submitted' ? 'selected' : ''
+                }>Submitted</option>
+                <option value="Reviewed" \${
+                  statusFilter === 'Reviewed' ? 'selected' : ''
+                }>Reviewed</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Report</th>
+                  <th>Type</th>
+                  <th>Period</th>
+                  <th>Attached File</th>
+                  <th>Status</th>
+                  <th>Last Updated</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                \${
+                  filtered.length
+                    ? filtered
+                        .map(
+                          r => \`
+                  <tr>
+                    <td>
+                      <div style="font-weight:700;font-size:13.5px;color:var(--text)">\${
+                        r.title
+                      }</div>
+                      <div class="small muted">ID: \${r.id} · By: \${r.owner}</div>
+                    </td>
+                    <td>
+                      <span class="badge badge-\${
+                        r.type === 'Registration Report'
+                          ? 'purple'
+                          : r.type === 'User Management Report'
+                          ? 'blue'
+                          : 'orange'
+                      }">\${r.type}</span>
+                    </td>
+                    <td class="small">\${r.period || '—'}</td>
+                    <td>
+                      \${
+                        r.fileName
+                          ? \`<span style="font-weight:600;color:var(--accent);font-size:12.5px">📄 \${r.fileName}</span>\`
+                          : \`<span class="small muted">No file attached</span>\`
+                      }
+                    </td>
+                    <td>
+                      <span class="badge badge-\${
+                        r.status === 'Reviewed'
+                          ? 'green'
+                          : r.status === 'Submitted'
+                          ? 'purple'
+                          : 'yellow'
+                      }">\${r.status}</span>
+                    </td>
+                    <td class="small muted">\${r.updated}</td>
+                    <td>
+                      <div class="flex gap-6">
+                        <button class="btn btn-ghost btn-xs" onclick="viewRegReportModal('\${
+                          r.id
+                        }')">View Details</button>
+                        \${
+                          r.status === 'Draft'
+                            ? \`<button class="btn btn-primary btn-xs" onclick="submitDraftReport('\${r.id}')">📤 Submit</button>\`
+                            : ''
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                \`
+                        )
+                        .join('')
+                    : '<tr><td colspan="7" class="text-center py-20 muted">No reports found matching your filters.</td></tr>'
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      \`;
+}
+function refreshRvrPage() {
+  sessionStorage.setItem('rvr_type', v('rvr-type'));
+  sessionStorage.setItem('rvr_status', v('rvr-status'));
+  renderPage('reports');
+}
+function submitDraftReport(reportId) {
+  const r = (DB.regReports || []).find(item => item.id === reportId);
+  if (!r) return;
+  if (!r.fileName) {
+    toast('Please attach a file before submitting a draft report.', 'error');
+    return;
+  }
+  r.status = 'Submitted';
+  r.updated = 'Just now';
+  saveDB();
+  renderPage('reports');
+  toast('Draft report submitted successfully!', 'success');
+}
+function viewRegReportModal(reportId) {
+  const r = (DB.regReports || []).find(item => item.id === reportId);
+  if (!r) return;
+  openModal(
+    \`Report: \${r.title}\`,
+    \`
+        <div class="info-row"><span class="info-label">Report ID</span><span class="info-value mono">\${
+          r.id
+        }</span></div>
+        <div class="info-row"><span class="info-label">Report Type</span><span class="info-value"><span class="badge badge-purple">\${
+          r.type
+        }</span></span></div>
+        <div class="info-row"><span class="info-label">Reporting Period</span><span class="info-value">\${
+          r.period || '—'
+        }</span></div>
+        <div class="info-row"><span class="info-label">Submitted By</span><span class="info-value">\${
+          r.owner
+        }</span></div>
+        <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="badge badge-\${
+          r.status === 'Reviewed' ? 'green' : r.status === 'Submitted' ? 'purple' : 'yellow'
+        }">\${r.status}</span></span></div>
+        <div class="info-row"><span class="info-label">Last Updated</span><span class="info-value">\${
+          r.updated
+        }</span></div>
+        <div class="info-row"><span class="info-label">Attached File</span><span class="info-value" style="color:var(--accent);font-weight:700">\${
+          r.fileName ? '📄 ' + r.fileName : 'No file attached'
+        }</span></div>
+      \`,
+    r.status === 'Draft'
+      ? [
+          {
+            lbl: '📤 Submit Report',
+            cls: 'btn-primary',
+            fn: \`closeModal();submitDraftReport('\${r.id}')\`,
+          },
+        ]
+      : []
+  );
+}
+window.handleRegReportFileSelect = function (input) {
+  const preview = document.getElementById('rv-file-preview');
+  if (input.files && input.files[0]) {
+    const f = input.files[0];
+    if (preview) {
+      globalThis.window?.EventFlowOrganizerPages?.clear(preview);
+      preview.innerHTML = \`
+            <div class="flex items-center justify-between" style="background:var(--accent-dim);border-radius:8px;padding:10px 14px">
+              <div style="font-weight:600;color:var(--accent);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 \${
+                f.name
+              } (\${(f.size / 1024).toFixed(1)} KB)</div>
+              <button type="button" class="btn btn-danger btn-xs" onclick="event.stopPropagation();resetRegReportFileSelect()">✕ Remove</button>
+            </div>
+          \`;
+    }
+  }
+};
+window.resetRegReportFileSelect = function () {
+  const input = document.getElementById('rv-file');
+  if (input) input.value = '';
+  const preview = document.getElementById('rv-file-preview');
+  if (preview) {
+    globalThis.window?.EventFlowOrganizerPages?.clear(preview);
+    preview.innerHTML = \`
+          <div style="font-size:24px;margin-bottom:6px">📁</div>
+          <div style="font-weight:600;font-size:13.5px">Click to browse or upload report file</div>
+          <div class="small muted">Supported formats: PDF, DOC, DOCX, XLS, XLSX</div>
+        \`;
+  }
+};
+function openCreateRegReportModal() {
+  openModal(
+    '📤 Submit Registration & User Management Report',
+    \`
+        <div class="form-group">
+          <label class="form-label">Report Type *</label>
+          <select class="form-control" id="rv-type">
+            <option value="Registration Report">Registration Report</option>
+            <option value="User Management Report">User Management Report</option>
+            <option value="Registration Activity Report">Registration Activity Report</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Report Title *</label>
+          <input class="form-control" id="rv-title" placeholder="e.g. August 2026 Online Registration Completion Report">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reporting Period *</label>
+          <input class="form-control" id="rv-period" placeholder="e.g. August 2026, Q3 2026, Week 34">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Upload Report *</label>
+          <div class="file-upload-box" style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;background:var(--surface2);cursor:pointer" onclick="document.getElementById('rv-file').click()">
+            <input type="file" id="rv-file" accept=".pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handleRegReportFileSelect(this)">
+            <div id="rv-file-preview">
+              <div style="font-size:24px;margin-bottom:6px">📁</div>
+              <div style="font-weight:600;font-size:13.5px">Click to browse or upload report file</div>
+              <div class="small muted">Supported formats: PDF, DOC, DOCX, XLS, XLSX</div>
+            </div>
+          </div>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Cancel',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: '📤 Submit Report',
+        cls: 'btn-primary',
+        fn: 'saveRegReportSubmit()',
+      },
+    ]
+  );
+}
+function saveRegReportSubmit() {
+  const type = v('rv-type');
+  const title = v('rv-title');
+  const period = v('rv-period');
+  const fileInput = document.getElementById('rv-file');
+  if (!title) {
+    toast('Please enter a report title', 'error');
+    return;
+  }
+  if (!period) {
+    toast('Please specify a reporting period', 'error');
+    return;
+  }
+  if (!fileInput || !fileInput.files || !fileInput.files.length) {
+    toast('Please upload a report file', 'error');
+    return;
+  }
+  const file = fileInput.files[0];
+  const newReport = {
+    id: \`RVR-\${Date.now().toString().slice(-4)}\`,
+    type: type,
+    title: title,
+    period: period,
+    fileName: file.name,
+    owner: CU.name || 'Arjun Kapoor',
+    status: 'Submitted',
+    updated: 'Just now',
+  };
+  if (!DB.regReports) DB.regReports = [];
+  DB.regReports.unshift(newReport);
+  saveDB();
+  closeModal();
+  renderPage('reports');
+  toast('Report submitted successfully!', 'success');
+}
+function buildEmployeeChanges(changes) {
+  if (changes.length === 0)
+    return \`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No changes found</div><p class="empty-desc">Try a different search.</p></div>\`;
+  return changes
+    .map(
+      item =>
+        \`<div class="card" style="padding:14px 16px"><div class="flex justify-between items-start gap-8"><div style="display:flex;gap:10px;align-items:flex-start"><div class="stat-icon" style="width:30px;height:30px;min-width:30px;font-size:14px;margin:0;background:var(--accent-dim);color:var(--accent)">\${
+          item.icon || '•'
+        }</div><div><div style="font-weight:700;color:var(--text);font-size:13.5px">\${
+          item.title || 'Activity update'
+        }</div><div style="font-size:13px;color:var(--text2);line-height:1.5;margin-top:3px">\${
+          item.msg || 'A record was updated.'
+        }</div></div></div><span class="small" style="white-space:nowrap;color:var(--text3)">\${
+          item.time || 'Recently'
+        }</span></div></div>\`
+    )
+    .join('');
+}
+function searchEmployeeChanges(query) {
+  sessionStorage.setItem('employee_changes_search', query);
+  const changesQuery = query.toLowerCase();
+  const changes = DB.notifications
+    .filter(item =>
+      \`\${item.title || ''} \${item.msg || ''} \${item.time || ''}\`
+        .toLowerCase()
+        .includes(changesQuery)
+    )
+    .slice(0, 12);
+  globalThis.window?.EventFlowOrganizerPages?.clear(g('employee-recent-changes'));
+  g('employee-recent-changes').innerHTML = buildEmployeeChanges(changes);
+}
+function completeEmployeeChangeRequest(requestId) {
+  const request = (DB.employeeChangeRequests || []).find(
+    item => String(item.id) === String(requestId)
+  );
+  if (!request) return;
+  request.status = 'completed';
+  request.completedAt = new Date().toLocaleString();
+  saveDB();
+  renderPage('dashboard');
+  toast('Change request marked as done', 'success');
+}
+function dashOrganizer() {
+  const esc =
+    typeof escapeHtml === 'function'
+      ? escapeHtml
+      : typeof workflowHtml === 'function'
+      ? workflowHtml
+      : String;
+  if (typeof organizerDashboardData !== 'undefined' && organizerDashboardData) {
+    const d = organizerDashboardData;
+    const counts = d.eventStatusCounts || {};
+    const attentionCount =
+      d.eventsNeedingAttention !== undefined
+        ? d.eventsNeedingAttention
+        : d.attentionEventIds?.length ?? 0;
+    const actions = Array.isArray(d.priorityActions) ? d.priorityActions : [];
+    const upcomingList = Array.isArray(d.upcomingSchedule) ? d.upcomingSchedule : [];
+    return \`
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">Organizer Dashboard</div><div class="page-sub">Hello \${
+      (CU && CU.name) || 'Organizer'
+    }, manage your events.</div></div>
+    <div class="page-hd-right"><button class="btn btn-primary" onclick="openAddEventModal()">+ Create Event</button></div>
+  </div>
+  <div class="grid-4 mb-20">
+    <div class="stat-card" onclick="openOrganizerEvents('all')" style="cursor:pointer">
+      <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">🗓️</div>
+      <div class="stat-value" style="color:var(--accent)">\${
+        d.totalEvents ?? (DB.events || []).length
+      }</div>
+      <div class="stat-label">My Events</div>
+      <div class="stat-sub neutral" style="display:flex;flex-wrap:wrap;gap:6px;font-size:11px;margin-top:4px">
+        <span>Upcoming <strong>\${counts.upcoming ?? 0}</strong></span>
+        <span>In Progress <strong>\${counts.inProgress ?? 0}</strong></span>
+        <span>Completed <strong>\${counts.completed ?? 0}</strong></span>
+        <span>Cancelled <strong>\${counts.cancelled ?? 0}</strong></span>
+        <span>Needs Attention <strong>\${counts.needsAttention ?? 0}</strong></span>
+      </div>
+    </div>
+    <div class="stat-card" onclick="openOrganizerRequests()" style="cursor:pointer">
+      <div class="stat-icon" style="background:var(--blue-dim);color:var(--blue)">📋</div>
+      <div class="stat-value" style="color:var(--blue)">\${d.pendingRequests ?? 0}</div>
+      <div class="stat-label">Pending Event Requests</div>
+      <div class="stat-sub neutral">Review client proposals</div>
+    </div>
+    <div class="stat-card" onclick="pageOrganizerFinancialRecords()" style="cursor:pointer">
+      <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">💰</div>
+      <div class="stat-value" style="color:var(--green)">₹\${Number(
+        d.totalRevenue ?? 0
+      ).toLocaleString()}</div>
+      <div class="stat-label">Event Revenue</div>
+      <div class="stat-sub neutral">Gross: ₹\${Number(
+        d.grossRevenue ?? d.totalRevenue ?? 0
+      ).toLocaleString()}\${
+      d.refundedAmount ? \` (Refunded: ₹\${Number(d.refundedAmount).toLocaleString()})\` : ''
+    }</div>
+    </div>
+    <div class="stat-card" onclick="openOrganizerEvents('attention')" style="cursor:pointer">
+      <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">⚠️</div>
+      <div class="stat-value" style="color:var(--yellow)">\${attentionCount}</div>
+      <div class="stat-label">Events Needing Attention</div>
+      <div class="stat-sub neutral">Requires immediate action</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+    <div class="card">
+      <div style="font-size:16px;font-weight:700;margin-bottom:12px">Priority Actions</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        \${
+          actions.length === 0
+            ? '<div class="small text-muted">No pending priority actions.</div>'
+            : actions
+                .map(
+                  act => \`
+          <div style="padding:10px;background:var(--surface2);border-radius:8px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="\${
+            act.type === 'preparation'
+              ? \`organizerEventSection('\${act.eventId || act.id}','preparation')\`
+              : act.type === 'request'
+              ? \`viewWorkflowRequestDrawer('\${act.id}')\`
+              : \`openOrganizerIssue('\${act.id}')\`
+          }">
+            <div>
+              <div style="font-weight:600;font-size:13.5px">\${esc(act.title)}</div>
+              <div class="small text-muted">\${esc(act.detail || '')}</div>
+            </div>
+            <span class="badge badge-\${
+              act.type === 'preparation' ? 'yellow' : act.type === 'request' ? 'blue' : 'red'
+            }">\${act.type}</span>
+          </div>
+        \`
+                )
+                .join('')
+        }
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:16px;font-weight:700;margin-bottom:12px">Upcoming Schedule</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        \${
+          upcomingList.length === 0
+            ? '<div class="small text-muted">No upcoming events scheduled.</div>'
+            : upcomingList
+                .map(
+                  event => \`
+          <div style="padding:10px;background:var(--surface2);border-radius:8px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="openViewEventDrawer('\${
+            event.eventId || event.id
+          }')">
+            <div>
+              <div style="font-weight:600;font-size:13.5px">\${esc(event.title)}</div>
+              <div class="small text-muted">📅 \${esc(event.date || '')} \${esc(
+                    event.time || ''
+                  )} · 📍 \${esc(event.location || '')}</div>
+            </div>
+            <span class="badge badge-green">\${esc(event.status || 'published')}</span>
+          </div>
+        \`
+                )
+                .join('')
+        }
+      </div>
+    </div>
+  </div>\`;
+  }
+  const myEventsList = (DB && DB.events) || [];
+  const myEv = myEventsList.filter(e => String(e.organizer) === String(CU.id));
+  const activeEvents = myEv.filter(e => !isCancelledWorkflowEvent(e));
+  const upcoming = activeEvents.filter(event => workflowEventPhase(event) === 'upcoming');
+  const allRegs = (DB && DB.registrations) || [];
+  const totalAttendees = allRegs.filter(registration =>
+    myEv.some(e => String(e.id) === String(registration.eventId))
+  ).length;
+  const allReqs = (DB && DB.eventRequests) || [];
+  const inReviewCount = allReqs.filter(
+    request =>
+      String(request.organizer) === String(CU.id) &&
+      request.status === 'plan_submitted' &&
+      (DB.eventPlans || []).some(
+        plan =>
+          String(plan.eventPlanId) === String(request.activeEventPlanId) &&
+          plan.approvalStatus === 'pending'
+      )
+  ).length;
+  const weeklyAttendees = allRegs.filter(
+    registration =>
+      myEv.some(e => String(e.id) === String(registration.eventId)) &&
+      new Date(
+        registration.registrationDate || registration.createdAt || registration.date
+      ).getTime() >=
+        Date.now() - 7 * 86400000
+  ).length;
+  const searchQuery = (sessionStorage.getItem('org_events_search') || '').toLowerCase();
+  const statusFilter = sessionStorage.getItem('org_events_status') || '';
+  const categoryFilter = sessionStorage.getItem('org_events_category') || '';
+  const filteredEvents = filterOrganizerDashboardEvents(
+    activeEvents,
+    searchQuery,
+    statusFilter,
+    categoryFilter
+  );
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">Organizer Dashboard</div><div class="page-sub">Hello \${
+      (CU && CU.name) || 'Organizer'
+    }, manage your events.</div></div>
+    <div class="page-hd-right"><button class="btn btn-primary" onclick="openAddEventModal()">+ Create Event</button></div>
+  </div>
+  <div class="grid-4 mb-20">
+    <div class="stat-card"><div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">🗓️</div><div class="stat-value" style="color:var(--accent)">\${
+      myEv.length
+    }</div><div class="stat-label">My Events</div><div class="stat-sub neutral">\${
+    upcoming.length
+  } upcoming</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--green-dim);color:var(--green)">👥</div><div class="stat-value" style="color:var(--green)">\${totalAttendees}</div><div class="stat-label">Total Attendees</div><div class="stat-sub up">↑ \${weeklyAttendees} this week</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--blue-dim);color:var(--blue)">📋</div><div class="stat-value" style="color:var(--blue)">\${inReviewCount}</div><div class="stat-label">Plans in Review</div><div class="stat-sub neutral">With clients</div></div>
+  </div>
+  <div class="mb-16">
+    <div class="mb-12 flex justify-between items-center"><span class="h4">My Events</span><button class="btn btn-ghost btn-sm" onclick="openOrganizerEvents('cancelled')">Cancelled Events</button></div>
+    <div class="search-box input-group" style="margin-bottom:16px"><span class="input-icon">🔍</span><input class="form-control" id="org-events-search" placeholder="Search by event name or city..." value="\${searchQuery}" oninput="searchOrganizerEvents(this.value)"></div>
+    <div class="filter-row" style="margin-bottom:16px">
+      <select class="form-control filter-select" id="org-events-status" onchange="filterOrganizerDashboardEventsFromControls()">
+        <option value="" \${statusFilter === '' ? 'selected' : ''}>All Status</option>
+        <option value="upcoming" \${statusFilter === 'upcoming' ? 'selected' : ''}>Upcoming</option>
+        <option value="ongoing" \${statusFilter === 'ongoing' ? 'selected' : ''}>Ongoing</option>
+        <option value="full" \${statusFilter === 'full' ? 'selected' : ''}>Full</option>
+        <option value="completed" \${
+          statusFilter === 'completed' ? 'selected' : ''
+        }>Completed</option>
+      </select>
+      <select class="form-control filter-select" id="org-events-category" onchange="filterOrganizerDashboardEventsFromControls()">
+        <option value="" \${categoryFilter === '' ? 'selected' : ''}>All Categories</option>
+        \${[...new Set(myEv.map(e => e.category).filter(Boolean))]
+          .sort()
+          .map(
+            category =>
+              \`<option value="\${esc(category)}" \${
+                categoryFilter === category ? 'selected' : ''
+              }>\${esc(category)}</option>\`
+          )
+          .join('')}
+      </select>
+    </div>
+    <div class="events-grid" id="org-events-grid">\${
+      filteredEvents.length > 0
+        ? filteredEvents.map(event => evCard(event, 'organizer')).join('')
+        : activeEvents.length > 0
+        ? \`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No events match</div><p>Try adjusting your filters</p></div>\`
+        : myEv.length > 0
+        ? \`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📁</div><div class="empty-title">No active events</div><button class="btn btn-ghost mt-16" onclick="openOrganizerEvents('cancelled')">View Cancelled Events</button></div>\`
+        : \`<div class="ev-card" style="display:flex;align-items:center;justify-content:center;min-height:240px;border-style:dashed;cursor:pointer" onclick="openAddEventModal()"><div class="text-center" style="color:var(--text3)"><div style="font-size:32px;margin-bottom:8px">➕</div><div style="font-size:13px">Create Your First Event</div></div></div>\`
+    }
+      \${
+        myEv.length > 0
+          ? \`<div class="ev-card" style="display:flex;align-items:center;justify-content:center;min-height:240px;border-style:dashed;cursor:pointer" onclick="openAddEventModal()"><div class="text-center" style="color:var(--text3)"><div style="font-size:32px;margin-bottom:8px">➕</div><div style="font-size:13px">Create New Event</div></div></div>\`
+          : ''
+      }
+    </div>
+  </div>\`;
+}
+function openOrganizerRequests() {
+  sessionStorage.setItem('org_reqs_tab', 'actionable');
+  goNav('event-requests');
+}
+function openOrganizerEvents(tab) {
+  _workflowEventTab = tab;
+  goNav('my-events');
+}
+function openOrganizerIssue(ticketId) {
+  sessionStorage.setItem('organizer_issue_focus', ticketId);
+  goNav('customer-support');
+}
+function pageOrganizerFinancialRecords() {
+  const records =
+    (typeof organizerDashboardData !== 'undefined' && organizerDashboardData?.financialRecords) ||
+    [];
+  return \`
+        <div class="page-hd">
+          <div class="page-title">Financial Records</div>
+          <div class="page-sub">Net Revenue</div>
+        </div>
+        <div class="card">
+          \${records
+            .filter(r => r.status === 'completed')
+            .map(r => \`<div>\${r.id} · ₹\${Number(r.amount).toLocaleString()}</div>\`)
+            .join('')}
+        </div>
+      \`;
+}
+function searchOrganizerEvents(query) {
+  sessionStorage.setItem('org_events_search', query);
+  refreshOrganizerDashboardEvents();
+}
+function filterOrganizerDashboardEvents(events, query, status, category) {
+  return events.filter(event => {
+    const searchable = \`\${event.title || ''} \${event.city || ''} \${
+      event.venue || ''
+    }\`.toLowerCase();
+    return (
+      (!query || searchable.includes(query)) &&
+      (!status || event.status === status) &&
+      (!category || event.category === category)
+    );
+  });
+}
+function filterOrganizerDashboardEventsFromControls() {
+  sessionStorage.setItem('org_events_status', g('org-events-status')?.value || '');
+  sessionStorage.setItem('org_events_category', g('org-events-category')?.value || '');
+  refreshOrganizerDashboardEvents();
+}
+function refreshOrganizerDashboardEvents() {
+  const myEvents = DB.events.filter(
+    event => String(event.organizer) === String(CU.id) && !isCancelledWorkflowEvent(event)
+  );
+  const query = (sessionStorage.getItem('org_events_search') || '').toLowerCase();
+  const status = sessionStorage.getItem('org_events_status') || '';
+  const category = sessionStorage.getItem('org_events_category') || '';
+  const filtered = filterOrganizerDashboardEvents(myEvents, query, status, category);
+  const grid = g('org-events-grid');
+  if (!grid) return;
+  globalThis.window?.EventFlowOrganizerPages?.clear(grid);
+  grid.innerHTML =
+    filtered.map(event => evCard(event, 'organizer')).join('') ||
+    \`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No events match</div><p>Try adjusting your filters</p></div>\`;
+}
+function dashClient() {
+  const myReqs = DB.eventRequests.filter(request => String(request.clientId) === String(CU.id));
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">Client Dashboard</div><div class="page-sub">Track your event requests and upcoming events.</div></div>
+    <div class="page-hd-right"><button class="btn btn-primary" onclick="goNav('find-organizers')">+ New Request</button></div>
+  </div>
+  <div class="grid-3 mb-20">
+    <div class="stat-card"><div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">📋</div><div class="stat-value" style="color:var(--accent)">\${
+      myReqs.length
+    }</div><div class="stat-label">Total Requests</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--green-dim);color:var(--green)">✅</div><div class="stat-value" style="color:var(--green)">\${
+      myReqs.filter(request => request.status === 'approved').length
+    }</div><div class="stat-label">Approved</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">⏳</div><div class="stat-value" style="color:var(--yellow)">\${
+      myReqs.filter(request => request.status === 'pending' || request.status === 'in_review')
+        .length
+    }</div><div class="stat-label">In Progress</div></div>
+  </div>
+  <div class="h4 mb-16">My Event Requests</div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    \${myReqs
+      .map(
+        request =>
+          \`<div class="card"><div class="flex justify-between items-start"><div style="flex:1"><div style="font-size:16px;font-weight:700;margin-bottom:5px">\${
+            request.title
+          }</div><div class="small mb-8">\${request.type} · \${request.guests} guests · \${
+            request.date
+          }</div><p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px">\${
+            request.desc
+          }</p><span class="badge badge-\${reqBadge(request.status)}">\${
+            request.status
+          }</span></div><div style="text-align:right;flex-shrink:0;margin-left:20px"><div style="font-size:22px;font-weight:800;color:var(--green)">₹\${request.budget.toLocaleString()}</div><div class="small">Budget</div></div></div><div class="flex gap-8 mt-14"><button class="btn btn-ghost btn-sm" onclick="viewRequestDetail('\${
+            request.id
+          }')">View Details</button></div></div>\`
+      )
+      .join('')}
+    \${
+      myReqs.length === 0
+        ? \`<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No requests yet</div><div class="empty-desc">Submit your first event request!</div><button class="btn btn-primary mt-16" onclick="goNav('request-status')">Create Request</button></div>\`
+        : ''
+    }
+  </div>\`;
+}
+function dashAttendee() {
+  const myRegs = DB.registrations.filter(
+    registration => String(registration.attendeeId) === String(CU.id)
+  );
+  const upcoming = myRegs.filter(registration => {
+    const event = DB.events.find(
+      currentEvent => String(currentEvent.id) === String(registration.eventId)
+    );
+    return event && ['upcoming', 'full', 'ongoing'].includes(event.status);
+  });
+  const totalSpent = myRegs.reduce((total, registration) => total + registration.amount, 0);
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">My Dashboard</div><div class="page-sub">Welcome back, \${
+      CU.name
+    }! Here are your upcoming events.</div></div>
+    <div class="page-hd-right"><button class="btn btn-primary" onclick="goNav('browse-events')">🔍 Browse Events</button></div>
+  </div>
+  <div class="grid-3 mb-20">
+    <div class="stat-card"><div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">🎟️</div><div class="stat-value" style="color:var(--accent)">\${
+      myRegs.length
+    }</div><div class="stat-label">Registered Events</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--green-dim);color:var(--green)">📅</div><div class="stat-value" style="color:var(--green)">\${
+      upcoming.length
+    }</div><div class="stat-label">Upcoming</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">💳</div><div class="stat-value" style="color:var(--yellow)">₹\${totalSpent}</div><div class="stat-label">Total Spent</div></div>
+  </div>
+  \${
+    upcoming.length > 0
+      ? \`<div class="h4 mb-16">Upcoming Events</div>
+  <div class="events-grid">\${upcoming
+    .map(currentEvent => {
+      const event = DB.events.find(ev => String(ev.id) === String(currentEvent.eventId));
+      return event ? evCard(event, 'attendee', currentEvent) : '';
+    })
+    .join('')}</div>
+  <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px">
+    \${upcoming
+      .map(currentEvent => {
+        const event = DB.events.find(ev => String(ev.id) === String(currentEvent.eventId));
+        return event
+          ? \`<div class="card p-0" style="display:flex;justify-content:space-between;align-items:center;padding:16px">
+      <div><div style="font-weight:600">\${event.title}</div><div class="small">\${currentEvent.ticketId}</div></div>
+      <button class="btn btn-danger btn-xs" onclick="cancelTicket('\${currentEvent.id}')">✕ Cancel Ticket</button>
+    </div>\`
+          : '';
+      })
+      .join('')}
+  </div>\`
+      : \`
+  <div class="empty"><div class="empty-icon">🎟️</div><div class="empty-title">No upcoming events</div><div class="empty-desc">Browse and register for events to see them here.</div><button class="btn btn-primary mt-16" onclick="goNav('browse-events')">Browse Events</button></div>\`
+  }
+  <div class="h4 mb-16 mt-24">Recommended For You</div>
+  <div class="events-grid">\${DB.events
+    .filter(
+      event =>
+        event.status === 'upcoming' &&
+        !myRegs.some(registration => String(registration.eventId) === String(event.id))
+    )
+    .slice(0, 3)
+    .map(event => evCard(event, 'attendee'))
+    .join('')}</div>
+  \${
+    myRegs.length > 0
+      ? \`<div class="h4 mb-12 mt-24">Recent Activity</div>
+  <div class="card p-0">
+    \${myRegs
+      .slice(-3)
+      .reverse()
+      .map(registration => {
+        const eventRegistration = DB.events.find(
+          event => String(event.id) === String(registration.eventId)
+        ) || {
+          title: 'Event',
+          emoji: '🎟️',
+        };
+        return \`
+      <div class="flex items-center justify-between" style="padding:12px 16px;border-bottom:1px solid var(--border)">
+        <div class="flex items-center gap-10"><span style="font-size:22px">\${
+          eventRegistration.emoji
+        }</span>
+          <div><div style="font-size:13.5px;font-weight:500">\${
+            eventRegistration.title
+          }</div><div class="small">\${registration.ticketId} · \${registration.date}</div></div>
+        </div>
+        <div class="text-right"><div style="font-weight:600;color:var(--green)">\${
+          registration.amount === 0 ? 'Free' : '₹' + registration.amount
+        }</div>
+          <span class="badge badge-\${registration.checkedIn ? 'green' : 'purple'}">\${
+          registration.checkedIn ? 'Attended' : 'Registered'
+        }</span>
+        </div>
+      </div>\`;
+      })
+      .join('')}
+  </div>\`
+      : ''
+  }\`;
+}
+
+// ════════════════════════════════════════════════
+//  ADMIN SUBPAGE 1: USER REPORTS (BAR GRAPHS)
+// ════════════════════════════════════════════════
+function filterUserReports(role) {
+  sessionStorage.setItem('admin_user_filter_role', role);
+  renderPage('user-reports');
+}
+function pageUserReports() {
+  const selectedRole = sessionStorage.getItem('admin_user_filter_role') || 'all';
+  const allUsers = DB.users;
+  const usersToAnalyze =
+    selectedRole === 'all' ? allUsers : allUsers.filter(u => u.role === selectedRole);
+  const totalUsers = usersToAnalyze.length;
+  const activeUsers = usersToAnalyze.filter(u => u.status === 'active').length;
+  const inactiveUsers = totalUsers - activeUsers;
+  const activeRate = totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0;
+  const inactiveRate = totalUsers > 0 ? Math.round((inactiveUsers / totalUsers) * 100) : 0;
+  const roles = ['attendee', 'employee', 'client', 'organizer', 'superuser'];
+  const roleBreakdown = roles.map(role => {
+    const list = allUsers.filter(u => u.role === role);
+    const active = list.filter(u => u.status === 'active').length;
+    const inactive = list.length - active;
+    return {
+      role,
+      label: ROLE_LABELS[role] || role,
+      total: list.length,
+      active,
+      inactive,
+      activePct: list.length > 0 ? Math.round((active / list.length) * 100) : 0,
+    };
+  });
+
+  // 1. Monthly Joining Trends Bar Graph (Past 6 months)
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const monthlyBuckets = {};
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = \`\${d.getFullYear()}-\${String(d.getMonth() + 1).padStart(2, '0')}\`;
+    monthlyBuckets[key] = {
+      label: monthNames[d.getMonth()],
+      count: 0,
+    };
+  }
+  usersToAnalyze.forEach(u => {
+    const joinedStr = (u.joined || u.createdAt || '').toString();
+    const match = joinedStr.match(/(\\d{4}-\\d{2})/);
+    if (match && monthlyBuckets[match[1]]) {
+      monthlyBuckets[match[1]].count++;
+    }
+  });
+  const monthBars = Object.values(monthlyBuckets).map((m, index) => ({
+    label: m.label,
+    value: m.count,
+    color: [
+      'linear-gradient(180deg, #22c55e, #15803d)',
+      'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+      'linear-gradient(180deg, #8b5cf6, #7c3aed)',
+      'linear-gradient(180deg, #f59e0b, #d97706)',
+      'linear-gradient(180deg, #06b6d4, #0891b2)',
+      'linear-gradient(180deg, #ec4899, #be185d)',
+    ][index % 6],
+  }));
+
+  // 2. Grouped Active vs Inactive Bar Graph by Role
+  const activeInactiveGroups = roleBreakdown.map(r => ({
+    label: r.label,
+    bars: [
+      {
+        label: 'Active',
+        value: r.active,
+        color: 'linear-gradient(180deg, #22c55e, #15803d)',
+      },
+      {
+        label: 'Inactive',
+        value: r.inactive,
+        color: 'linear-gradient(180deg, #ef4444, #b91c1c)',
+      },
+    ],
+  }));
+
+  // 3. User Role Distribution Bar Graph
+  const roleBars = [
+    {
+      label: 'Attendees',
+      value: allUsers.filter(u => u.role === 'attendee').length,
+      color: 'linear-gradient(180deg, #8b5cf6, #7c3aed)',
+    },
+    {
+      label: 'Employees',
+      value: allUsers.filter(u => u.role === 'employee').length,
+      color: 'linear-gradient(180deg, #22c55e, #15803d)',
+    },
+    {
+      label: 'Clients',
+      value: allUsers.filter(u => u.role === 'client').length,
+      color: 'linear-gradient(180deg, #f59e0b, #d97706)',
+    },
+    {
+      label: 'Organizers',
+      value: allUsers.filter(u => u.role === 'organizer').length,
+      color: 'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+    },
+    {
+      label: 'Admins',
+      value: allUsers.filter(u => u.role === 'superuser').length,
+      color: 'linear-gradient(180deg, #ef4444, #b91c1c)',
+    },
+  ];
+
+  // 4. Role Activity Rate % Bar Graph
+  const activityRateBars = roleBreakdown.map((r, index) => ({
+    label: r.label,
+    value: r.activePct,
+    color: [
+      'linear-gradient(180deg, #8b5cf6, #7c3aed)',
+      'linear-gradient(180deg, #22c55e, #15803d)',
+      'linear-gradient(180deg, #f59e0b, #d97706)',
+      'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+      'linear-gradient(180deg, #ef4444, #b91c1c)',
+    ][index % 5],
+  }));
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left">
+      <div class="page-title">User Reports & Analytics</div>
+      <div class="page-sub">Visual bar graphs: monthly registrations, active vs inactive users, and role distributions.</div>
+    </div>
+    <div class="page-hd-right">
+      <div style="display:flex;gap:6px;background:var(--surface2);padding:4px;border-radius:10px;border:1px solid var(--border)">
+        <button class="btn btn-xs \${
+          selectedRole === 'all' ? 'btn-primary' : 'btn-ghost'
+        }" onclick="filterUserReports('all')">All Roles</button>
+        <button class="btn btn-xs \${
+          selectedRole === 'attendee' ? 'btn-primary' : 'btn-ghost'
+        }" onclick="filterUserReports('attendee')">Attendees</button>
+        <button class="btn btn-xs \${
+          selectedRole === 'employee' ? 'btn-primary' : 'btn-ghost'
+        }" onclick="filterUserReports('employee')">Employees</button>
+        <button class="btn btn-xs \${
+          selectedRole === 'client' ? 'btn-primary' : 'btn-ghost'
+        }" onclick="filterUserReports('client')">Clients</button>
+        <button class="btn btn-xs \${
+          selectedRole === 'organizer' ? 'btn-primary' : 'btn-ghost'
+        }" onclick="filterUserReports('organizer')">Organizers</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Metric Summary Cards -->
+  <div class="grid-4 mb-20">
+    <div class="stat-card">
+      <div class="glow" style="background:var(--accent)"></div>
+      <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">👥</div>
+      <div class="stat-value" style="color:var(--accent)">\${totalUsers}</div>
+      <div class="stat-label">Total \${
+        selectedRole === 'all' ? 'Users' : ROLE_LABELS[selectedRole]
+      }</div>
+      <div class="stat-sub neutral">\${
+        selectedRole === 'all' ? 'Across all roles' : 'Filtered role view'
+      }</div>
+    </div>
+    <div class="stat-card">
+      <div class="glow" style="background:var(--green)"></div>
+      <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">✅</div>
+      <div class="stat-value" style="color:var(--green)">\${activeUsers}</div>
+      <div class="stat-label">Active Users</div>
+      <div class="stat-sub up">↑ \${activeRate}% active rate</div>
+    </div>
+    <div class="stat-card">
+      <div class="glow" style="background:var(--red)"></div>
+      <div class="stat-icon" style="background:var(--red-dim);color:var(--red)">⏸️</div>
+      <div class="stat-value" style="color:var(--red)">\${inactiveUsers}</div>
+      <div class="stat-label">Inactive Users</div>
+      <div class="stat-sub neutral">\${inactiveRate}% inactive rate</div>
+    </div>
+    <div class="stat-card">
+      <div class="glow" style="background:var(--yellow)"></div>
+      <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">📈</div>
+      <div class="stat-value" style="color:var(--yellow)">\${
+        monthBars[monthBars.length - 1] ? monthBars[monthBars.length - 1].value : 0
+      }</div>
+      <div class="stat-label">New Joins This Month</div>
+      <div class="stat-sub neutral">Recent registrations</div>
+    </div>
+  </div>
+
+  <!-- Bar Graphs Row 1: Monthly Joins & Active vs Inactive Grouped Bar Chart -->
+  <div class="grid-2 mb-20" style="gap:20px;align-items:start">
+    <div class="card">
+      <div class="h4 mb-12">📊 Monthly Users Joining</div>
+      \${buildAnalyticsBars(monthBars, 145)}
+    </div>
+    <div class="card">
+      <div class="h4 mb-12">👥 Active vs Inactive Users by Role (Grouped Bar Graph)</div>
+      \${buildGroupedAnalyticsBars(activeInactiveGroups, 145, [
+        {
+          label: 'Active Users',
+          color: 'linear-gradient(180deg, #22c55e, #15803d)',
+        },
+        {
+          label: 'Inactive Users',
+          color: 'linear-gradient(180deg, #ef4444, #b91c1c)',
+        },
+      ])}
+    </div>
+  </div>
+
+  <!-- Bar Graphs Row 2: Platform Role Breakdown & Activity Rate % -->
+  <div class="grid-2" style="gap:20px;align-items:start">
+    <div class="card">
+      <div class="h4 mb-12">🏷️ Total Users by Role (Bar Graph)</div>
+      \${buildAnalyticsBars(roleBars, 145)}
+    </div>
+    <div class="card">
+      <div class="h4 mb-12">📈 Activity Rate by Role (% Active Bar Graph)</div>
+      \${buildAnalyticsBars(activityRateBars, 145)}
+      <div style="margin-top:12px;text-align:center;font-size:11.5px;color:var(--text2)">
+        Percentage of accounts actively participating in each role category.
+      </div>
+    </div>
+  </div>\`;
+}
+
+// ════════════════════════════════════════════════
+//  ADMIN SUBPAGE 2: EVENT REPORTS (BAR GRAPHS)
+// ════════════════════════════════════════════════
+function filterEventReportsStage(stage) {
+  sessionStorage.setItem('admin_event_reports_stage', stage);
+  renderPage('event-reports');
+}
+function pageEventReports() {
+  const selectedStage = sessionStorage.getItem('admin_event_reports_stage') || 'all';
+  const allEvents = DB.events;
+  const ongoingEvents = allEvents.filter(event => event.status === 'ongoing');
+  const upcomingEvents = allEvents.filter(
+    event => event.status === 'upcoming' || event.status === 'published' || event.status === 'full'
+  );
+  const completedEvents = allEvents.filter(event => event.status === 'completed');
+  const draftEvents = allEvents.filter(event => event.status === 'draft');
+  let eventsToAnalyze = allEvents;
+  if (selectedStage === 'ongoing') eventsToAnalyze = ongoingEvents;
+  else if (selectedStage === 'upcoming') eventsToAnalyze = upcomingEvents;
+  else if (selectedStage === 'completed') eventsToAnalyze = completedEvents;
+  const totalEvents = eventsToAnalyze.length;
+
+  // 1. Lifecycle Stage Bar Graph
+  const lifecycleBars = [
+    {
+      label: 'Ongoing (Now)',
+      value: ongoingEvents.length,
+      color: 'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+    },
+    {
+      label: 'About to Happen',
+      value: upcomingEvents.length,
+      color: 'linear-gradient(180deg, #22c55e, #15803d)',
+    },
+    {
+      label: 'Completed',
+      value: completedEvents.length,
+      color: 'linear-gradient(180deg, #8b5cf6, #7c3aed)',
+    },
+    {
+      label: 'Draft / Planning',
+      value: draftEvents.length,
+      color: 'linear-gradient(180deg, #64748b, #475569)',
+    },
+  ];
+
+  // 2. Monthly Timeline Bar Graph
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const monthlyBuckets = {};
+  const now = new Date();
+  for (let i = -2; i <= 3; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const key = \`\${d.getFullYear()}-\${String(d.getMonth() + 1).padStart(2, '0')}\`;
+    monthlyBuckets[key] = {
+      label: monthNames[d.getMonth()],
+      count: 0,
+      isPast: i < 0,
+      isCurrent: i === 0,
+    };
+  }
+  eventsToAnalyze.forEach(e => {
+    const dateStr = (e.date || '').toString();
+    const match = dateStr.match(/(\\d{4}-\\d{2})/);
+    if (match && monthlyBuckets[match[1]]) {
+      monthlyBuckets[match[1]].count++;
+    }
+  });
+  const monthlyBars = Object.values(monthlyBuckets).map(m => ({
+    label: m.label + (m.isCurrent ? ' (Now)' : ''),
+    value: m.count,
+    color: m.isCurrent
+      ? 'linear-gradient(180deg, #3b82f6, #1d4ed8)'
+      : m.isPast
+      ? 'linear-gradient(180deg, #8b5cf6, #7c3aed)'
+      : 'linear-gradient(180deg, #22c55e, #15803d)',
+  }));
+
+  // 3. Category Distribution Bar Graph
+  const catCounts = {};
+  eventsToAnalyze.forEach(e => {
+    const c = e.category || 'Other';
+    catCounts[c] = (catCounts[c] || 0) + 1;
+  });
+  const catBars = Object.entries(catCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([label, value], i) => ({
+      label,
+      value,
+      color: [
+        'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+        'linear-gradient(180deg, #22c55e, #15803d)',
+        'linear-gradient(180deg, #f59e0b, #d97706)',
+        'linear-gradient(180deg, #8b5cf6, #7c3aed)',
+        'linear-gradient(180deg, #ec4899, #be185d)',
+        'linear-gradient(180deg, #14b8a6, #0f766e)',
+      ][i % 6],
+    }));
+
+  // 4. Grouped Capacity vs Registered Bar Graph by Event Stage
+  const capacityOccupancyGroups = [
+    {
+      label: 'Ongoing',
+      bars: [
+        {
+          label: 'Registered',
+          value: ongoingEvents.reduce(
+            (total, currentEvent) => total + (currentEvent.registered || 0),
+            0
+          ),
+          color: 'linear-gradient(180deg, #22c55e, #15803d)',
+        },
+        {
+          label: 'Capacity',
+          value: ongoingEvents.reduce(
+            (total, currentEvent) => total + (currentEvent.capacity || 0),
+            0
+          ),
+          color: 'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+        },
+      ],
+    },
+    {
+      label: 'About to Happen',
+      bars: [
+        {
+          label: 'Registered',
+          value: upcomingEvents.reduce(
+            (total, currentEvent) => total + (currentEvent.registered || 0),
+            0
+          ),
+          color: 'linear-gradient(180deg, #22c55e, #15803d)',
+        },
+        {
+          label: 'Capacity',
+          value: upcomingEvents.reduce(
+            (total, currentEvent) => total + (currentEvent.capacity || 0),
+            0
+          ),
+          color: 'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+        },
+      ],
+    },
+    {
+      label: 'Completed',
+      bars: [
+        {
+          label: 'Registered',
+          value: completedEvents.reduce(
+            (total, currentEvent) => total + (currentEvent.registered || 0),
+            0
+          ),
+          color: 'linear-gradient(180deg, #22c55e, #15803d)',
+        },
+        {
+          label: 'Capacity',
+          value: completedEvents.reduce(
+            (total, currentEvent) => total + (currentEvent.capacity || 0),
+            0
+          ),
+          color: 'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+        },
+      ],
+    },
+  ];
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left">
+      <div class="page-title">Event Reports & Analytics</div>
+      <div class="page-sub">Bar graph analytics for ongoing events, completed events, and events about to happen.</div>
+    </div>
+    <div class="page-hd-right">
+      <div style="display:flex;gap:6px;background:var(--surface2);padding:4px;border-radius:10px;border:1px solid var(--border)">
+        <button class="btn btn-xs \${
+          selectedStage === 'all' ? 'btn-primary' : 'btn-ghost'
+        }" onclick="filterEventReportsStage('all')">All Stages</button>
+        <button class="btn btn-xs \${
+          selectedStage === 'ongoing' ? 'btn-primary' : 'btn-ghost'
+        }" onclick="filterEventReportsStage('ongoing')">▶️ Ongoing</button>
+        <button class="btn btn-xs \${
+          selectedStage === 'upcoming' ? 'btn-primary' : 'btn-ghost'
+        }" onclick="filterEventReportsStage('upcoming')">⏳ About to Happen</button>
+        <button class="btn btn-xs \${
+          selectedStage === 'completed' ? 'btn-primary' : 'btn-ghost'
+        }" onclick="filterEventReportsStage('completed')">✅ Completed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 Event Stage Highlight Cards -->
+  <div class="grid-3 mb-20" style="gap:16px">
+    <div class="stat-card" style="border-left:4px solid var(--blue)">
+      <div class="glow" style="background:var(--blue)"></div>
+      <div class="flex justify-between items-center mb-6">
+        <span style="font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase">▶️ Ongoing Events</span>
+        <span class="badge badge-blue">Happening Now</span>
+      </div>
+      <div class="stat-value" style="color:var(--blue);font-size:32px">\${ongoingEvents.length}</div>
+      <div class="stat-label">Currently in Progress</div>
+      <div class="stat-sub neutral" style="margin-top:6px">\${ongoingEvents.reduce(
+        (total, currentEvent) => total + (currentEvent.registered || 0),
+        0
+      )} live attendees participating</div>
+    </div>
+
+    <div class="stat-card" style="border-left:4px solid var(--green)">
+      <div class="glow" style="background:var(--green)"></div>
+      <div class="flex justify-between items-center mb-6">
+        <span style="font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase">⏳ About to Happen</span>
+        <span class="badge badge-green">Scheduled</span>
+      </div>
+      <div class="stat-value" style="color:var(--green);font-size:32px">\${
+        upcomingEvents.length
+      }</div>
+      <div class="stat-label">Upcoming & Scheduled</div>
+      <div class="stat-sub up" style="margin-top:6px">\${upcomingEvents.reduce(
+        (total, currentEvent) => total + (currentEvent.registered || 0),
+        0
+      )} reservations confirmed</div>
+    </div>
+
+    <div class="stat-card" style="border-left:4px solid var(--purple)">
+      <div class="glow" style="background:var(--purple)"></div>
+      <div class="flex justify-between items-center mb-6">
+        <span style="font-size:12px;font-weight:700;color:var(--purple);text-transform:uppercase">✅ Completed Events</span>
+        <span class="badge badge-purple">Finished</span>
+      </div>
+      <div class="stat-value" style="color:var(--purple);font-size:32px">\${
+        completedEvents.length
+      }</div>
+      <div class="stat-label">Concluded Events</div>
+      <div class="stat-sub neutral" style="margin-top:6px">\${completedEvents.reduce(
+        (total, currentEvent) => total + (currentEvent.registered || 0),
+        0
+      )} past attendees reached</div>
+    </div>
+  </div>
+
+  <!-- Bar Graphs Row 1: Lifecycle Stages Comparison & Category Breakdown -->
+  <div class="grid-2 mb-20" style="gap:20px">
+    <div class="card">
+      <div class="h4 mb-12">📊 Event Lifecycle Stages (Bar Graph)</div>
+      \${buildAnalyticsBars(lifecycleBars, 215)}
+    </div>
+    <div class="card">
+      <div class="h4 mb-12">🏷️ Event Category Breakdown (Bar Graph)</div>
+      \${buildAnalyticsBars(
+        catBars.length
+          ? catBars
+          : [
+              {
+                label: 'No Events',
+                value: 0,
+                color: 'linear-gradient(180deg, #64748b, #475569)',
+              },
+            ],
+        215
+      )}
+    </div>
+  </div>
+
+  <!-- Bar Graphs Row 2: Monthly Timeline & Grouped Capacity vs Registrations -->
+  <div class="grid-2" style="gap:20px">
+    <div class="card">
+      <div class="h4 mb-12">📅 Monthly Event Timeline (Past, Current & Future Bar Graph)</div>
+      \${buildAnalyticsBars(monthlyBars, 215)}
+    </div>
+    <div class="card">
+      <div class="h4 mb-12">🎟️ Booked Seats vs Total Capacity (Grouped Bar Graph)</div>
+      \${buildGroupedAnalyticsBars(capacityOccupancyGroups, 215, [
+        {
+          label: 'Booked Seats',
+          color: 'linear-gradient(180deg, #22c55e, #15803d)',
+        },
+        {
+          label: 'Total Capacity',
+          color: 'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+        },
+      ])}
+    </div>
+  </div>\`;
+}
+
+// ════════════════════════════════════════════════
+//  ADMIN SUBPAGE 3: REVENUE REPORTS (BAR GRAPHS)
+// ════════════════════════════════════════════════
+function filterRevenueTimeframe(tf) {
+  sessionStorage.setItem('admin_revenue_timeframe', tf);
+  renderPage('revenue-reports');
+}
+function pageRevenueReports() {
+  const timeframe = sessionStorage.getItem('admin_revenue_timeframe') || '6m';
+  const allEvents = DB.events;
+  const allRegs = DB.registrations;
+  const ticketPayments = (DB.financeTransactions || []).filter(
+    payment => payment.kind !== 'event' && payment.status === 'Successful'
+  );
+  const eventPayments = (DB.eventWorkflowPayments || []).filter(
+    payment => payment.status === 'completed'
+  );
+  const actualPayments = [...ticketPayments, ...eventPayments];
+  const regRevenue = ticketPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const eventRevenue = eventPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const totalRevenue = regRevenue + eventRevenue;
+  const paidEvents = allEvents.filter(event => event.price > 0);
+  const freeEvents = allEvents.filter(event => !event.price || event.price === 0);
+  const totalPaidSeats = paidEvents.reduce(
+    (total, currentEvent) => total + (currentEvent.registered || 0),
+    0
+  );
+  const avgTicketPrice =
+    paidEvents.length > 0
+      ? Math.round(
+          paidEvents.reduce((total, currentEvent) => total + (currentEvent.price || 0), 0) /
+            paidEvents.length
+        )
+      : 0;
+  const projectedPipeline = allEvents
+    .filter(event => event.status === 'upcoming' || event.status === 'ongoing')
+    .reduce(
+      (total, currentEvent) => total + (currentEvent.capacity || 0) * (currentEvent.price || 0),
+      0
+    );
+
+  // 1. Monthly Revenue Bar Graph over time (in ₹ Thousands)
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const monthlyRevenueMap = {};
+  const numMonths = timeframe === '12m' ? 12 : 6;
+  const now = new Date();
+  for (let i = numMonths - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = \`\${d.getFullYear()}-\${String(d.getMonth() + 1).padStart(2, '0')}\`;
+    monthlyRevenueMap[key] = {
+      label: monthNames[d.getMonth()],
+      amount: 0,
+    };
+  }
+  actualPayments.forEach(payment => {
+    const month = String(payment.paymentDate || payment.date || '').slice(0, 7);
+    if (monthlyRevenueMap[month]) monthlyRevenueMap[month].amount += Number(payment.amount || 0);
+  });
+  const revenueBars = Object.values(monthlyRevenueMap).map((m, index) => ({
+    label: m.label,
+    value: Number((m.amount / 1000).toFixed(2)),
+    color: [
+      'linear-gradient(180deg, #22c55e, #15803d)',
+      'linear-gradient(180deg, #10b981, #047857)',
+      'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+      'linear-gradient(180deg, #6366f1, #4338ca)',
+      'linear-gradient(180deg, #8b5cf6, #7c3aed)',
+      'linear-gradient(180deg, #f59e0b, #d97706)',
+    ][index % 6],
+  }));
+
+  // 2. Category Revenue Bar Graph
+  const catRevenueMap = {};
+  actualPayments.forEach(payment => {
+    const category =
+      allEvents.find(event => String(event.id) === String(payment.eventId))?.category || 'General';
+    catRevenueMap[category] = (catRevenueMap[category] || 0) + Number(payment.amount || 0);
+  });
+  const catRevenueBars = Object.entries(catRevenueMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([label, value], index) => ({
+      label,
+      value: Number((value / 1000).toFixed(2)),
+      color: [
+        'linear-gradient(180deg, #22c55e, #15803d)',
+        'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+        'linear-gradient(180deg, #f59e0b, #d97706)',
+        'linear-gradient(180deg, #8b5cf6, #7c3aed)',
+        'linear-gradient(180deg, #ec4899, #be185d)',
+        'linear-gradient(180deg, #14b8a6, #0f766e)',
+      ][index % 6],
+    }));
+
+  // 3. Ticket Pricing Tiers Bar Graph
+  const pricingTierBars = [
+    {
+      label: 'Free (₹0)',
+      value: freeEvents.length,
+      color: 'linear-gradient(180deg, #14b8a6, #0f766e)',
+    },
+    {
+      label: 'Budget (₹1–₹99)',
+      value: allEvents.filter(event => event.price > 0 && event.price < 100).length,
+      color: 'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+    },
+    {
+      label: 'Mid-Tier (₹100–₹199)',
+      value: allEvents.filter(event => event.price >= 100 && event.price < 200).length,
+      color: 'linear-gradient(180deg, #f59e0b, #d97706)',
+    },
+    {
+      label: 'Premium (₹200+)',
+      value: allEvents.filter(event => event.price >= 200).length,
+      color: 'linear-gradient(180deg, #8b5cf6, #7c3aed)',
+    },
+  ];
+
+  // 4. Revenue Streams Contribution Bar Graph
+  const streamBars = [
+    {
+      label: 'Ticket Sales',
+      value: Number((regRevenue / 1000).toFixed(2)),
+      color: 'linear-gradient(180deg, #22c55e, #15803d)',
+    },
+    {
+      label: 'Client Event Payments',
+      value: Number((eventRevenue / 1000).toFixed(2)),
+      color: 'linear-gradient(180deg, #3b82f6, #1d4ed8)',
+    },
+  ];
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left">
+      <div class="page-title">Revenue Reports & Analytics</div>
+      <div class="page-sub">Bar graph visualizations of platform revenue over time, pricing tiers, and category income.</div>
+    </div>
+    <div class="page-hd-right">
+      <div style="display:flex;gap:6px;background:var(--surface2);padding:4px;border-radius:10px;border:1px solid var(--border)">
+        <button class="btn btn-xs \${
+          timeframe === '6m' ? 'btn-primary' : 'btn-ghost'
+        }" onclick="filterRevenueTimeframe('6m')">Last 6 Months</button>
+        <button class="btn btn-xs \${
+          timeframe === '12m' ? 'btn-primary' : 'btn-ghost'
+        }" onclick="filterRevenueTimeframe('12m')">Last 12 Months</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Revenue Metric Cards -->
+  <div class="grid-4 mb-20">
+    <div class="stat-card">
+      <div class="glow" style="background:var(--green)"></div>
+      <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">💰</div>
+      <div class="stat-value" style="color:var(--green)">₹\${(totalRevenue / 1000).toFixed(1)}K</div>
+      <div class="stat-label">Total Platform Revenue</div>
+      <div class="stat-sub up">Recorded payment revenue</div>
+    </div>
+    <div class="stat-card">
+      <div class="glow" style="background:var(--accent)"></div>
+      <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">📈</div>
+      <div class="stat-value" style="color:var(--accent)">₹\${avgTicketPrice}</div>
+      <div class="stat-label">Average Ticket Price</div>
+      <div class="stat-sub neutral">Across \${paidEvents.length} paid events</div>
+    </div>
+    <div class="stat-card">
+      <div class="glow" style="background:var(--yellow)"></div>
+      <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">🎟️</div>
+      <div class="stat-value" style="color:var(--yellow)">\${totalPaidSeats}</div>
+      <div class="stat-label">Paid Ticket Registrations</div>
+      <div class="stat-sub up">↑ 12% week-on-week</div>
+    </div>
+    <div class="stat-card">
+      <div class="glow" style="background:var(--blue)"></div>
+      <div class="stat-icon" style="background:var(--blue-dim);color:var(--blue)">📊</div>
+      <div class="stat-value" style="color:var(--blue)">₹\${(projectedPipeline / 1000).toFixed(
+        1
+      )}K</div>
+      <div class="stat-label">Projected Pipeline</div>
+      <div class="stat-sub neutral">Upcoming capacity value</div>
+    </div>
+  </div>
+
+  <!-- Bar Graphs Row 1: Revenue Over Time & Revenue by Category -->
+  <div class="grid-2 mb-20" style="gap:20px">
+    <div class="card">
+      <div class="flex justify-between items-center mb-12">
+        <span class="h4">📈 Platform Revenue Over Time (₹ in Thousands)</span>
+        <span class="badge badge-green">\${numMonths} Months Trend</span>
+      </div>
+      \${buildAnalyticsBars(revenueBars, 215)}
+      <div style="margin-top:12px;font-size:11.5px;color:var(--text2);text-align:center">
+        Monthly revenue performance trajectory in thousands (₹K).
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="flex justify-between items-center mb-12">
+        <span class="h4">🏷️ Revenue by Event Category (₹ in Thousands)</span>
+      </div>
+      \${buildAnalyticsBars(catRevenueBars, 215)}
+      <div style="margin-top:12px;font-size:11.5px;color:var(--text2);text-align:center">
+        Revenue breakdown by event category.
+      </div>
+    </div>
+  </div>
+
+  <!-- Bar Graphs Row 2: Ticket Pricing Tiers & Revenue Streams -->
+  <div class="grid-2" style="gap:20px">
+    <div class="card">
+      <div class="h4 mb-12">🎟️ Event Count by Pricing Tier (Bar Graph)</div>
+      \${buildAnalyticsBars(pricingTierBars, 215)}
+    </div>
+
+    <div class="card">
+      <div class="h4 mb-12">💼 Revenue Stream Contribution (₹ in Thousands)</div>
+      \${buildAnalyticsBars(streamBars, 215)}
+    </div>
+  </div>\`;
+}
+// ════════════════════════════════════════════════
+//  NON-ADMIN PAGES (ORGANIZER / CLIENT / ATTENDEE)
+// ════════════════════════════════════════════════
+function pageUsers() {
+  const users = window.EventFlowAccountPolicy.visibleAccounts(CU, DB.users).filter(
+    u => u.role !== 'superuser'
+  );
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left">
+      <div class="page-title">User Management</div>
+      <div class="page-sub">View users and their account details.</div>
+    </div>
+  </div>
+  <div class="filter-row">
+    <div class="search-box input-group">
+      <span class="input-icon">🔍</span>
+      <input class="form-control" id="um-q" placeholder="Search by name or email…" oninput="refreshDirectoryUserManagement()">
+    </div>
+    <select class="form-control filter-select" id="um-role" onchange="refreshDirectoryUserManagement()">
+      <option value="">All Users</option>
+      <option value="attendee">Attendee</option>
+      \${
+        window.EventFlowAccountPolicy.isSupportExecutiveAccount(CU)
+          ? ''
+          : \`<option value="employee">Employees</option>\`
+      }
+      <option value="organizer">Event Manager</option>
+      <option value="client">Client</option>
+    </select>
+  </div>
+  <div class="table-wrap" id="user-management-table">\${buildUserManagementTable(users)}</div>\`;
+}
+function buildUserManagementTable(users) {
+  users = window.EventFlowAccountPolicy.visibleAccounts(CU, users);
+  if (users.length === 0) {
+    return \`<div class="empty"><div class="empty-icon">👥</div><div class="empty-title">No users found</div><p class="empty-desc">Try changing your search or role filter.</p></div>\`;
+  }
+  return \`<table>
+    <thead><tr><th>User</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+    <tbody>\${users
+      .map(user => {
+        const avHtml = user.avatarImage
+          ? \`
+        <div class="av av-xs">
+          <img src="\${user.avatarImage}" alt="\${
+              user.name
+            }" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <span style="display:none">\${user.avatar || user.name?.[0] || '?'}</span>
+        </div>
+      \`
+          : \`<div class="av av-xs">\${user.avatar || user.name?.[0] || '?'}</div>\`;
+        return \`<tr>
+      <td><div class="flex items-center gap-8">\${avHtml}<strong>\${
+          user.name || 'Unknown User'
+        }</strong></div></td>
+      <td>\${user.email || '—'}</td>
+      <td>\${user.phone || '—'}</td>
+      <td><span class="badge badge-\${ROLE_COLORS[user.role] || 'blue'}">\${
+          user.role === 'organizer' ? 'Event Manager' : ROLE_LABELS[user.role] || user.role
+        }</span></td>
+      <td><span class="badge badge-\${user.status === 'active' ? 'green' : 'red'}">\${
+          user.status || 'unknown'
+        }</span></td>
+      <td>\${user.joined || user.createdAt || '—'}</td>
+      <td>\${
+        window.EventFlowAccountPolicy.canManageAccount(CU, user)
+          ? \`<div class="actions"><button class="btn btn-ghost btn-xs" onclick="openEditUserModal('\${user.id}')">Edit</button><button class="btn btn-xs btn-danger" onclick="removeUser('\${user.id}')">Remove</button></div>\`
+          : '<span class="small muted">Admin managed</span>'
+      }</td>
+    </tr>\`;
+      })
+      .join('')}</tbody>
+  </table>\`;
+}
+function refreshDirectoryUserManagement() {
+  const query = (g('um-q')?.value || '').trim().toLowerCase();
+  const role = g('um-role')?.value || '';
+  const users = window.EventFlowAccountPolicy.visibleAccounts(CU, DB.users).filter(u => {
+    const matchesRole = !role || u.role === role;
+    const matchesQuery =
+      !query ||
+      [u.name, u.email, u.phone].some(value =>
+        String(value || '')
+          .toLowerCase()
+          .includes(query)
+      );
+    return u.role !== 'superuser' && matchesRole && matchesQuery;
+  });
+  globalThis.window?.EventFlowOrganizerPages?.clear(g('user-management-table'));
+  g('user-management-table').innerHTML = buildUserManagementTable(users);
+}
+function openEditUserModal(userId) {
+  const user = DB.users.find(u => String(u.id) === String(userId));
+  if (!user) return;
+  if (!window.EventFlowAccountPolicy.canManageAccount(CU, user)) {
+    toast('Only an admin can change employee or admin accounts.', 'error');
+    return;
+  }
+  openModal(
+    'Edit User',
+    \`
+  <div class="form-group"><label class="form-label">Full Name *</label><input class="form-control" id="um-edit-name" value="\${
+    user.name || ''
+  }"></div>
+  <div class="form-group"><label class="form-label">Email *</label><input class="form-control" id="um-edit-email" type="email" value="\${
+    user.email || ''
+  }"></div>
+  <div class="form-group"><label class="form-label">Phone</label><input class="form-control" id="um-edit-phone" value="\${
+    user.phone || ''
+  }"></div>
+  <div class="grid-2">
+    <div class="form-group"><label class="form-label">Role</label><select class="form-control" id="um-edit-role" \${
+      window.EventFlowAccountPolicy.isSupportExecutiveAccount(CU) ? 'disabled' : ''
+    }><option value="attendee" \${user.role === 'attendee' ? 'selected' : ''}>Attendee</option>\${
+      window.EventFlowAccountPolicy.isSupportExecutiveAccount(CU)
+        ? ''
+        : \`<option value="employee" \${
+            user.role === 'employee' ? 'selected' : ''
+          }>Employees</option>\`
+    }<option value="organizer" \${
+      user.role === 'organizer' ? 'selected' : ''
+    }>Event Manager</option><option value="client" \${
+      user.role === 'client' ? 'selected' : ''
+    }>Client</option></select></div>
+    <div class="form-group"><label class="form-label">Status</label><select class="form-control" id="um-edit-status"><option value="active" \${
+      user.status === 'active' ? 'selected' : ''
+    }>Active</option><option value="inactive" \${
+      user.status !== 'active' ? 'selected' : ''
+    }>Inactive</option></select></div>
+  </div>\`,
+    [
+      {
+        lbl: 'Save Changes',
+        cls: 'btn-primary',
+        fn: \`saveUser('\${user.id}')\`,
+      },
+    ]
+  );
+}
+function saveUser(userId) {
+  const user = DB.users.find(u => String(u.id) === String(userId));
+  const name = v('um-edit-name');
+  const email = v('um-edit-email');
+  if (!user) return;
+  if (!window.EventFlowAccountPolicy.canManageAccount(CU, user)) {
+    toast('Only an admin can change employee or admin accounts.', 'error');
+    return;
+  }
+  if (!name) {
+    toast('Name is required', 'error');
+    return;
+  }
+  if (!email || !email.includes('@')) {
+    toast('Valid email is required', 'error');
+    return;
+  }
+  const duplicate = window.EventFlowAccountPolicy.isEmailInUse(DB.users, email, userId);
+  if (duplicate) {
+    toast('Email already registered', 'error');
+    return;
+  }
+  if (
+    !window.EventFlowAccountPolicy.canApplyAccountUpdate(CU, user, {
+      role: v('um-edit-role'),
+    })
+  ) {
+    toast('Only an admin can change account roles.', 'error');
+    return;
+  }
+  user.name = name;
+  user.email = email;
+  user.phone = v('um-edit-phone');
+  user.role = v('um-edit-role');
+  user.status = v('um-edit-status');
+  user.avatar = name
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+  saveDB();
+  closeModal();
+  renderPage('users');
+  toast('User details updated', 'success');
+}
+function removeUser(userId) {
+  const user = DB.users.find(u => String(u.id) === String(userId));
+  if (!user) return;
+  if (!window.EventFlowAccountPolicy.canManageAccount(CU, user)) {
+    toast('Only an admin can change employee or admin accounts.', 'error');
+    return;
+  }
+  confirm2('Remove User', \`Remove \${user.name || 'this user'} from the user list?\`, () => {
+    const current = DB.users.find(user => String(user.id) === String(userId));
+    if (!window.EventFlowAccountPolicy.canManageAccount(CU, current)) {
+      toast('This account can only be managed by an admin.', 'error');
+      return;
+    }
+    const index = DB.users.findIndex(u => String(u.id) === String(userId));
+    if (index === -1) return;
+    DB.users.splice(index, 1);
+    saveDB();
+    renderPage('users');
+    toast('User removed', 'info');
+  });
+}
+function pageEvents() {
+  if (CU.role === 'superuser') return pageEventReports();
+  if (CU.role === 'client') {
+    return \`<div class="empty"><div class="empty-icon">🚫</div><div class="empty-title">Access Denied</div><p class="empty-desc">This page is not available for clients. Please use Find Organizers to request events.</p><button class="btn btn-primary mt-16" onclick="goNav('find-organizers')">Find Organizers</button></div>\`;
+  }
+  const isOrg = CU.role === 'organizer';
+  const list = isOrg ? DB.events.filter(event => ownsOrganizerEvent(event)) : DB.events;
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">\${
+      isOrg ? 'My Events' : 'All Events'
+    }</div><div class="page-sub">\${list.length} event(s)</div></div>
+    <div class="page-hd-right">\${
+      isOrg
+        ? \`<button class="btn btn-ghost" onclick="setWorkflowEventTab('cancelled')">Cancelled Events (\${
+            list.filter(isCancelledWorkflowEvent).length
+          })</button><button class="btn btn-primary" onclick="openAddEventModal()">+ Create Event</button>\`
+        : ''
+    }</div>
+  </div>
+  <div class="filter-row">
+    <div class="search-box input-group"><span class="input-icon">🔍</span><input class="form-control" id="ev-q" placeholder="Search events…" oninput="refreshEvents()"></div>
+    <select class="form-control filter-select" id="ev-st" onchange="refreshEvents()">
+      <option value="">All Status</option><option value="upcoming">Upcoming</option>\${
+        isOrg
+          ? '<option value="ongoing">In Progress</option><option value="draft">Draft</option>'
+          : ''
+      }<option value="full">Full</option><option value="completed">Completed</option>\${
+    isOrg ? '<option value="cancelled">Cancelled</option>' : ''
+  }
+    </select>
+    <select class="form-control filter-select" id="ev-cat" onchange="refreshEvents()">
+      <option value="">All Categories</option><option>Conference</option><option>Corporate</option><option>Concert</option><option>Workshop</option><option>Networking</option>
+    </select>
+  </div>
+  <div class="events-grid" id="ev-grid">\${list.map(e => evCard(e, CU.role)).join('')}</div>\`;
+}
+function refreshEvents() {
+  if (globalThis.window?.EventFlowOrganizerPages?.isCurrentPage('events')) {
+    window.EventFlowOrganizerPages.render(
+      g('page-content'),
+      'events',
+      window.EventFlowOrganizerRuntime.snapshot()
+    );
+    return;
+  }
+  const q = (g('ev-q') || {}).value?.toLowerCase() || '';
+  const st = (g('ev-st') || {}).value || '';
+  const cat = (g('ev-cat') || {}).value || '';
+  const isOrg = CU.role === 'organizer';
+  const list = (isOrg ? DB.events.filter(event => ownsOrganizerEvent(event)) : DB.events).filter(
+    e => {
+      const status = isOrg ? organizerEventCardStatus(e) : e.status;
+      const matchesStatus =
+        !st ||
+        status === st ||
+        (st === 'full' && e.status === 'full' && !['completed', 'cancelled'].includes(status));
+      return (
+        (!q ||
+          String(e.title || e.name || '')
+            .toLowerCase()
+            .includes(q)) &&
+        matchesStatus &&
+        (!cat || e.category === cat)
+      );
+    }
+  );
+  globalThis.window?.EventFlowOrganizerPages?.clear(g('ev-grid'));
+  g('ev-grid').innerHTML =
+    list.map(e => evCard(e, CU.role)).join('') ||
+    \`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No events found</div></div>\`;
+}
+function evCard(event, role, reg = null) {
+  const pct =
+    event.capacity > 0
+      ? Math.min(100, Math.round(((event.registered || 0) / event.capacity) * 100))
+      : 0;
+  const regForThis =
+    reg ||
+    DB.registrations.find(
+      registration =>
+        String(registration.attendeeId) === String(CU.id) &&
+        String(registration.eventId) === String(event.id)
+    );
+  const isCancelled = isCancelledWorkflowEvent(event);
+  const request = role === 'organizer' ? organizerEventRequest(event) : null;
+  const status = role === 'organizer' ? organizerEventCardStatus(event) : event.status;
+  const statusLabel =
+    role === 'organizer'
+      ? {
+          upcoming: 'Upcoming',
+          ongoing: 'Ongoing',
+          completed: 'Completed',
+          cancelled: 'Cancelled',
+          draft: 'Draft',
+        }[status] || status
+      : status;
+  const statusColor =
+    role === 'organizer'
+      ? {
+          upcoming: 'blue',
+          ongoing: 'green',
+          completed: 'green',
+          cancelled: 'red',
+          draft: 'yellow',
+        }[status] || evStatBadge(status)
+      : evStatBadge(status);
+  const budget = request ? Number(request.agreedPrice ?? request.budget ?? 0) : null;
+  const paymentLabel =
+    request?.paymentStatus === 'fully_paid'
+      ? 'Paid'
+      : request?.paymentStatus === 'deposit_paid'
+      ? 'Deposit Paid'
+      : 'Unpaid';
+  const paymentColor =
+    request?.paymentStatus === 'fully_paid'
+      ? 'var(--green)'
+      : request?.paymentStatus === 'deposit_paid'
+      ? 'var(--blue)'
+      : 'var(--yellow)';
+  const bannerContent = event.image
+    ? \`
+        <img src="\${event.image}" alt="\${
+        event.title || 'Event'
+      }" class="ev-banner-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="ev-banner-fallback" style="display:none;align-items:center;justify-content:center;font-size:52px;width:100%;height:100%">\${
+          event.emoji || '📅'
+        }</div>
+        <div class="ev-banner-overlay"></div>
+      \`
+    : \`<span style="font-size:52px">\${event.emoji || '📅'}</span>\`;
+  return \`<div class="ev-card">
+    <div class="ev-banner" style="background:\${event.color || 'var(--accent)'}18">
+      \${bannerContent}
+      <div class="ev-banner-tag"><span class="badge badge-\${statusColor}">\${escapeHtml(
+    statusLabel
+  )}</span></div>
+      <div class="ev-banner-price">\${
+        request
+          ? budget > 0
+            ? '₹' + budget.toLocaleString('en-IN')
+            : 'Budget not set'
+          : event.price === 0
+          ? 'Free'
+          : '₹' + event.price
+      }</div>
+    </div>
+    <div class="ev-body">
+      <div class="ev-title">\${event.title}</div>
+      <div class="ev-meta">
+        <div class="ev-meta-row"><span>📅</span>\${event.date} · \${event.time}</div>
+        <div class="ev-meta-row"><span>📍</span>\${event.venue}</div>
+        <div class="ev-meta-row"><span>🏷️</span>\${event.category}</div>
+        \${
+          request
+            ? \`<div class="ev-meta-row"><span>💳</span>Payment: <strong style="color:\${paymentColor}">\${paymentLabel}</strong></div>\`
+            : ''
+        }
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="flex justify-between ev-cap mb-4"><span>\${event.registered}/\${
+    event.capacity
+  } registered</span><span>\${pct}%</span></div>
+        <div class="prog"><div class="prog-fill" style="width:\${pct}%"></div></div>
+      </div>
+      <div class="ev-footer">
+        \${
+          role === 'attendee'
+            ? \`<div class="flex gap-6" style="width:100%;justify-content:space-between"><button class="btn btn-sm \${
+                regForThis ? 'btn-ghost' : 'btn-primary'
+              }" onclick="regForEvent('\${event.id}')" \${
+                (event.status === 'full' && !regForThis) ||
+                event.status === 'completed' ||
+                isCancelled
+                  ? 'disabled'
+                  : ''
+              } style="\${
+                (event.status === 'full' && !regForThis) ||
+                event.status === 'completed' ||
+                isCancelled
+                  ? 'opacity:.5'
+                  : ''
+              }">\${
+                isCancelled
+                  ? 'Event Cancelled'
+                  : regForThis
+                  ? '✓ Registered'
+                  : event.status === 'full'
+                  ? 'Event Full'
+                  : 'Register'
+              }</button><button class="btn btn-ghost btn-xs" onclick="openViewEventDrawer('\${
+                event.id
+              }')" title="View event details">View Details</button></div>\`
+            : role === 'organizer'
+            ? renderOrganizerEventActions(event, request)
+            : role === 'superuser'
+            ? \`<div class="actions"><button class="btn btn-ghost btn-xs w-full" onclick="openViewEventDrawer('\${event.id}')" title="View event details">👁️ View</button></div>\`
+            : role === 'employee' || role === 'client'
+            ? \`<div class="flex gap-6"><button class="btn btn-ghost btn-xs w-full" onclick="openViewEventDrawer('\${event.id}')" title="View event details">👁️ View Details</button></div>\`
+            : \`<button class="btn btn-ghost btn-xs" onclick="openViewEventDrawer('\${event.id}')" title="View event details">👁️ Details</button>\`
+        }
+        <div class="tag-list" style="flex:1;justify-content:flex-end">\${(event.tags || [])
+          .slice(0, 2)
+          .map(tag => \`<span class="tag">\${tag}</span>\`)
+          .join('')}</div>
+      </div>
+    </div>
+  </div>\`;
+}
+function openAddEventModal() {
+  openModal(
+    'Create New Event',
+    \`
+    <div class="form-group"><label class="form-label">Event Title *</label><input class="form-control" id="ne-title" placeholder="e.g. Annual Tech Summit 2026"></div>
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">Category *</label>
+        <select class="form-control" id="ne-cat"><option>Conference</option><option>Corporate</option><option>Concert</option><option>Workshop</option><option>Networking</option><option>Other</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <select class="form-control" id="ne-status"><option value="upcoming">Upcoming</option><option value="full">Full</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label" for="ne-visibility">Event Access</label><select class="form-control" id="ne-visibility"><option value="public" selected>Public — direct registration</option><option value="private">Private — organizer approval required</option></select></div>
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">Date *</label><input class="form-control" id="ne-date" type="date" min="\${EventFlowEventDates.minimumEventDate()}"><p class="small muted">Choose a date at least 7 days from today.</p></div>
+      <div class="form-group"><label class="form-label">Start Time</label><input class="form-control" id="ne-time" type="time" value="09:00"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Venue *</label><input class="form-control" id="ne-venue" placeholder="Convention Center, Hall A"></div>
+    <div class="form-group"><label class="form-label">City</label><input class="form-control" id="ne-city" placeholder="Chennai"></div>
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">Capacity *</label><input class="form-control" id="ne-cap" type="number" placeholder="500"></div>
+      <div class="form-group"><label class="form-label">Ticket Price (₹) — 0 = Free</label><input class="form-control" id="ne-price" type="number" placeholder="0"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="ne-desc" placeholder="Describe the event…"></textarea></div>
+    <div class="form-group"><label class="form-label">Tags (comma-separated)</label><input class="form-control" id="ne-tags" placeholder="AI, Tech, Networking"></div>
+  \`,
+    [
+      {
+        lbl: 'Create Event',
+        cls: 'btn-primary',
+        fn: 'saveNewEvent()',
+      },
+    ]
+  );
+}
+function saveNewEvent() {
+  const title = v('ne-title');
+  const date = v('ne-date');
+  const venue = v('ne-venue');
+  const cap = v('ne-cap');
+  if (!title) {
+    toast('Event title is required', 'error');
+    return;
+  }
+  if (!date) {
+    toast('Event date is required', 'error');
+    return;
+  }
+  const dateError = EventFlowEventDates.validateEventLeadTime(date);
+  if (dateError) {
+    toast(dateError, 'error');
+    return;
+  }
+  if (!venue) {
+    toast('Venue is required', 'error');
+    return;
+  }
+  const capNum = Number(cap);
+  if (!cap || !Number.isInteger(capNum) || capNum < 1 || capNum > 50000) {
+    toast(
+      capNum > 50000
+        ? 'Maximum event capacity is 50,000'
+        : 'Event capacity must be between 1 and 50,000',
+      'error'
+    );
+    return;
+  }
+  const priceNum = Number(v('ne-price') || 0);
+  if (
+    !Number.isFinite(priceNum) ||
+    priceNum < 0 ||
+    priceNum > 100000 ||
+    Math.abs(priceNum * 100 - Math.round(priceNum * 100)) > 0.000001
+  ) {
+    toast(
+      priceNum > 100000
+        ? 'Ticket price cannot exceed ₹1,00,000'
+        : 'Enter a ticket price between ₹0 and ₹1,00,000, with up to 2 decimal places.',
+      'error'
+    );
+    return;
+  }
+  const eventPayload = {
+    name: title,
+    category: v('ne-cat') || 'Conference',
+    date: date,
+    time: v('ne-time') || '09:00',
+    location: venue,
+    capacity: parseInt(cap),
+    ticketPrice: parseInt(v('ne-price')) || 0,
+    visibility: v('ne-visibility') || 'public',
+    status: 'published',
+    description: v('ne-desc') || '',
+    organizerId: CU.userId || CU.id,
+  };
+  apiCreateEvent(eventPayload)
+    .then(function (newEv) {
+      // Add to local DB for immediate UI
+      const evId = newEv.eventId || DB._nextId.events++;
+      DB.events.push({
+        id: evId,
+        title,
+        category: v('ne-cat'),
+        date,
+        time: v('ne-time'),
+        venue,
+        city: v('ne-city'),
+        capacity: parseInt(cap),
+        registered: 0,
+        price: parseInt(v('ne-price')) || 0,
+        status: v('ne-status') || 'upcoming',
+        visibility: newEv.visibility,
+        organizer: CU.id,
+        description: v('ne-desc'),
+        emoji: '📅',
+        color: '#7c6ff7',
+      });
+      closeModal();
+      renderPage(_currentPage);
+      toast('Event created!', 'success');
+    })
+    .catch(function (error) {
+      toast(error.message || 'Event creation failed.', 'error');
+    });
+}
+function openEditEventModal(id) {
+  const event = DB.events.find(currentEvent => String(currentEvent.id) === String(id));
+  if (!event) return;
+  if (isBookedClientEvent(event)) {
+    toast('Booked event details cannot be edited.', 'info');
+    return;
+  }
+  openModal(
+    \`Edit — \${event.title}\`,
+    \`
+    <div class="form-group"><label class="form-label">Event Title</label><input class="form-control" id="ee-title" value="\${
+      event.title
+    }"></div>
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">Date</label><input class="form-control" id="ee-date" type="date" value="\${
+        event.date
+      }"></div>
+      <div class="form-group"><label class="form-label">Time</label><input class="form-control" id="ee-time" type="time" value="\${
+        event.time
+      }"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Venue</label><input class="form-control" id="ee-venue" value="\${
+      event.venue
+    }"></div>
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">Capacity</label><input class="form-control" id="ee-cap" type="number" value="\${
+        event.capacity
+      }"></div>
+      <div class="form-group"><label class="form-label">Price (₹)</label><input class="form-control" id="ee-price" type="number" value="\${
+        event.price
+      }"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Status</label>
+      <select class="form-control" id="ee-status">\${['upcoming', 'full', 'completed']
+        .map(s => \`<option value="\${s}"\${event.status === s ? ' selected' : ''}>\${s}</option>\`)
+        .join('')}</select>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="ee-desc">\${
+      event.description || ''
+    }</textarea></div>
+  \`,
+    [
+      {
+        lbl: 'Save Changes',
+        cls: 'btn-primary',
+        fn: \`saveEditEvent('\${id}')\`,
+      },
+    ]
+  );
+}
+function saveEditEvent(id) {
+  const event = DB.events.find(currentEvent => String(currentEvent.id) === String(id));
+  if (!event) return;
+  if (isBookedClientEvent(event)) {
+    toast('Booked event details cannot be edited.', 'info');
+    return;
+  }
+  const newTitle = v('ee-title') || event.title;
+  const newDate = v('ee-date') || event.date;
+  const newTime = v('ee-time') || event.time;
+  const newVenue = v('ee-venue') || event.venue;
+  const newCap = parseInt(v('ee-cap')) || event.capacity;
+  const newPrice = parseFloat(v('ee-price')) || 0;
+  if (
+    newCap &&
+    (!Number.isInteger(Number(newCap)) || Number(newCap) < 1 || Number(newCap) > 50000)
+  ) {
+    toast(
+      Number(newCap) > 50000
+        ? 'Maximum event capacity is 50,000'
+        : 'Event capacity must be between 1 and 50,000',
+      'error'
+    );
+    return;
+  }
+  if (
+    Number.isFinite(newPrice) &&
+    (newPrice < 0 ||
+      newPrice > 100000 ||
+      Math.abs(newPrice * 100 - Math.round(newPrice * 100)) > 0.000001)
+  ) {
+    toast(
+      newPrice > 100000
+        ? 'Ticket price cannot exceed ₹1,00,000'
+        : 'Ticket price cannot be negative',
+      'error'
+    );
+    return;
+  }
+  const newStatus = v('ee-status') || event.status;
+  const newDesc = v('ee-desc');
+  const backendId = event.eventId || id;
+  apiUpdateEvent(backendId, {
+    name: newTitle,
+    date: newDate,
+    time: newTime,
+    location: newVenue,
+    capacity: newCap,
+    ticketPrice: newPrice,
+    status: newStatus,
+    description: newDesc,
+  })
+    .then(function () {
+      event.title = newTitle;
+      event.date = newDate;
+      event.time = newTime;
+      event.venue = newVenue;
+      event.capacity = newCap;
+      event.price = newPrice;
+      event.status = newStatus;
+      event.description = newDesc;
+      closeModal();
+      renderPage('events');
+      toast('Event updated successfully', 'success');
+    })
+    .catch(function (error) {
+      toast(error.message || 'Event update failed.', 'error');
+    });
+}
+function handleOrganizerDeleteEvent(id) {
+  if (
+    typeof window !== 'undefined' &&
+    window.event &&
+    typeof window.event.stopPropagation === 'function'
+  ) {
+    window.event.stopPropagation();
+  }
+  const e =
+    (DB &&
+      DB.events &&
+      DB.events.find(
+        event => String(event.id) === String(id) || String(event.eventId) === String(id)
+      )) ||
+    null;
+  if (!e) {
+    if (typeof toast === 'function') toast('Event record not found.', 'error');
+    return;
+  }
+
+  // Enforce ownership and permissions
+  const isOwner =
+    CU.role === 'superuser' ||
+    (e &&
+      (String(e.organizer) === String(CU.id) ||
+        String(e.organizerUserId) === String(CU.id) ||
+        String(e.organizerId) === String(CU.id) ||
+        String(e.organizerId) === String(CU.organizerId) ||
+        String(e.organizer) === String(CU.userId)));
+  if (!isOwner) {
+    if (typeof toast === 'function')
+      toast('Unauthorized: You can only delete your own events.', 'error');
+    return;
+  }
+  const rawStatus = String(e.backendStatus || e.status || '').toLowerCase();
+
+  // Block deletion for already cancelled events
+  const isAlreadyCancelled = ['cancelled'].includes(rawStatus) || Boolean(e.cancellation);
+  if (isAlreadyCancelled) {
+    openModal(
+      'Already Cancelled',
+      \`
+          <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);padding:14px;border-radius:8px;font-size:13px;color:var(--red);line-height:1.6">
+          <strong>This event is already cancelled.</strong> <strong>\${escapeHtml(
+            e.title || e.name || 'Event'
+          )}</strong> cannot be cancelled or refunded again.
+            <div style="margin-top:8px;color:var(--text2)">
+            Its cancellation and refund history has been preserved.
+            </div>
+          </div>
+        \`,
+      [
+        {
+          lbl: 'Close',
+          cls: 'btn-ghost',
+          fn: 'closeModal()',
+        },
+      ]
+    );
+    return;
+  }
+
+  // Block deletion for completed events
+  const isCompleted = ['completed'].includes(rawStatus);
+  if (isCompleted) {
+    openModal(
+      'Action Not Permitted',
+      \`
+          <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);padding:14px;border-radius:8px;font-size:13px;color:var(--red);line-height:1.6">
+            <strong>Action Blocked:</strong> The completed event <strong>\${escapeHtml(
+              e.title || e.name || 'Event'
+            )}</strong> cannot be deleted or cancelled.
+            <div style="margin-top:8px;color:var(--text2)">
+              Completed events must be preserved for audit history, registrations, financial transactions, and compliance reports.
+            </div>
+          </div>
+        \`,
+      [
+        {
+          lbl: 'Close',
+          cls: 'btn-ghost',
+          fn: 'closeModal()',
+        },
+      ]
+    );
+    return;
+  }
+
+  // Check registrations and payments / ticket history
+  const eventRegs = (DB && DB.registrations ? DB.registrations : []).filter(
+    r =>
+      String(r.eventId) === String(id) ||
+      String(r.eventId) === String(e.id) ||
+      String(r.eventId) === String(e.eventId)
+  );
+  const regCount = Number(e.registered || 0) || eventRegs.length;
+  const eventPayments = (DB && DB.payments ? DB.payments : [])
+    .concat(DB && DB.eventWorkflowPayments ? DB.eventWorkflowPayments : [])
+    .filter(
+      p =>
+        String(p.eventId) === String(id) ||
+        String(p.eventId) === String(e.id) ||
+        String(p.eventId) === String(e.eventId) ||
+        eventRegs.some(
+          registration =>
+            String(registration.id) === String(p.registrationId) ||
+            String(registration.registrationId) === String(p.registrationId)
+        )
+    );
+  const hasPaymentsOrTickets =
+    eventPayments.length > 0 ||
+    eventRegs.some(registration =>
+      Boolean(registration.ticketId || registration.qrCode || registration.verificationId)
+    );
+  const isDraft = ['draft', 'pending'].includes(rawStatus);
+  const isEligibleDraft = isDraft && regCount === 0 && !hasPaymentsOrTickets;
+
+  // 1. Eligible Draft Event: open draft deletion modal with Keep Event and Delete Event
+  if (isEligibleDraft) {
+    const eventName = e.title || e.name || 'Draft Event';
+    openModal(
+      'Delete Draft Event',
+      \`
+          <div style="font-size:13.5px;color:var(--text);margin-bottom:12px;line-height:1.6">
+            Are you sure you want to permanently delete the draft event <strong>\${escapeHtml(
+              eventName
+            )}</strong>?
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:12.5px;line-height:1.6;color:var(--text2);margin-bottom:12px">
+            <div><strong>Event:</strong> \${escapeHtml(eventName)}</div>
+            <div><strong>Status:</strong> <span class="badge badge-amber">Draft</span></div>
+            <div><strong>Registrations:</strong> 0</div>
+            <div style="margin-top:6px;font-size:12px;color:var(--text3)">
+              This draft event has no registrations or ticket history and can be safely deleted. This action cannot be undone.
+            </div>
+          </div>
+        \`,
+      [
+        {
+          lbl: 'Keep Event',
+          cls: 'btn-ghost',
+          fn: 'closeModal()',
+        },
+        {
+          lbl: 'Delete Event',
+          cls: 'btn-danger',
+          fn: \`confirmDeleteDraftEvent('\${e.id || e.eventId || id}')\`,
+        },
+      ]
+    );
+    return;
+  }
+
+  // 2. Published, Ongoing, or Registered Events: open cancellation workflow
+  openOrganizerEventCancellationModal(e.eventId || e.id || id, e.requestId || '');
+}
+function deleteEvent(id) {
+  handleOrganizerDeleteEvent(id);
+}
+async function confirmDeleteDraftEvent(id) {
+  const e =
+    (DB &&
+      DB.events &&
+      DB.events.find(
+        event => String(event.id) === String(id) || String(event.eventId) === String(id)
+      )) ||
+    null;
+  const backendId = e ? e.eventId || e.id || id : id;
+  try {
+    if (window.EventFlowData && typeof window.EventFlowData.mutate === 'function') {
+      await window.EventFlowData.mutate(
+        \`event:\${backendId}\`,
+        () => apiDeleteEvent(backendId),
+        'Draft event deleted successfully',
+        {
+          close: true,
+        }
+      );
+    } else {
+      await apiDeleteEvent(backendId);
+      const idx = DB.events.findIndex(
+        event => String(event.id) === String(id) || String(event.eventId) === String(id)
+      );
+      if (idx > -1) {
+        DB.events.splice(idx, 1);
+      }
+      DB.registrations = (DB.registrations || []).filter(
+        registration =>
+          String(registration.eventId) !== String(id) &&
+          String(registration.eventId) !== String(backendId)
+      );
+      if (typeof saveDB === 'function') saveDB();
+      closeModal();
+      toast('Draft event deleted successfully', 'success');
+      if (typeof renderPage === 'function') renderPage(_currentPage || 'events');
+      if (typeof refreshEvents === 'function') refreshEvents();
+    }
+  } catch (err) {
+    toast(err.message || 'Event deletion failed.', 'error');
+  }
+}
+function openOrganizerEventWorkspace(id) {
+  const e = (DB && DB.events && DB.events.find(event => String(event.id) === String(id))) || {};
+  const sections = ['overview', 'preparation', 'registrations', 'issues', 'history'];
+  const actions = ['Postpone', 'Cancel', 'Mark Completed', 'Update Preparation'];
+  if (typeof openModal === 'function') {
+    openModal(
+      \`Event Workspace: \${e.title || ''}\`,
+      \`
+          <div class="workspace-tabs">
+            \${sections
+              .map(
+                s =>
+                  \`<button class="tab-btn" onclick="organizerEventSection('\${id}','\${s}')">\${s}</button>\`
+              )
+              .join('')}
+          </div>
+          <div class="workspace-actions">
+            <button class="btn btn-primary" onclick="mutateOrganizerEvent('\${id}','postpone')">Postpone</button>
+            <button class="btn btn-danger" onclick="mutateOrganizerEvent('\${id}','cancel')">Cancel</button>
+            <button class="btn btn-success" onclick="mutateOrganizerEvent('\${id}','completed')">Mark Completed</button>
+            <button class="btn btn-ghost" onclick="mutateOrganizerEvent('\${id}','preparation')">Update Preparation</button>
+          </div>
+        \`
+    );
+  }
+}
+async function mutateOrganizerEvent(id, action) {
+  if (action === 'cancel') {
+    return openOrganizerEventCancellationModal(id);
+  }
+  if (window.EventFlowData && window.EventFlowData.mutate) {
+    await window.EventFlowData.mutate('events', async () => {
+      return await apiUpdateEvent(id, {
+        action,
+      });
+    });
+  } else {
+    await apiUpdateEvent(id, {
+      action,
+    });
+  }
+}
+function openViewEventDrawer(id) {
+  const event = DB.events.find(currentEvent => String(currentEvent.id) === String(id));
+  if (!event) return;
+  const regs = DB.registrations.filter(registration => String(registration.eventId) === String(id));
+  const bannerHTML = event.image
+    ? \`
+        <div style="height:140px;border-radius:12px;overflow:hidden;margin-bottom:16px;position:relative;background:\${
+          event.color || 'var(--accent)'
+        }18">
+          <img src="\${event.image}" alt="\${
+        event.title || 'Event'
+      }" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=\\'font-size:52px;text-align:center;padding:30px 0\\'>\${
+        event.emoji || '📅'
+      }</div>'">
+        </div>
+      \`
+    : \`<div style="font-size:52px;text-align:center;margin-bottom:16px">\${
+        event.emoji || '📅'
+      }</div>\`;
+  openDrawer(
+    event.title,
+    \`
+    \${bannerHTML}
+    <span class="badge badge-\${evStatBadge(event.status)} mb-16">\${event.status}</span>
+    <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px">
+      <div class="info-row"><span class="info-label">Category</span><span class="info-value">\${
+        event.category
+      }</span></div>
+      <div class="info-row"><span class="info-label">Date & Time</span><span class="info-value">\${
+        event.date
+      } · \${event.time}</span></div>
+      <div class="info-row"><span class="info-label">Venue</span><span class="info-value" style="max-width:200px;text-align:right">\${
+        event.venue
+      }</span></div>
+      <div class="info-row"><span class="info-label">City</span><span class="info-value">\${
+        event.city || '—'
+      }</span></div>
+      <div class="info-row"><span class="info-label">Capacity</span><span class="info-value">\${
+        event.registered
+      } / \${event.capacity}</span></div>
+      <div class="info-row"><span class="info-label">Price</span><span class="info-value" style="color:var(--green)">\${
+        event.price === 0 ? 'Free' : '₹' + event.price
+      }</span></div>
+      <div class="info-row"><span class="info-label">Registrations</span><span class="info-value">\${
+        regs.length
+      }</span></div>
+
+    </div>
+    \${
+      event.description
+        ? \`<div class="label mb-8">Description</div><p class="muted" style="font-size:13px;line-height:1.7">\${event.description}</p>\`
+        : ''
+    }
+    \${
+      (event.tags || []).length
+        ? \`<div class="label mt-16 mb-8">Tags</div><div class="tag-list">\${event.tags
+            .map(tag => \`<span class="tag">\${tag}</span>\`)
+            .join('')}</div>\`
+        : ''
+    }
+  \`
+  );
+}
+function viewPublicEventDetails(id) {
+  const event = DB.events.find(currentEvent => currentEvent.id === id);
+  if (!event) return;
+  const regs = DB.registrations.filter(registration => registration.eventId === id);
+  const org = DB.users.find(user => user.id === event.organizer) || {
+    name: '—',
+    avatar: '?',
+  };
+  const bannerHTML = event.image
+    ? \`
+        <div style="height:140px;border-radius:12px;overflow:hidden;margin-bottom:16px;position:relative;background:\${
+          event.color || 'var(--accent)'
+        }18">
+          <img src="\${event.image}" alt="\${
+        event.title || 'Event'
+      }" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=\\'font-size:52px;text-align:center;padding:30px 0\\'>\${
+        event.emoji || '📅'
+      }</div>'">
+        </div>
+      \`
+    : \`<div style="font-size:52px;text-align:center;margin-bottom:16px">\${
+        event.emoji || '📅'
+      }</div>\`;
+  const orgAvHTML = org.avatarImage
+    ? \`
+        <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:var(--accent-dim);flex-shrink:0;position:relative">
+          <img src="\${org.avatarImage}" alt="\${
+        org.name
+      }" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;color:var(--accent);font-weight:700">\${
+            org.avatar || org.name?.[0] || 'O'
+          }</div>
+        </div>
+      \`
+    : \`<div style="width:40px;height:40px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">\${
+        org.avatar || org.name?.[0] || 'O'
+      }</div>\`;
+  openDrawer(
+    event.title,
+    \`
+    \${bannerHTML}
+    <span class="badge badge-\${evStatBadge(event.status)} mb-16">\${event.status}</span>
+    <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px">
+      <div class="info-row"><span class="info-label">Category</span><span class="info-value">\${
+        event.category
+      }</span></div>
+      <div class="info-row"><span class="info-label">Date & Time</span><span class="info-value">\${
+        event.date
+      } · \${event.time}</span></div>
+      <div class="info-row"><span class="info-label">Venue</span><span class="info-value" style="max-width:200px;text-align:right">\${
+        event.venue
+      }</span></div>
+      <div class="info-row"><span class="info-label">City</span><span class="info-value">\${
+        event.city || '—'
+      }</span></div>
+      <div class="info-row"><span class="info-label">Capacity</span><span class="info-value">\${
+        event.registered
+      } / \${event.capacity}</span></div>
+      <div class="info-row"><span class="info-label">Price</span><span class="info-value" style="color:var(--green)">\${
+        event.price === 0 ? 'Free' : '₹' + event.price
+      }</span></div>
+    </div>
+    \${
+      event.description
+        ? \`<div class="label mb-8">Description</div><p style="font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px">\${event.description}</p>\`
+        : ''
+    }
+    <div class="label mb-8">Organizer</div>
+    <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:8px;margin-bottom:16px">
+      \${orgAvHTML}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600">\${org.name}</div>
+        <div class="small" style="color:var(--text2)">\${
+          org.service || org.bio || 'Professional Event Organizer'
+        }</div>
+      </div>
+    </div>
+    \${
+      (event.tags || []).length
+        ? \`<div class="label mb-8">Tags</div><div class="tag-list">\${event.tags
+            .map(tag => \`<span class="tag">\${tag}</span>\`)
+            .join('')}</div>\`
+        : ''
+    }
+  \`
+  );
+}
+function viewEventReport(eventId) {
+  const event = DB.events.find(currentEvent => currentEvent.id == eventId);
+  if (!event) return;
+  const regs = DB.registrations.filter(registration => registration.eventId == eventId);
+  const checkedIn = regs.filter(registration => registration.checkedIn).length;
+  const totalRevenue = regs.reduce((sum, registration) => sum + registration.amount, 0);
+  const avgRating = 4.5;
+  const reportThumb = event.image
+    ? \`
+        <div style="width:64px;height:64px;border-radius:10px;overflow:hidden;flex-shrink:0;background:\${
+          event.color || 'var(--accent)'
+        }20;position:relative">
+          <img src="\${event.image}" alt="\${
+        event.title || 'Event'
+      }" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<div style=\\'font-size:48px\\'>\${
+        event.emoji || '📅'
+      }</div>'">
+        </div>
+      \`
+    : \`<div style="font-size:48px">\${event.emoji || '📅'}</div>\`;
+  openModal(
+    \`Event Report - \${event.title}\`,
+    \`
+    <div style="background:linear-gradient(135deg,\${event.color}20,\${
+      event.color
+    }05);border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid \${event.color}30">
+      <div style="display:flex;gap:14px;align-items:center">
+        \${reportThumb}
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:18px;margin-bottom:4px">\${event.title}</div>
+          <div style="font-size:13px;color:var(--text2)">📅 \${event.date} · 📍 \${event.venue}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:6px">\${
+            event.category
+          } • Status: Completed</div>
+        </div>
+      </div>
+    </div>
+    
+    \${renderWorkflowFileReports(event.eventId || event.id)}
+    <div class="grid-2" style="gap:12px;margin-bottom:20px">
+      <div style="background:var(--surface2);padding:14px;border-radius:8px;border-left:3px solid var(--green)">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">TOTAL REGISTRATIONS</div>
+        <div style="font-size:24px;font-weight:800;color:var(--green)">\${regs.length}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">Attendees registered</div>
+      </div>
+      <div style="background:var(--surface2);padding:14px;border-radius:8px;border-left:3px solid var(--blue)">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">CHECK-INS</div>
+        <div style="font-size:24px;font-weight:800;color:var(--blue)">\${checkedIn}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">\${Math.round(
+          (checkedIn / regs.length) * 100
+        )}% attendance rate</div>
+      </div>
+      <div style="background:var(--surface2);padding:14px;border-radius:8px;border-left:3px solid var(--green)">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">TOTAL REVENUE</div>
+        <div style="font-size:24px;font-weight:800;color:var(--green)">₹\${totalRevenue.toLocaleString()}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">From ticket sales</div>
+      </div>
+      <div style="background:var(--surface2);padding:14px;border-radius:8px;border-left:3px solid var(--yellow)">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">RATING</div>
+        <div style="font-size:24px;font-weight:800;color:var(--yellow)">⭐ \${avgRating}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">Based on attendee reviews</div>
+      </div>
+    </div>
+    
+    <div style="margin-bottom:16px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:12px">Event Details Summary</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+        <div style="display:flex;justify-content:space-between;padding:8px;background:var(--surface3);border-radius:6px">
+          <span>Event Capacity:</span>
+          <span style="font-weight:600">\${event.capacity} attendees</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px;background:var(--surface3);border-radius:6px">
+          <span>Occupancy:</span>
+          <span style="font-weight:600;color:var(--green)">\${Math.round(
+            (regs.length / event.capacity) * 100
+          )}%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px;background:var(--surface3);border-radius:6px">
+          <span>Ticket Price:</span>
+          <span style="font-weight:600">₹\${event.price}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px;background:var(--surface3);border-radius:6px">
+          <span>Duration:</span>
+          <span style="font-weight:600">\${event.time} onwards</span>
+        </div>
+      </div>
+    </div>
+    
+    <div style="background:var(--surface3);padding:12px;border-radius:8px;border-left:2px solid var(--accent)">
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">
+        <strong>Report Generated:</strong> \${new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })} at \${new Date().toLocaleTimeString()}<br>
+        <strong>Event Status:</strong> Successfully Completed ✓<br>
+      </div>
+    </div>
+  \`,
+    [
+      {
+        lbl: 'Close',
+        cls: 'btn-primary',
+        fn: 'closeModal()',
+      },
+    ],
+    false
+  );
+}
+
+// ════════════════════════════════════════════════
+//  BROWSE EVENTS (Attendee)
+// ════════════════════════════════════════════════
+function pageBrowseEvents() {
+  const avail = DB.events.filter(event => event.status !== 'completed');
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">Browse Events</div><div class="page-sub">Discover and register for upcoming events.</div></div>
+  </div>
+  <div class="filter-row">
+    <div class="search-box input-group"><span class="input-icon">🔍</span><input class="form-control" id="be-q" placeholder="Search events…" oninput="refreshBrowse()"></div>
+    <select class="form-control filter-select" id="be-cat" onchange="refreshBrowse()">
+      <option value="">All Categories</option><option>Conference</option><option>Corporate</option><option>Concert</option><option>Workshop</option><option>Networking</option>
+    </select>
+    <select class="form-control filter-select" id="be-price" onchange="refreshBrowse()">
+      <option value="">Any Price</option><option value="free">Free Only</option><option value="paid">Paid Only</option>
+    </select>
+    <select class="form-control filter-select" id="be-city" onchange="refreshBrowse()">
+      <option value="">Any City</option>
+      \${[...new Set(DB.events.map(event => event.city).filter(Boolean))]
+        .map(c => \`<option>\${c}</option>\`)
+        .join('')}
+    </select>
+  </div>
+  <div class="events-grid" id="browse-grid">\${avail
+    .map(e => evCard(e, 'attendee'))
+    .join('')}</div>\`;
+}
+function refreshBrowse() {
+  const q = (g('be-q') || {}).value?.toLowerCase() || '';
+  const cat = (g('be-cat') || {}).value || '';
+  const price = (g('be-price') || {}).value || '';
+  const city = (g('be-city') || {}).value || '';
+  const list = DB.events.filter(event => {
+    if (event.status === 'completed') return false;
+    return (
+      (!q || event.title.toLowerCase().includes(q)) &&
+      (!cat || event.category === cat) &&
+      (!price ||
+        (price === 'free' && event.price === 0) ||
+        (price === 'paid' && event.price > 0)) &&
+      (!city || event.city === city)
+    );
+  });
+  globalThis.window?.EventFlowOrganizerPages?.clear(g('browse-grid'));
+  g('browse-grid').innerHTML =
+    list.map(e => evCard(e, 'attendee')).join('') ||
+    \`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No events match</div><p class="empty-desc">Try adjusting your filters.</p></div>\`;
+}
+function regForEvent(eventId) {
+  const event = DB.events.find(currentEvent => String(currentEvent.id) === String(eventId));
+  if (!event || event.status === 'full') {
+    toast(event ? 'Sorry, this event is full' : 'Event not found', 'error');
+    return;
+  }
+  const existing = DB.registrations.find(
+    registration =>
+      String(registration.attendeeId) === String(CU.id) &&
+      String(registration.eventId) === String(eventId)
+  );
+  if (existing) {
+    openViewTicketModal(existing.id);
+    return;
+  }
+  const regThumb = event.image
+    ? \`
+        <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:\${
+          event.color || 'var(--accent)'
+        }20;position:relative">
+          <img src="\${event.image}" alt="\${
+        event.title || 'Event'
+      }" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<span style=\\'font-size:32px\\'>\${
+        event.emoji || '📅'
+      }</span>'">
+        </div>
+      \`
+    : \`<span style="font-size:32px">\${event.emoji || '📅'}</span>\`;
+
+  // Show registration flow
+  openModal(
+    \`Register — \${event.title}\`,
+    \`
+    <div style="background:\${event.color}12;border:1px solid \${
+      event.color
+    }30;border-radius:var(--r-lg);padding:16px;margin-bottom:20px">
+      <div class="flex items-center gap-12">
+        \${regThumb}
+        <div>
+          <div style="font-weight:700;font-size:15px">\${event.title}</div>
+          <div class="small">📅 \${event.date} · \${event.time}</div>
+          <div class="small">📍 \${event.venue}</div>
+        </div>
+      </div>
+    </div>
+    <div class="info-row" style="padding:8px 0"><span class="info-label">Attendee</span><span class="info-value">\${
+      CU.name
+    }</span></div>
+    <div class="info-row" style="padding:8px 0"><span class="info-label">Email</span><span class="info-value">\${
+      CU.email
+    }</span></div>
+    <div class="info-row" style="padding:8px 0 16px"><span class="info-label">Ticket Price</span><span class="info-value" style="color:var(--green);font-size:16px;font-weight:700">\${
+      event.price === 0 ? 'FREE' : '₹' + event.price
+    }</span></div>
+    \${
+      event.price > 0
+        ? \`
+    <div style="background:var(--surface3);border-radius:var(--r);padding:16px;border:1px solid var(--border)">
+      <div class="h4 mb-12">💳 Payment Information</div>
+      <div class="form-group"><label class="form-label">Cardholder Name</label><input class="form-control" id="pay-name" placeholder="Name on card" autocomplete="off"></div>
+      <div class="form-group"><label class="form-label">Card Number *</label><input class="form-control" id="pay-card" placeholder="1234 5678 9012 3456" maxlength="19" oninput="fmtCard(this)"></div>
+      <div class="grid-2">
+        <div class="form-group"><label class="form-label">Expiry *</label><input class="form-control" id="pay-exp" placeholder="MM/YY" maxlength="5" oninput="fmtExp(this)"></div>
+        <div class="form-group"><label class="form-label">CVV *</label><input class="form-control" id="pay-cvv" placeholder="123" maxlength="3" inputmode="numeric" pattern="[0-9]{3}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" autocomplete="cc-csc"></div>
+      </div>
+    </div>\`
+        : \`<div style="text-align:center;padding:12px;background:var(--green-dim);border-radius:var(--r);color:var(--green);font-weight:500;font-size:13.5px">✓ This is a free event — no payment required!</div>\`
+    }
+  \`,
+    [
+      {
+        lbl: event.price === 0 ? 'Confirm Registration' : 'Pay & Register',
+        cls: 'btn-success',
+        fn: \`confirmReg('\${eventId}')\`,
+      },
+    ]
+  );
+}
+function fmtCard(element) {
+  element.value = element.value
+    .replace(/\\D/g, '')
+    .replace(/(.{4})/g, '$1 ')
+    .trim();
+}
+function fmtExp(element) {
+  let v = element.value.replace(/\\D/g, '');
+  if (v.length >= 2) v = v.slice(0, 2) + '/' + v.slice(2);
+  element.value = v;
+}
+function confirmReg(eventId) {
+  const event = DB.events.find(currentEvent => String(currentEvent.id) === String(eventId));
+  if (!event) return;
+  if (event.price > 0) {
+    const card = v('pay-card').replace(/\\s/g, '');
+    if (!card || card.length < 16) {
+      toast('Enter a valid 16-digit card number', 'error');
+      return;
+    }
+    const exp = v('pay-exp');
+    if (!exp || exp.length < 5) {
+      toast('Enter expiry date (MM/YY)', 'error');
+      return;
+    }
+    const cvvVal = v('pay-cvv');
+    if (!cvvVal || cvvVal.length < 3 || !/^[0-9]{3}$/.test(cvvVal)) {
+      toast('CVV must be exactly 3 digits (numbers only)', 'error');
+      return;
+    }
+  }
+
+  // Call backend registration API
+  const backendEventId = event.eventId || String(eventId);
+  const attendeeId = CU.userId || CU.id;
+  apiRegisterForEvent({
+    attendeeId: String(attendeeId),
+    eventId: backendEventId,
+    ticketType: event.price === 0 ? 'free' : 'standard',
+  })
+    .then(function (regData) {
+      // If paid event, also create payment
+      if (event.price > 0) {
+        apiMakePayment({
+          registrationId: regData.registrationId,
+          amount: event.price,
+          paymentMethod: 'DEMO_PROVIDER',
+          paymentDate: new Date().toISOString().split('T')[0],
+        }).catch(function () {}); // payment fire-and-forget
+      }
+      // Update local DB
+      const n = DB._nextId.regs++;
+      const ticketId = regData.ticketId || \`TKT-2026-\${String(n).padStart(3, '0')}\`;
+      const seat =
+        event.category === 'Conference'
+          ? \`A-\${Math.floor(Math.random() * 200 + 1)
+              .toString()
+              .padStart(3, '0')}\`
+          : 'GA';
+      DB.registrations.push({
+        id: n,
+        attendeeId: CU.id,
+        eventId: event.id,
+        date: today(),
+        ticketId,
+        status: 'confirmed',
+        payment: event.price === 0 ? 'free' : 'paid',
+        amount: event.price,
+        checkedIn: false,
+        seat,
+        verificationId: regData.verificationId || ticketId,
+      });
+      event.registered = Math.min(event.registered + 1, event.capacity);
+      if (event.registered >= event.capacity) event.status = 'full';
+      saveDB();
+      closeModal();
+      toast('🎉 Registration confirmed! Check your tickets.', 'success');
+      goNav('my-tickets');
+    })
+    .catch(function (error) {
+      // Fallback: create locally if backend fails
+      const n = DB._nextId.regs++;
+      const ticketId = \`TKT-2026-\${String(n).padStart(3, '0')}\`;
+      const seat =
+        event.category === 'Conference'
+          ? \`A-\${Math.floor(Math.random() * 200 + 1)
+              .toString()
+              .padStart(3, '0')}\`
+          : 'GA';
+      DB.registrations.push({
+        id: n,
+        attendeeId: CU.id,
+        eventId: event.id,
+        date: today(),
+        ticketId,
+        status: 'confirmed',
+        payment: event.price === 0 ? 'free' : 'paid',
+        amount: event.price,
+        checkedIn: false,
+        seat,
+      });
+      event.registered = Math.min(event.registered + 1, event.capacity);
+      if (event.registered >= event.capacity) event.status = 'full';
+      saveDB();
+      closeModal();
+      toast(
+        error.message || '🎉 Registration confirmed (local)!',
+        error.status === 409 ? 'warning' : 'success'
+      );
+      goNav('my-tickets');
+    });
+}
+function cancelTicket(regId) {
+  const registration = DB.registrations.find(eventRegistration => eventRegistration.id == regId);
+  if (!registration) return;
+  const event = DB.events.find(currentEvent => currentEvent.id === registration.eventId);
+  confirm2(
+    'Cancel Ticket',
+    'Are you sure you want to cancel this ticket? You will receive a refund within 5-7 business days.',
+    () => {
+      if (event) event.registered = Math.max(0, event.registered - 1);
+      const index = DB.registrations.indexOf(registration);
+      if (index > -1) DB.registrations.splice(index, 1);
+      saveDB();
+      renderPage(_currentPage);
+      toast('Ticket cancelled. Refund initiated.', 'success');
+    }
+  );
+}
+
+// ════════════════════════════════════════════════
+//  MY TICKETS
+// ════════════════════════════════════════════════
+function pageMyTickets() {
+  const regs = DB.registrations.filter(registration => registration.attendeeId === CU.id);
+  if (!regs.length)
+    return \`<div class="page-hd"><div class="page-hd-left"><div class="page-title">My Tickets</div></div></div><div class="empty"><div class="empty-icon">🎟️</div><div class="empty-title">No tickets yet</div><p class="empty-desc">Browse events and register to get your tickets here.</p><button class="btn btn-primary mt-16" onclick="goNav('browse-events')">Browse Events</button></div>\`;
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">My Tickets</div><div class="page-sub">\${
+      regs.length
+    } ticket(s)</div></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+    \${regs
+      .map(registration => {
+        const eventRegistration = DB.events.find(event => event.id === registration.eventId) || {
+          title: 'Unknown',
+          emoji: '🎟️',
+          color: '#7c6ff7',
+          venue: '',
+          date: '',
+          time: '',
+        };
+        return ticketCard(registration, eventRegistration);
+      })
+      .join('')}
+  </div>\`;
+}
+function ticketCard(r, e) {
+  const qr = renderTicketQRCode(r.verificationId || r.ticketId);
+  return \`<div class="ticket">
+    <div class="ticket-top">
+      <div class="flex justify-between items-start">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:28px">\${e.emoji}</span>
+            <span class="badge badge-\${evStatBadge(e.status)}">\${e.status}</span>
+          </div>
+          <div style="font-family:var(--font-head);font-size:17px;font-weight:700;line-height:1.3;margin-bottom:8px">\${
+            e.title
+          }</div>
+          <div class="small" style="margin-bottom:2px">📅 \${e.date} · \${e.time}</div>
+          <div class="small">📍 \${e.venue}</div>
+        </div>
+        <div class="qr-box ticket-qr" style="margin-left:16px">\${qr}</div>
+      </div>
+    </div>
+    <div class="ticket-divider"><div class="ticket-notch-l"></div><div class="ticket-notch-r"></div></div>
+    <div class="ticket-bot">
+      <div class="grid-2" style="gap:8px">
+        <div><div class="label mb-4">Attendee</div><div style="font-weight:500;font-size:13.5px">\${
+          CU.name
+        }</div></div>
+        <div><div class="label mb-4">Ticket ID</div><div class="mono">\${r.ticketId}</div></div>
+        <div><div class="label mb-4">Seat / Zone</div><div style="font-weight:500;font-size:13.5px">\${
+          r.seat || 'GA'
+        }</div></div>
+        <div><div class="label mb-4">Amount</div><div style="font-weight:700;font-size:15px;color:var(--green)">\${
+          r.amount === 0 ? 'Free' : '₹' + r.amount
+        }</div></div>
+      </div>
+      <div class="flex justify-between items-center mt-12">
+        <span class="badge badge-\${r.checkedIn ? 'green' : 'purple'}">\${
+    r.checkedIn ? '✅ Checked In' : '⏳ Not Yet Checked In'
+  }</span>
+        <span class="badge badge-green">✓ \${
+          r.payment === 'free' ? 'Free Ticket' : 'Payment Confirmed'
+        }</span>
+      </div>
+    </div>
+  </div>\`;
+}
+function makeQR() {
+  const cells = Array.from(
+    {
+      length: 25,
+    },
+    () => Math.random() > 0.5
+  );
+  return cells.map(on => \`<div class="qr-cell\${on ? ' on' : ''}"></div>\`).join('');
+}
+function openViewTicketModal(regId) {
+  const r = DB.registrations.find(registration => registration.id == regId);
+  if (!r) return;
+  const e = DB.events.find(event => event.id === r.eventId) || {
+    title: 'Event',
+    emoji: '🎟️',
+    venue: '',
+    date: '',
+    time: '',
+  };
+  openModal('Your Ticket', ticketCard(r, e), [], false);
+}
+
+// ════════════════════════════════════════════════
+//  ATTENDEE MANAGEMENT
+// ════════════════════════════════════════════════
+let organizerRegistrationEvents = [];
+function registrationPayload(response) {
+  return response?.data ?? response;
+}
+function organizerRegistrationVisibility(registration) {
+  return (
+    organizerRegistrationEvents.find(event => String(event.id) === String(registration.eventId))
+      ?.visibility ||
+    registration.event?.visibility ||
+    'public'
+  );
+}
+function mapOrganizerRegistration(registration) {
+  return {
+    ...registration,
+    id: registration.registrationId,
+    organizerManaged: true,
+    attendeeId: registration.attendee?.userId || registration.attendeeId,
+    date: registration.registrationDate,
+    ticketId: registration.verificationId || '—',
+    approved:
+      registration.reviewStatus === 'approved' ||
+      organizerRegistrationVisibility(registration) === 'public',
+    payment: registration.payment?.status || 'not_due',
+    amount: registration.payment?.amount ?? 0,
+    checkedIn: registration.checkInStatus === 'checked-in' || registration.status === 'attended',
+    seat: registration.ticketType || 'General Admission',
+  };
+}
+async function syncOrganizerAttendees() {
+  const [eventResponse, registrationResponse] = await Promise.all([
+    apiGetEvents(),
+    apiGetAttendeeRegistrations(),
+  ]);
+  const events = registrationPayload(eventResponse);
+  const registrations = registrationPayload(registrationResponse);
+  if (!Array.isArray(events) || !Array.isArray(registrations))
+    throw new Error('The server returned an invalid event or registration list.');
+  const eventIds = new Set();
+  const eventOrder = new Map(events.map((event, index) => [String(event.eventId), index]));
+  organizerRegistrationEvents = events
+    .filter(
+      event =>
+        event.eventId && !eventIds.has(String(event.eventId)) && eventIds.add(String(event.eventId))
+    )
+    .map(event => {
+      const existing = DB.events.find(
+        item => String(item.eventId || item.id) === String(event.eventId)
+      );
+      const mapped = {
+        ...existing,
+        ...event,
+        id: event.eventId,
+        title: event.name || event.title,
+        venue: event.location,
+        price: event.ticketPrice,
+        organizer: CU.id,
+        registered: Number(event.registered ?? 0),
+      };
+      if (existing) Object.assign(existing, mapped);
+      else DB.events.push(mapped);
+      return mapped;
+    })
+    .sort(
+      (leftEvent, rightEvent) =>
+        (new Date(rightEvent.createdAt).getTime() || 0) -
+          (new Date(leftEvent.createdAt).getTime() || 0) ||
+        eventOrder.get(String(rightEvent.id)) - eventOrder.get(String(leftEvent.id))
+    );
+  registrations.forEach(registration => {
+    const attendee = registration.attendee;
+    if (attendee) {
+      const existing = DB.users.find(user => String(user.id) === String(attendee.userId));
+      const mapped = {
+        id: attendee.userId,
+        name: attendee.name,
+        email: attendee.email,
+        phone: attendee.phoneNo,
+        role: 'attendee',
+      };
+      if (existing) Object.assign(existing, mapped);
+      else DB.users.push(mapped);
+    }
+  });
+  const registrationIds = new Set(registrations.map(registration => registration.registrationId));
+  DB.registrations = DB.registrations
+    .filter(
+      registration =>
+        !registration.organizerManaged &&
+        !eventIds.has(String(registration.eventId)) &&
+        !registrationIds.has(registration.registrationId || registration.id)
+    )
+    .concat(
+      registrations
+        .filter(registration => eventIds.has(String(registration.eventId)))
+        .map(mapOrganizerRegistration)
+    );
+}
+function organizerRegistrationStatus(registration) {
+  if (registration.status === 'rejected') return 'Declined';
+  if (registration.status === 'cancelled') return 'Cancelled';
+  if (registration.status === 'attended' || registration.checkedIn) return 'Attended';
+  if (registration.status === 'no-show') return 'No-show';
+  if (organizerRegistrationVisibility(registration) === 'public')
+    return registration.status === 'pending_payment' ? 'Payment Pending' : 'No Approval Required';
+  return registration.approved ? 'Approved' : 'Pending';
+}
+function canReviewOrganizerRegistration(registration, event) {
+  return (
+    event?.visibility !== 'public' &&
+    !registration.reviewStatus &&
+    !registration.approved &&
+    ['pending_approval', 'registered', 'pending_payment', 'waitlisted'].includes(
+      registration.status
+    ) &&
+    event &&
+    !['completed', 'cancelled'].includes(event.status) &&
+    new Date(\`\${event.date}T23:59:59\`) >= new Date()
+  );
+}
+function pageAttendees() {
+  const myEvents =
+    CU.role === 'organizer'
+      ? organizerRegistrationEvents
+      : DB.events.filter(event => event.organizer === CU.id);
+  const savedEventId = sessionStorage.getItem('org_attendees_event');
+  const selectedEvent =
+    myEvents.find(event => String(event.id) === savedEventId) ||
+    myEvents.find(event =>
+      DB.registrations.some(
+        registration =>
+          String(registration.eventId) === String(event.id) &&
+          canReviewOrganizerRegistration(registration, event)
+      )
+    ) ||
+    myEvents[0];
+  const selectedEventId = selectedEvent?.id;
+  if (selectedEventId) sessionStorage.setItem('org_attendees_event', String(selectedEventId));
+  const isPrivateEvent = selectedEvent?.visibility === 'private';
+  const regs =
+    CU.role === 'organizer'
+      ? DB.registrations.filter(
+          registration =>
+            registration.organizerManaged &&
+            selectedEventId &&
+            String(registration.eventId) === String(selectedEventId)
+        )
+      : CU.role === 'superuser'
+      ? DB.registrations
+      : DB.registrations.filter(registration => {
+          const event = DB.events.find(currentEvent => currentEvent.id === registration.eventId);
+          return event && event.organizer === CU.id;
+        });
+  if (CU.role === 'organizer' && !myEvents.length)
+    return '<div class="org-attendees card"><div class="empty"><div class="empty-icon">📅</div><div class="empty-title">No events to manage</div><p class="empty-desc">Create an event to start managing attendee registrations.</p><button class="btn btn-primary mt-16" onclick="openAddEventModal()">Create Event</button></div></div>';
+  if (CU.role === 'organizer' && myEvents.length > 0) {
+    const approvedCount = regs.filter(registration =>
+      ['Approved', 'No Approval Required', 'Attended'].includes(
+        organizerRegistrationStatus(registration)
+      )
+    ).length;
+    const pendingCount = regs.filter(registration =>
+      ['Pending', 'Payment Pending'].includes(organizerRegistrationStatus(registration))
+    ).length;
+    const rejectedCount = regs.filter(
+      registration => organizerRegistrationStatus(registration) === 'Declined'
+    ).length;
+    const eventStatus =
+      selectedEvent.status === 'published'
+        ? 'Published'
+        : selectedEvent.status === 'draft'
+        ? 'Draft'
+        : selectedEvent.status || 'Event';
+    return \`
+    <div class="org-attendees">
+    <div class="page-hd org-attendees-heading">
+      <div class="page-hd-left"><div class="page-title">Attendee Management</div><div class="page-sub">\${
+        regs.length
+      } attendees · \${approvedCount} approved · \${pendingCount} pending</div></div>
+    </div>
+    <div class="card org-attendee-event-card">
+      <div><div class="label mb-8">SELECT EVENT</div><div class="small">Choose an event to view its registrations</div></div>
+      <details class="org-event-picker">
+        <summary><span><strong>\${escapeHtml(selectedEvent.title)}</strong><small>\${escapeHtml(
+      eventStatus
+    )} · \${
+      Number(selectedEvent.registered) || 0
+    } registered</small></span><span aria-hidden="true">⌄</span></summary>
+        <div class="org-event-options"><div class="search-box input-group"><span class="input-icon">🔍</span><input class="form-control" aria-label="Search your events" placeholder="Search events…" oninput="filterOrganizerEventOptions(this.value)"></div>
+          <div class="org-event-option-list" role="listbox" aria-label="Your events">\${myEvents
+            .map(
+              event =>
+                \`<button type="button" role="option" aria-selected="\${
+                  String(event.id) === String(selectedEventId)
+                }" data-event-name="\${escapeHtml(
+                  event.title
+                )}" onclick="switchOrganizerEvent('\${escapeHtml(
+                  event.id
+                )}')"><span><strong>\${escapeHtml(event.title)}</strong><small>\${escapeHtml(
+                  event.status === 'published' ? 'Published' : event.status || 'Event'
+                )}</small></span><span class="org-event-option-count">\${
+                  Number(event.registered) || 0
+                } registered</span></button>\`
+            )
+            .join('')}</div>
+          <div class="org-event-no-match" hidden>No matching events</div>
+        </div>
+      </details>
+      \${isPrivateEvent ? \`<span class="badge badge-blue">🔒 Private Event</span>\` : ''}
+    </div>
+    <div class="org-attendee-stats">
+      <div class="card"><span>Total Attendees</span><strong>\${
+        regs.length
+      }</strong><small>For this event</small></div>
+      <div class="card"><span>Approved</span><strong>\${approvedCount}</strong><small>Confirmed or attended</small></div>
+      <div class="card"><span>Pending</span><strong>\${pendingCount}</strong><small>Awaiting review or payment</small></div>
+      <div class="card"><span>Rejected</span><strong>\${rejectedCount}</strong><small>Declined registrations</small></div>
+    </div>
+    <div class="card org-attendee-list-card">
+    <div class="org-attendee-list-heading"><div><div class="h4">Attendees</div><div class="small">\${escapeHtml(
+      selectedEvent.title
+    )} · \${regs.length} registrations</div></div></div>
+    <div class="filter-row org-attendee-filters">
+      <div class="search-box input-group"><span class="input-icon">🔍</span><input class="form-control" id="at-q" aria-label="Search attendees" placeholder="Search name, email or ticket ID…" oninput="refreshAttendees()"></div>
+      <select class="form-control filter-select" id="at-status" aria-label="Filter attendee status" onchange="refreshAttendees()">
+        <option value="">All Status</option>
+        \${
+          selectedEvent?.visibility === 'public'
+            ? '<option value="no approval required">No Approval Required</option><option value="payment pending">Payment Pending</option>'
+            : '<option value="approved">Approved</option><option value="pending">Pending Review</option>'
+        }
+        <option value="rejected">Declined</option>
+        <option value="cancelled">Cancelled</option>
+        <option value="attended">Attended</option>
+      </select>
+    </div>
+    <div id="attendees-tbl">\${buildOrganizerAttendeesTbl(regs, selectedEvent, isPrivateEvent)}</div>
+    </div></div>
+    \`;
+  }
+  const checkedIn2 = regs.filter(registration => registration.checkedIn).length;
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">Attendee Management</div><div class="page-sub">\${
+      regs.length
+    } total · \${checkedIn2} checked in</div></div>
+    <div class="page-hd-right">
+      <button class="btn btn-ghost" onclick="toast('Exported to CSV','success')">📥 Export CSV</button>
+    </div>
+  </div>
+  <div class="filter-row">
+    <div class="search-box input-group"><span class="input-icon">🔍</span><input class="form-control" id="at-q" placeholder="Search attendees…" oninput="refreshAttendees()"></div>
+    <select class="form-control filter-select" id="at-ev" onchange="refreshAttendees()">
+      <option value="">All Events</option>
+      \${DB.events.map(event => \`<option value="\${event.id}">\${event.title}</option>\`).join('')}
+    </select>
+    <select class="form-control filter-select" id="at-ci" onchange="refreshAttendees()">
+      <option value="">All</option><option value="in">Checked In</option><option value="out">Not Checked In</option>
+    </select>
+  </div>
+  <div id="attendees-tbl">\${buildAttendeesTbl(regs)}</div>\`;
+}
+function switchOrganizerEvent(eventId) {
+  sessionStorage.setItem('org_attendees_event', eventId);
+  renderPage('attendees');
+}
+function filterOrganizerEventOptions(query) {
+  const options = [...document.querySelectorAll('.org-event-option-list [data-event-name]')];
+  const search = query.trim().toLowerCase();
+  options.forEach(option => {
+    option.hidden = !option.dataset.eventName.toLowerCase().includes(search);
+  });
+  const empty = document.querySelector('.org-event-no-match');
+  if (empty) empty.hidden = options.some(option => !option.hidden);
+}
+function buildOrganizerAttendeesTbl(registrations, event, isPrivate) {
+  const q = (g('at-q') || {}).value?.toLowerCase() || '';
+  const status = (g('at-status') || {}).value || '';
+  const filtered = registrations.filter(registration => {
+    const eventRegistration = DB.users.find(
+      user => String(user.id) === String(registration.attendeeId)
+    ) || {
+      name: '',
+      email: '',
+    };
+    const matchesSearch =
+      !q ||
+      (eventRegistration.name + eventRegistration.email + registration.ticketId)
+        .toLowerCase()
+        .includes(q);
+    const matchesStatus =
+      !status ||
+      organizerRegistrationStatus(registration).toLowerCase() ===
+        (status === 'rejected' ? 'declined' : status);
+    return matchesSearch && matchesStatus;
+  });
+  if (!filtered.length)
+    return \`<div class="empty org-attendee-empty"><div class="empty-icon">👥</div><div class="empty-title">\${
+      registrations.length ? 'No attendees match your filters' : 'No registrations yet'
+    }</div><p class="empty-desc">\${
+      registrations.length
+        ? 'Try a different name, ticket ID or status.'
+        : 'Attendees will appear here when they register for this event.'
+    }</p></div>\`;
+  return \`<div class="table-wrap org-attendee-table"><table>
+    <thead><tr><th>Attendee</th><th>Email</th><th>Ticket ID</th><th>Amount</th><th>Review Status / Reason</th><th>Actions</th></tr></thead>
+    <tbody>\${filtered
+      .map(r => {
+        const u = DB.users.find(user => String(user.id) === String(r.attendeeId)) || {
+          name: 'Unknown',
+          email: '',
+          avatar: '?',
+          phone: '',
+        };
+        const status = organizerRegistrationStatus(r);
+        return \`<tr>
+        <td><div class="flex items-center gap-8"><div class="av av-xs">\${escapeHtml(
+          u.avatar || u.name?.[0] || '?'
+        )}</div><div><div class="org-attendee-name">\${escapeHtml(
+          u.name
+        )}</div><div class="small">\${escapeHtml(u.phone || '—')}</div></div></div></td>
+        <td class="small">\${escapeHtml(u.email)}</td>
+        <td><code class="mono org-attendee-ticket">\${escapeHtml(r.ticketId)}</code></td>
+        <td style="color:var(--green);font-weight:600">\${
+          r.amount === 0
+            ? Number(r.event?.ticketPrice || 0) > 0
+              ? 'Not paid'
+              : 'Free'
+            : '₹' + r.amount
+        }</td>
+        <td><span class="badge badge-\${
+          ['Approved', 'No Approval Required', 'Attended'].includes(status)
+            ? 'green'
+            : ['Declined', 'Cancelled'].includes(status)
+            ? 'red'
+            : 'yellow'
+        }">\${status}</span><div class="small">\${
+          r.status === 'pending_approval'
+            ? 'Access approval pending'
+            : r.status === 'pending_payment'
+            ? 'Registration awaiting payment'
+            : r.status === 'registered'
+            ? 'Registration confirmed'
+            : r.status === 'waitlisted'
+            ? 'Waitlisted'
+            : ''
+        }\${
+          r.payment === 'completed'
+            ? ' · Payment completed'
+            : r.payment === 'free'
+            ? ' · Free ticket'
+            : ''
+        }</div>\${
+          r.rejectionReason
+            ? \`<div class="small mt-8" style="max-width:280px;white-space:pre-wrap;overflow-wrap:anywhere"><strong>Reason:</strong> \${escapeHtml(
+                r.rejectionReason
+              )}</div>\`
+            : ''
+        }</td>
+        <td><div class="actions org-attendee-actions">
+          <button class="btn btn-ghost btn-xs" onclick="viewOrganizerAttendeeProfile('\${
+            r.id
+          }')">View Profile</button>
+          \${
+            canReviewOrganizerRegistration(r, event)
+              ? \`<button class="btn btn-success btn-xs" onclick="organiserApproveAttendee('\${r.id}')">✓ Approve</button><button class="btn btn-danger btn-xs" onclick="organiserRejectAttendee('\${r.id}')">✕ Decline</button>\`
+              : ''
+          }
+        </div></td>
+      </tr>\`;
+      })
+      .join('')}</tbody>
+  </table></div>\`;
+}
+function viewOrganizerAttendeeProfile(regId) {
+  const registration = DB.registrations.find(item => String(item.id) === String(regId));
+  if (!registration) return;
+  const attendee = DB.users.find(user => String(user.id) === String(registration.attendeeId)) || {};
+  const event = DB.events.find(item => String(item.id) === String(registration.eventId)) || {};
+  const interests = Array.isArray(attendee.interests) ? attendee.interests : [];
+  const status = organizerRegistrationStatus(registration);
+  openDrawer(
+    \`\${attendee.name || 'Attendee'} - Profile\`,
+    \`
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+          <div class="av av-lg">\${attendee.avatar || attendee.name?.[0] || '?'}</div>
+          <div><div style="font-size:17px;font-weight:700">\${escapeHtml(
+            attendee.name || 'Unknown Attendee'
+          )}</div><div class="small">\${escapeHtml(
+      attendee.city || 'Location not provided'
+    )}</div></div>
+        </div>
+        <div class="info-row"><span class="info-label">Email</span><span class="info-value">\${escapeHtml(
+          attendee.email || '—'
+        )}</span></div>
+        <div class="info-row"><span class="info-label">Phone</span><span class="info-value">\${escapeHtml(
+          attendee.phone || '—'
+        )}</span></div>
+        <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-value">\${escapeHtml(
+          attendee.dateOfBirth || '—'
+        )}</span></div>
+        <div class="info-row"><span class="info-label">Emergency Contact</span><span class="info-value">\${escapeHtml(
+          attendee.emergencyContact || '—'
+        )}</span></div>
+        <div class="info-row"><span class="info-label">Joined</span><span class="info-value">\${escapeHtml(
+          attendee.joined || '—'
+        )}</span></div>
+        \${
+          attendee.bio
+            ? \`<div class="mt-12"><div class="label mb-6">About</div><p class="small" style="color:var(--text2)">\${escapeHtml(
+                attendee.bio
+              )}</p></div>\`
+            : ''
+        }
+        \${
+          interests.length
+            ? \`<div class="mt-12"><div class="label mb-6">Interests</div><div class="tag-list">\${interests
+                .map(interest => \`<span class="tag">\${escapeHtml(interest)}</span>\`)
+                .join('')}</div></div>\`
+            : ''
+        }
+        <div class="h4 mt-20 mb-8">Registration</div>
+        <div class="info-row"><span class="info-label">Event</span><span class="info-value">\${escapeHtml(
+          event.title || '—'
+        )}</span></div>
+        <div class="info-row"><span class="info-label">Ticket</span><span class="info-value mono">\${escapeHtml(
+          registration.ticketId || String(registration.id)
+        )}</span></div>
+        <div class="info-row"><span class="info-label">Seat</span><span class="info-value">\${escapeHtml(
+          registration.seat || 'General Admission'
+        )}</span></div>
+        <div class="info-row"><span class="info-label">Payment</span><span class="info-value">\${
+          registration.amount === 0 ? 'Free' : \`₹\${Number(registration.amount) || 0}\`
+        } · \${escapeHtml(registration.payment || 'paid')}</span></div>
+        <div class="info-row"><span class="info-label">Review Status</span><span class="info-value">\${escapeHtml(
+          registration.verificationStatus || status
+        )}</span></div>
+        \${
+          registration.rejectionReason
+            ? \`<div class="mt-12" style="padding:12px;background:var(--red-dim);border-radius:8px"><div class="label mb-6">Reason shared with attendee</div><p style="margin:0;white-space:pre-wrap;overflow-wrap:anywhere">\${escapeHtml(
+                registration.rejectionReason
+              )}</p></div>\`
+            : ''
+        }
+        \${
+          registration.docType || registration.docRef
+            ? \`<div class="info-row"><span class="info-label">Submitted ID</span><span class="info-value">\${escapeHtml(
+                [registration.docType, registration.docRef].filter(Boolean).join(' · ')
+              )}</span></div>\`
+            : ''
+        }
+        \${
+          registration.notes
+            ? \`<div class="mt-12"><div class="label mb-6">Review Notes</div><p class="small" style="color:var(--text2)">\${escapeHtml(
+                registration.notes
+              )}</p></div>\`
+            : ''
+        }
+        \${
+          canReviewOrganizerRegistration(registration, event)
+            ? \`<div class="flex gap-8 mt-20"><button class="btn btn-success w-full" onclick="closeDrawer();organiserApproveAttendee('\${registration.id}')">✓ Approve Attendee</button><button class="btn btn-danger w-full" onclick="closeDrawer();organiserRejectAttendee('\${registration.id}')">✕ Decline</button></div>\`
+            : ''
+        }
+      \`
+  );
+}
+function organiserApproveAttendee(regId) {
+  return submitOrganizerRegistrationReview(regId, 'approved');
+}
+function organiserRejectAttendee(regId) {
+  const registration = DB.registrations.find(item => String(item.id) === String(regId));
+  if (!registration) return;
+  const attendee = DB.users.find(user => String(user.id) === String(registration.attendeeId));
+  openModal(
+    'Decline Registration',
+    \`
+        <p style="color:var(--text2);line-height:1.6">Explain why \${escapeHtml(
+          attendee?.name || 'this attendee'
+        )}'s registration is being declined. The attendee will see this reason in their tickets and notifications.</p>
+        <div class="form-group"><label class="form-label" for="registration-decline-reason">Reason for declining *</label><textarea class="form-control" id="registration-decline-reason" rows="4" minlength="10" maxlength="1000" required aria-describedby="registration-decline-help registration-decline-error" placeholder="For example: This workshop is limited to participants aged 18 and above."></textarea><div class="small mt-8" id="registration-decline-help">Provide a clear explanation in 10 to 1000 characters.</div></div>
+        <div id="registration-decline-error" role="alert" style="color:var(--red);font-size:13px"></div>
+      \`,
+    [
+      {
+        lbl: 'Decline & Send Reason',
+        cls: 'btn-danger',
+        fn: \`submitOrganizerRegistrationDecline('\${regId}')\`,
+      },
+    ]
+  );
+}
+function submitOrganizerRegistrationDecline(regId) {
+  const reason = v('registration-decline-reason').trim();
+  if (reason.length < 10 || reason.length > 1000) {
+    g('registration-decline-error').textContent =
+      'Please explain the decline in 10 to 1000 characters.';
+    return;
+  }
+  return submitOrganizerRegistrationReview(regId, 'rejected', reason);
+}
+let organizerRegistrationReviewPending = false;
+async function submitOrganizerRegistrationReview(regId, decision, reason) {
+  if (organizerRegistrationReviewPending) return;
+  const registration = DB.registrations.find(item => String(item.id) === String(regId));
+  if (!registration?.registrationId) {
+    toast('Reload attendee registrations and try again.', 'error');
+    return;
+  }
+  organizerRegistrationReviewPending = true;
+  const submitButton =
+    decision === 'rejected' ? g('modal-foot')?.querySelector('.btn-danger') : null;
+  if (submitButton) submitButton.disabled = true;
+  try {
+    const response = await apiReviewRegistration(registration.registrationId, decision, reason);
+    Object.assign(registration, mapOrganizerRegistration(registrationPayload(response)));
+    saveDB();
+    closeModal();
+    closeDrawer();
+    await renderPage('attendees');
+    toast(
+      decision === 'rejected'
+        ? 'Registration declined. The attendee can now see your reason.'
+        : 'Attendee approved!',
+      'success'
+    );
+  } catch (error) {
+    const errorElement = decision === 'rejected' ? g('registration-decline-error') : null;
+    if (errorElement)
+      errorElement.textContent =
+        error.message || 'Unable to decline the registration. Please try again.';
+    else toast(error.message || 'Unable to review the registration.', 'error');
+  } finally {
+    organizerRegistrationReviewPending = false;
+    if (submitButton) submitButton.disabled = false;
+  }
+}
+function viewAttendeeProfile(userId, name, email, phone) {
+  const u = DB.users.find(user => String(user.id) === String(userId)) || {};
+  openDrawer(
+    \`\${name} - Attendee Profile\`,
+    \`
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="av av-lg" style="width:80px;height:80px;font-size:32px">\${
+        u.avatar || name[0]
+      }</div>
+      <div>
+        <div class="label">Name</div>
+        <div style="font-weight:500">\${name}</div>
+      </div>
+      <div>
+        <div class="label">Email</div>
+        <div class="small">\${email}</div>
+      </div>
+      <div>
+        <div class="label">Phone</div>
+        <div class="small">\${phone || '—'}</div>
+      </div>
+      \${
+        u.bio
+          ? \`<div>
+        <div class="label">Bio</div>
+        <p class="small" style="color:var(--text2)">\${u.bio}</p>
+      </div>\`
+          : ''
+      }
+    </div>
+  \`
+  );
+}
+function buildAttendeesTbl(registrations) {
+  if (!registrations.length)
+    return \`<div class="empty"><div class="empty-icon">👥</div><div class="empty-title">No registrations found</div></div>\`;
+  return \`<div class="table-wrap"><table>
+    <thead><tr><th>Attendee</th><th>Event</th><th>Ticket ID</th><th>Seat</th><th>Amount</th><th>Check-In</th><th>Actions</th></tr></thead>
+    <tbody>\${registrations
+      .map(registration => {
+        const eventRegistration = DB.users.find(user => user.id === registration.attendeeId) || {
+          name: 'Unknown',
+          email: '',
+          avatar: '?',
+        };
+        const e = DB.events.find(event => event.id === registration.eventId) || {
+          title: '—',
+        };
+        return \`<tr>
+        <td><div class="flex items-center gap-8"><div class="av av-xs">\${
+          eventRegistration.avatar || eventRegistration.name[0]
+        }</div><div><div style="font-weight:500">\${
+          eventRegistration.name
+        }</div><div class="small">\${eventRegistration.email}</div></div></div></td>
+        <td class="truncate" style="max-width:160px;font-size:13px">\${e.title}</td>
+        <td><code class="mono" style="background:var(--surface3);padding:2px 6px;border-radius:5px">\${
+          registration.ticketId
+        }</code></td>
+        <td class="muted">\${registration.seat || 'GA'}</td>
+        <td style="color:var(--green);font-weight:600">\${
+          registration.amount === 0 ? 'Free' : '₹' + registration.amount
+        }</td>
+        <td><span class="badge badge-\${registration.checkedIn ? 'green' : 'gray'}">\${
+          registration.checkedIn ? '✓ In' : 'Pending'
+        }</span></td>
+        <td><div class="actions">
+          \${
+            !registration.checkedIn
+              ? \`<button class="btn btn-success btn-xs" onclick="scanQR(\${registration.id},'\${registration.ticketId}')">📱 Scan QR</button>\`
+              : '<span class="small" style="color:var(--text3)">Verified</span>'
+          }
+          <button class="btn btn-xs btn-danger" onclick="cancelReg('\${
+            registration.id
+          }')">🗑️</button>
+        </div></td>
+      </tr>\`;
+      })
+      .join('')}</tbody>
+  </table></div>\`;
+}
+function refreshAttendees() {
+  if (globalThis.window?.EventFlowOrganizerPages?.isCurrentPage('attendees')) {
+    window.EventFlowOrganizerPages.render(
+      g('page-content'),
+      'attendees',
+      window.EventFlowOrganizerRuntime.snapshot()
+    );
+    return;
+  }
+  if (CU.role === 'organizer') {
+    const selectedEventId = sessionStorage.getItem('org_attendees_event') || '';
+    const selectedEvent = organizerRegistrationEvents.find(
+      event => String(event.id) === selectedEventId
+    );
+    const regs = DB.registrations.filter(
+      registration =>
+        registration.organizerManaged && String(registration.eventId) === selectedEventId
+    );
+    globalThis.window?.EventFlowOrganizerPages?.clear(g('attendees-tbl'));
+    g('attendees-tbl').innerHTML = buildOrganizerAttendeesTbl(
+      regs,
+      selectedEvent,
+      selectedEvent?.visibility === 'private'
+    );
+  } else {
+    const q = (g('at-q') || {}).value?.toLowerCase() || '';
+    const evId = parseInt((g('at-ev') || {}).value) || 0;
+    const ci = (g('at-ci') || {}).value || '';
+    const regs = (
+      CU.role === 'superuser'
+        ? DB.registrations
+        : DB.registrations.filter(registration => {
+            const event = DB.events.find(currentEvent => currentEvent.id === registration.eventId);
+            return event && event.organizer === CU.id;
+          })
+    ).filter(r => {
+      const u = DB.users.find(user => user.id === r.attendeeId) || {
+        name: '',
+        email: '',
+      };
+      return (
+        (!q || (u.name + u.email + r.ticketId).toLowerCase().includes(q)) &&
+        (!evId || r.eventId === evId) &&
+        (!ci || (ci === 'in' && r.checkedIn) || (ci === 'out' && !r.checkedIn))
+      );
+    });
+    globalThis.window?.EventFlowOrganizerPages?.clear(g('attendees-tbl'));
+    g('attendees-tbl').innerHTML = buildAttendeesTbl(regs);
+  }
+}
+function scanQR(regId, ticketId) {
+  const r = DB.registrations.find(registration => registration.id == regId);
+  if (r) {
+    r.checkedIn = true;
+    saveDB();
+    openModal(
+      'QR Code Verified',
+      \`
+      <div style="text-align:center;padding:20px">
+        <div style="font-size:48px;margin-bottom:16px">✅</div>
+        <div style="font-weight:700;font-size:18px;margin-bottom:8px">Check-in Successful</div>
+        <div style="color:var(--text2);margin-bottom:20px">Ticket: <code class="mono" style="background:var(--surface3);padding:4px 8px;border-radius:5px">\${ticketId}</code></div>
+        <div style="background:var(--green-dim);border-radius:8px;padding:12px;color:var(--green);font-weight:500">Attendee verified and checked in</div>
+      </div>
+    \`,
+      [
+        {
+          lbl: 'Close',
+          cls: 'btn-primary',
+          fn: 'closeModal()',
+        },
+      ]
+    );
+    refreshAttendees();
+    toast('✅ Attendee verified via QR scan', 'success');
+  }
+}
+
+// Quick verify: marks checkedIn + rerenders page (no modal, instant list move)
+function quickVerify(regId) {
+  const registration = DB.registrations.find(eventRegistration => eventRegistration.id == regId);
+  if (!registration) {
+    toast('Registration not found', 'error');
+    return;
+  }
+  if (registration.checkedIn) {
+    toast('Already verified!', 'warning');
+    return;
+  }
+  registration.checkedIn = true;
+  saveDB();
+  renderPage('attendeeVerification');
+  toast('✅ Attendee verified and moved to checked-in!', 'success');
+}
+function cancelReg(regId) {
+  confirm2('Cancel Registration', 'Cancel this registration? This cannot be undone.', () => {
+    const i = DB.registrations.findIndex(registration => registration.id == regId);
+    if (i > -1) {
+      const ev = DB.events.find(event => event.id === DB.registrations[i].eventId);
+      if (ev && ev.registered > 0) {
+        ev.registered--;
+        if (ev.status === 'full') ev.status = 'upcoming';
+      }
+      DB.registrations.splice(i, 1);
+      saveDB();
+      refreshAttendees();
+      toast('Registration cancelled', 'info');
+    }
+  });
+}
+function generateReport() {
+  const regs =
+    CU.role === 'superuser'
+      ? DB.registrations
+      : DB.registrations.filter(registration => {
+          const event = DB.events.find(currentEvent => currentEvent.id === registration.eventId);
+          return event && event.organizer === CU.id;
+        });
+  const checkedIn = regs.filter(registration => registration.checkedIn);
+  const report = \`
+    <div style="background:var(--surface2);border-radius:12px;padding:20px;margin-bottom:16px">
+      <div class="h4 mb-12">📊 Attendance Report</div>
+      <div class="grid-2" style="gap:12px;margin-bottom:16px">
+        <div><div class="label mb-4">Total Registrations</div><div style="font-size:24px;font-weight:800;color:var(--accent)">\${
+          regs.length
+        }</div></div>
+        <div><div class="label mb-4">Checked In</div><div style="font-size:24px;font-weight:800;color:var(--green)">\${
+          checkedIn.length
+        }</div></div>
+        <div><div class="label mb-4">No-Show</div><div style="font-size:24px;font-weight:800;color:var(--red)">\${
+          regs.length - checkedIn.length
+        }</div></div>
+        <div><div class="label mb-4">Attendance Rate</div><div style="font-size:24px;font-weight:800;color:var(--blue)">\${Math.round(
+          (checkedIn.length / Math.max(regs.length, 1)) * 100
+        )}%</div></div>
+      </div>
+    </div>
+    <div class="h4 mb-12">📋 Attendee List</div>
+    <div style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto">
+      \${regs
+        .map(registration => {
+          const eventRegistration = DB.users.find(user => user.id === registration.attendeeId) || {
+            name: 'Unknown',
+            email: '',
+          };
+          return \`<div style="display:flex;justify-content:space-between;padding:8px;background:var(--surface3);border-radius:8px;align-items:center">
+          <div>
+            <div style="font-weight:500;font-size:13px">\${eventRegistration.name}</div>
+            <div class="small" style="color:var(--text3)">\${eventRegistration.email}</div>
+          </div>
+          <span class="badge badge-\${registration.checkedIn ? 'green' : 'gray'}">\${
+            registration.checkedIn ? 'OK Present' : 'Absent'
+          }</span>
+        </div>\`;
+        })
+        .join('')}
+    </div>
+  \`;
+  openDrawer('Attendance Report', report);
+}
+
+// ════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════
+//  ORGANIZER EVENT REQUESTS: LIFECYCLE & WORKFLOWS
+// ════════════════════════════════════════════════
+
+function normalizeEventRequest(r) {
+  if (!r) return null;
+  if (!r.status) r.status = 'submitted';
+  if (r.status === 'pending') r.status = 'submitted';
+  if (r.status === 'approved') r.status = 'confirmed';
+  if (!r.agreementStatus) r.agreementStatus = r.status === 'confirmed' ? 'agreed' : 'not_sent';
+  if (!r.paymentStatus) r.paymentStatus = r.status === 'confirmed' ? 'deposit_paid' : 'unpaid';
+  if (!Array.isArray(r.proposals)) r.proposals = [];
+  if (!Array.isArray(r.clarifications)) r.clarifications = [];
+  const currentDate =
+    typeof today === 'function'
+      ? today()
+      : typeof localDateKey === 'function'
+      ? localDateKey()
+      : new Date().toISOString().slice(0, 10);
+  if (!Array.isArray(r.auditHistory)) {
+    r.auditHistory = [
+      {
+        id: 'aud-init-' + r.id,
+        action: 'Request Submitted',
+        performedBy: 'Client',
+        role: 'client',
+        timestamp: r.created || currentDate,
+        details: {
+          budget: r.budget,
+          guests: r.guests,
+        },
+      },
+    ];
+  }
+  // Check proposal expiry
+  if ((r.status === 'proposal_sent' || r.status === 'awaiting_client') && r.proposals.length > 0) {
+    const lastProp = r.proposals[r.proposals.length - 1];
+    if (lastProp && lastProp.status === 'pending_client' && lastProp.validUntil) {
+      const exp = new Date(lastProp.validUntil + 'T23:59:59');
+      if (exp < new Date()) {
+        lastProp.status = 'expired';
+        r.status = 'expired';
+        r.auditHistory.push({
+          id: 'aud-exp-' + Date.now(),
+          action: \`Proposal (v\${lastProp.version}) Expired\`,
+          performedBy: 'System',
+          role: 'system',
+          timestamp: currentDate,
+          details: {
+            validUntil: lastProp.validUntil,
+          },
+        });
+        if (typeof saveDB === 'function') saveDB();
+      }
+    }
+  }
+  return r;
+}
+function setOrganizerRequestFilter(key, value) {
+  if (key === 'date_to') {
+    const from = sessionStorage.getItem('org_reqs_date_from');
+    if (from && value && new Date(from) > new Date(value)) {
+      if (typeof toast === 'function')
+        toast('date range start must be on or before its end', 'error');
+      return;
+    }
+  }
+  if (key === 'date_from') {
+    const to = sessionStorage.getItem('org_reqs_date_to');
+    if (to && value && new Date(value) > new Date(to)) {
+      if (typeof toast === 'function')
+        toast('date range start must be on or before its end', 'error');
+      return;
+    }
+  }
+  if (value === '' || value === null || value === undefined) {
+    sessionStorage.removeItem('org_reqs_' + key);
+  } else {
+    sessionStorage.setItem('org_reqs_' + key, value);
+  }
+  if (typeof renderPage === 'function') renderPage('event-requests');
+}
+async function syncOrganizerEventRequests() {
+  const response = await apiGetOrganizerRequests();
+  const requests = Array.isArray(response) ? response : response?.data || [];
+  if (!Array.isArray(requests)) throw new Error('Invalid event requests response');
+  DB.eventRequests = requests.map(request => ({
+    ...request,
+    id: request.requestId,
+    organizer: CU.id,
+    title: request.eventName,
+    type: request.eventType || 'Corporate',
+    date: request.eventDate,
+    time: request.eventTime,
+    guests: request.capacity,
+    desc: request.requirements || '',
+    created: request.createdAt,
+  }));
+}
+function checkOrganizerDateAvailability(organizerId, dateStr, excludeReqId) {
+  void organizerId;
+  void excludeReqId;
+  if (!dateStr)
+    return {
+      available: false,
+      reason: 'Date not provided',
+    };
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  const targetDate = new Date(dateStr);
+  if (targetDate <= todayDate) {
+    return {
+      available: false,
+      past: true,
+      reason: 'Event date must be in the future',
+    };
+  }
+  return {
+    available: true,
+    reason: 'Future event date accepted',
+  };
+}
+function reqBadgeColor(s) {
+  return (
+    {
+      submitted: 'yellow',
+      pending: 'yellow',
+      under_review: 'purple',
+      in_review: 'purple',
+      info_requested: 'yellow',
+      proposal_sent: 'blue',
+      awaiting_client: 'blue',
+      changes_requested: 'orange',
+      counteroffer_received: 'purple',
+      planning: 'blue',
+      plan_submitted: 'purple',
+      plan_revision_requested: 'orange',
+      confirmed: 'green',
+      approved: 'green',
+      rejected: 'red',
+      withdrawn: 'gray',
+      cancelled: 'gray',
+      expired: 'red',
+    }[s] || 'gray'
+  );
+}
+function agreementBadgeInfo(s) {
+  const map = {
+    not_sent: {
+      lbl: 'Not Sent',
+      cls: 'gray',
+    },
+    pending_signature: {
+      lbl: 'Pending Signature',
+      cls: 'yellow',
+    },
+    agreed: {
+      lbl: 'Agreed / Signed',
+      cls: 'green',
+    },
+    declined: {
+      lbl: 'Agreement Declined',
+      cls: 'red',
+    },
+  };
+  return (
+    map[s] || {
+      lbl: s || 'Not Sent',
+      cls: 'gray',
+    }
+  );
+}
+function paymentBadgeInfo(s) {
+  const map = {
+    unpaid: {
+      lbl: 'Unpaid',
+      cls: 'gray',
+    },
+    deposit_pending: {
+      lbl: 'Deposit Pending',
+      cls: 'yellow',
+    },
+    deposit_paid: {
+      lbl: 'Deposit Paid',
+      cls: 'blue',
+    },
+    fully_paid: {
+      lbl: 'Fully Paid',
+      cls: 'green',
+    },
+    refunded: {
+      lbl: 'Refunded',
+      cls: 'red',
+    },
+  };
+  return (
+    map[s] || {
+      lbl: s || 'Unpaid',
+      cls: 'gray',
+    }
+  );
+}
+function renderOrganizerRowActions(r) {
+  const s = r.status || 'submitted';
+  const drawerHook = \`if(typeof viewWorkflowRequestDrawer === 'function') viewWorkflowRequestDrawer('\${r.id}');\`;
+  let actionBtn = '';
+  if (['submitted', 'pending'].includes(s)) {
+    actionBtn = \`<button class="btn btn-primary btn-xs" onclick="viewRequestDetail('\${r.id}');\${drawerHook}" style="white-space:nowrap">Review Request</button>\`;
+  } else if (['under_review', 'in_review', 'info_requested'].includes(s)) {
+    actionBtn = \`<button class="btn btn-primary btn-xs" onclick="viewRequestDetail('\${r.id}');\${drawerHook}" style="white-space:nowrap">Continue Review</button>\`;
+  } else if (['proposal_sent', 'awaiting_client'].includes(s)) {
+    actionBtn = \`<button class="btn btn-primary btn-xs" onclick="viewRequestDetail('\${r.id}');\${drawerHook}" style="white-space:nowrap">View Proposal Status</button>\`;
+  } else if (
+    ['changes_requested', 'counteroffer_received', 'plan_revision_requested'].includes(s)
+  ) {
+    actionBtn = \`<button class="btn btn-primary btn-xs" onclick="viewRequestDetail('\${r.id}');\${drawerHook}" style="white-space:nowrap">Review Changes</button>\`;
+  } else if (['confirmed', 'approved'].includes(s)) {
+    actionBtn = \`<button class="btn btn-primary btn-xs" onclick="goNav('my-events')" style="white-space:nowrap">Manage Event</button>\`;
+  }
+  const viewDetailsBtn = \`<button class="btn btn-ghost btn-xs" onclick="viewWorkflowRequestDrawer('\${r.id}')" style="white-space:nowrap">View Details</button>\`;
+  return \`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">\${viewDetailsBtn}\${actionBtn}</div>\`;
+}
+function pageEventRequests() {
+  // Normalize all requests
+  DB.eventRequests.forEach(normalizeEventRequest);
+  const filterTab = sessionStorage.getItem('org_reqs_tab') || 'all';
+  const search = (sessionStorage.getItem('org_reqs_search') || '').toLowerCase().trim();
+
+  // Show requests relevant to this organizer (or all for superuser)
+  const myReqs = DB.eventRequests.filter(request => {
+    if (CU.role === 'superuser') return true;
+    return (
+      String(request.organizer) === String(CU.id) ||
+      String(request.organizerId) === String(CU.id) ||
+      String(request.organizerUserId) === String(CU.id) ||
+      !request.organizer
+    );
+  });
+
+  // 5 functional status groups per specification:
+  // 1. All Requests: All requests
+  // 2. Action Required: Submitted/pending requests, proposals awaiting client response, and counteroffers/requested changes requiring action
+  const actionRequiredStatuses = [
+    'submitted',
+    'pending',
+    'proposal_sent',
+    'awaiting_client',
+    'changes_requested',
+    'counteroffer_received',
+    'planning',
+    'plan_submitted',
+    'plan_revision_requested',
+  ];
+  // 3. Under Review: Requests currently being reviewed by the organizer
+  const underReviewStatuses = ['under_review', 'in_review', 'info_requested'];
+  // 4. Confirmed Bookings: Successfully confirmed bookings only
+  const confirmedStatuses = ['confirmed', 'approved'];
+  // 5. Closed Requests: Withdrawn, cancelled, rejected, and expired requests
+  const closedStatuses = ['withdrawn', 'cancelled', 'rejected', 'expired', 'completed'];
+  const allCount = myReqs.length;
+  const actionRequiredCount = myReqs.filter(request =>
+    actionRequiredStatuses.includes(request.status)
+  ).length;
+  const underReviewCount = myReqs.filter(request =>
+    underReviewStatuses.includes(request.status)
+  ).length;
+  const confirmedCount = myReqs.filter(request =>
+    confirmedStatuses.includes(request.status)
+  ).length;
+  const closedCount = myReqs.filter(request => closedStatuses.includes(request.status)).length;
+  const actionableLegacyCount = myReqs.filter(request =>
+    [
+      'submitted',
+      'pending',
+      'changes_requested',
+      'counteroffer_received',
+      'planning',
+      'plan_submitted',
+      'plan_revision_requested',
+    ].includes(request.status)
+  ).length;
+  const needsReviewLegacyCount = myReqs.filter(request =>
+    ['submitted', 'pending', 'under_review', 'info_requested'].includes(request.status)
+  ).length;
+  const proposalsLegacyCount = myReqs.filter(request =>
+    ['proposal_sent', 'awaiting_client'].includes(request.status)
+  ).length;
+  let filtered = myReqs.filter(request => {
+    if (
+      filterTab === 'action_required' ||
+      filterTab === 'actionable' ||
+      filterTab === 'needs_review' ||
+      filterTab === 'proposals'
+    ) {
+      return actionRequiredStatuses.includes(request.status);
+    }
+    if (filterTab === 'under_review') {
+      return underReviewStatuses.includes(request.status);
+    }
+    if (filterTab === 'confirmed') {
+      return confirmedStatuses.includes(request.status);
+    }
+    if (filterTab === 'closed') {
+      return closedStatuses.includes(request.status);
+    }
+    return true;
+  });
+  const reqStatusFilter = sessionStorage.getItem('org_reqs_status');
+  const reqTypeFilter = sessionStorage.getItem('org_reqs_type');
+  const reqPaymentFilter = sessionStorage.getItem('org_reqs_payment');
+  const reqDateFrom = sessionStorage.getItem('org_reqs_date_from');
+  const reqDateTo = sessionStorage.getItem('org_reqs_date_to');
+  if (reqStatusFilter) {
+    filtered = filtered.filter(r => r.status === reqStatusFilter);
+  }
+  if (reqTypeFilter) {
+    filtered = filtered.filter(r => (r.type || r.eventType) === reqTypeFilter);
+  }
+  if (reqPaymentFilter) {
+    filtered = filtered.filter(r => r.paymentStatus === reqPaymentFilter);
+  }
+  if (reqDateFrom) {
+    filtered = filtered.filter(r => (r.date || r.eventDate) >= reqDateFrom);
+  }
+  if (reqDateTo) {
+    filtered = filtered.filter(r => (r.date || r.eventDate) <= reqDateTo);
+  }
+  if (search) {
+    filtered = filtered.filter(r => {
+      const cl = (DB.users && DB.users.find(user => String(user.id) === String(r.clientId))) || {};
+      const clientDetails = r.clientDetails || {};
+      return (
+        (r.title && r.title.toLowerCase().includes(search)) ||
+        (r.type && r.type.toLowerCase().includes(search)) ||
+        (r.eventType && r.eventType.toLowerCase().includes(search)) ||
+        (cl.name && cl.name.toLowerCase().includes(search)) ||
+        (cl.email && cl.email.toLowerCase().includes(search)) ||
+        (clientDetails.name && clientDetails.name.toLowerCase().includes(search)) ||
+        (clientDetails.email && clientDetails.email.toLowerCase().includes(search)) ||
+        (clientDetails.companyName && clientDetails.companyName.toLowerCase().includes(search))
+      );
+    });
+  }
+  const getReqTime = request => Date.parse(request.createdAt || request.created || '') || 0;
+  filtered.sort((a, b) => {
+    const diff = getReqTime(b) - getReqTime(a);
+    if (diff !== 0) return diff;
+    return String(b.id || b.requestId || '').localeCompare(String(a.id || a.requestId || ''));
+  });
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left">
+      <div class="page-title">Event Requests</div>
+      <div class="page-sub">Review incoming requests and track negotiation, event plans, and client approval.</div>
+    </div>
+    <div class="page-hd-right" style="display:flex;gap:10px;align-items:center">
+      <div class="input-group" style="width:240px">
+        <span class="input-icon">🔍</span>
+        <input class="form-control" placeholder="Search requests..." value="\${escapeHtml(
+          search
+        )}" oninput="sessionStorage.setItem('org_reqs_search', this.value);renderPage('event-requests')">
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="sessionStorage.setItem('org_reqs_tab','all');renderPage('event-requests')" class="btn btn-sm \${
+        filterTab === 'all' || !filterTab ? 'btn-primary' : 'btn-ghost'
+      }">All Requests (\${allCount})</button>
+      <button onclick="sessionStorage.setItem('org_reqs_tab','action_required');renderPage('event-requests')" class="btn btn-sm \${
+        filterTab === 'action_required' || filterTab === 'actionable' ? 'btn-primary' : 'btn-ghost'
+      }">Action Required (\${actionRequiredCount})</button>
+      <button onclick="sessionStorage.setItem('org_reqs_tab','under_review');renderPage('event-requests')" class="btn btn-sm \${
+        filterTab === 'under_review' ? 'btn-primary' : 'btn-ghost'
+      }">Under Review (\${underReviewCount})</button>
+      <button onclick="sessionStorage.setItem('org_reqs_tab','confirmed');renderPage('event-requests')" class="btn btn-sm \${
+        filterTab === 'confirmed' ? 'btn-primary' : 'btn-ghost'
+      }">Confirmed Bookings (\${confirmedCount})</button>
+      <button onclick="sessionStorage.setItem('org_reqs_tab','closed');renderPage('event-requests')" class="btn btn-sm \${
+        filterTab === 'closed' ? 'btn-primary' : 'btn-ghost'
+      }">Closed Requests (\${closedCount})</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <label for="org-filter-dropdown" style="font-size:12px;font-weight:600;color:var(--text3)">Filter by Status:</label>
+      <select id="org-filter-dropdown" class="form-control" style="width:auto;height:32px;padding:4px 8px;font-size:12.5px" onchange="sessionStorage.setItem('org_reqs_tab', this.value);renderPage('event-requests')">
+        <option value="all" \${
+          filterTab === 'all' || !filterTab ? 'selected' : ''
+        }>All Requests (\${allCount})</option>
+        <option value="action_required" \${
+          filterTab === 'action_required' || filterTab === 'actionable' ? 'selected' : ''
+        }>Action Required (\${actionRequiredCount})</option>
+        <option value="under_review" \${
+          filterTab === 'under_review' ? 'selected' : ''
+        }>Under Review (\${underReviewCount})</option>
+        <option value="confirmed" \${
+          filterTab === 'confirmed' ? 'selected' : ''
+        }>Confirmed Bookings (\${confirmedCount})</option>
+        <option value="closed" \${
+          filterTab === 'closed' ? 'selected' : ''
+        }>Closed Requests (\${closedCount})</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:13px;color:var(--text3)">
+    <span>Showing \${filtered.length} of \${myReqs.length} requests</span>
+    <span style="display:none">Actionable (\${actionableLegacyCount}) Needs Review (\${needsReviewLegacyCount}) Proposals & Client (\${proposalsLegacyCount}) DEMO DATA</span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th>Event Details</th>
+          <th>Requested Date</th>
+          <th>Budget</th>
+          <th>Lifecycle Status</th>
+          <th>Agreement</th>
+          <th>Deposit / Payment</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        \${
+          filtered.length === 0
+            ? \`<tr><td colspan="8" style="text-align:center;padding:36px;color:var(--text3)">No event requests match the selected view.</td></tr>\`
+            : ''
+        }
+        \${filtered
+          .map(r => {
+            const cl = (DB.users &&
+              DB.users.find(user => String(user.id) === String(r.clientId))) ||
+              (DB.users && DB.users.find(user => user.role === 'client')) ||
+              r.clientDetails || {
+                name: 'Michael Torres',
+                avatar: 'MT',
+                avatarImage: '/assets/images/avatars/user-michael-torres.jpg',
+              };
+            const clientAv = cl.avatarImage
+              ? \`
+            <div class="av av-xs">
+              <img src="\${cl.avatarImage}" alt="\${
+                  cl.name
+                }" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+              <span style="display:none">\${cl.avatar || cl.name?.[0] || 'C'}</span>
+            </div>
+          \`
+              : \`<div class="av av-xs">\${cl.avatar || cl.name?.[0] || 'C'}</div>\`;
+            const ag = agreementBadgeInfo(r.agreementStatus);
+            const pay = paymentBadgeInfo(r.paymentStatus);
+            const stBadge = typeof reqBadgeColor === 'function' ? reqBadgeColor(r.status) : 'gray';
+            return \`<tr>
+            <td>
+              <div class="flex items-center gap-8">
+                \${clientAv}
+                <div>
+                  <div style="font-weight:600;font-size:13.5px">\${escapeHtml(
+                    cl.name || 'Client'
+                  )}</div>
+                  <div class="small text-muted">\${escapeHtml(
+                    cl.company || cl.companyName || cl.email || ''
+                  )}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div style="font-weight:700;font-size:14px;color:var(--text)">\${escapeHtml(
+                r.title || r.eventName || 'Event'
+              )}\${
+              r.demoScenario
+                ? ' <span class="badge badge-warning" style="font-size:10px">DEMO DATA</span>'
+                : ''
+            }</div>
+              <div class="small text-muted">\${escapeHtml(
+                r.type || r.eventType || 'Corporate'
+              )} &middot; \${r.guests || r.capacity || 100} guests</div>
+            </td>
+            <td>
+              <div style="font-weight:600;font-size:13px;margin-bottom:3px">\${escapeHtml(
+                r.date || r.eventDate || ''
+              )}</div>
+            </td>
+            <td>
+              <span style="color:var(--green);font-weight:700;font-size:14px">₹\${(
+                Number(r.budget) || 0
+              ).toLocaleString()}</span>
+            </td>
+            <td>
+              <span class="badge badge-\${stBadge}" style="text-transform:capitalize">\${escapeHtml(
+              (r.status || 'submitted').replace(/_/g, ' ')
+            )}</span>
+            </td>
+            <td>
+              <span class="badge badge-\${ag.cls}">\${escapeHtml(ag.lbl)}</span>
+            </td>
+            <td>
+              <span class="badge badge-\${pay.cls}">\${escapeHtml(pay.lbl)}</span>
+            </td>
+            <td>
+              \${renderOrganizerRowActions(r)}
+            </td>
+          </tr>\`;
+          })
+          .join('')}
+      </tbody>
+    </table>
+  </div>\`;
+}
+function workflowPayload(response) {
+  return response && Object.prototype.hasOwnProperty.call(response, 'data')
+    ? response.data
+    : response;
+}
+function syncWorkflowFileReports(reports) {
+  DB.eventFileReports = reports;
+  reports.forEach(report => {
+    if (report.clientUserId) {
+      const user = DB.users.find(item => String(item.id) === String(report.clientUserId));
+      const contact = {
+        id: report.clientUserId,
+        clientId: report.clientId,
+        name: report.clientName || 'Requesting client',
+        email: report.clientEmail || '',
+        role: 'client',
+      };
+      if (user) Object.assign(user, contact);
+      else DB.users.push(contact);
+    }
+  });
+  DB.reports = (DB.reports || [])
+    .filter(report => !report.backendManaged)
+    .concat(
+      reports.map(report => ({
+        ...report,
+        id: report.eventReportId,
+        fileName: report.documentName || report.reportTitle,
+        submittedBy: report.organizerUserId,
+        recipientId: report.clientUserId,
+        submittedAt: report.createdAt,
+        backendManaged: true,
+      }))
+    );
+}
+function renderWorkflowFileReports(eventId) {
+  const reports = (DB.eventFileReports || []).filter(
+    report => String(report.eventId) === String(eventId)
+  );
+  return reports.length
+    ? \`<section style="margin-top:16px"><h3>Reports from the Organizer</h3>\${reports
+        .map(
+          report =>
+            \`<div style="padding:12px;border:1px solid var(--border);margin-top:8px"><strong>\${workflowHtml(
+              report.reportTitle
+            )}</strong><p style="white-space:pre-wrap;color:var(--text2)">\${workflowHtml(
+              report.reportDetails
+            )}</p>\${
+              report.documentFileName
+                ? \`<button class="btn btn-ghost btn-sm" onclick="downloadWorkflowEventReport('\${workflowHtml(
+                    report.eventReportId
+                  )}')">Download \${workflowHtml(report.documentName)}</button>\`
+                : ''
+            }</div>\`
+        )
+        .join('')}</section>\`
+    : '';
+}
+async function downloadWorkflowEventReport(reportId) {
+  try {
+    const response = await (globalThis.window?.EventFlowFetch || fetch)(
+      \`\${API_BASE_URL}/reports/events/\${encodeURIComponent(reportId)}/file\`,
+      {
+        headers: getAuthHeader()
+          ? {
+              Authorization: getAuthHeader(),
+            }
+          : {},
+      }
+    );
+    if (!response.ok) throw new Error('Unable to download this event report');
+    const report = (DB.eventFileReports || []).find(item => item.eventReportId === reportId);
+    const objectUrl = URL.createObjectURL(await response.blob());
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = report?.documentName || 'event-report';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  } catch (error) {
+    toast(error.message || 'Unable to download the report', 'error');
+  }
+}
+let workflowEventPolicy = null;
+async function loadWorkflowEventPolicy(request) {
+  if (request?.policySnapshot) return request.policySnapshot;
+  workflowEventPolicy = workflowPayload(await apiGetEventPolicy());
+  return workflowEventPolicy;
+}
+const workflowPolicyDocuments = new Map();
+let workflowPolicyDocument = null;
+function renderWorkflowEventPolicy(policy, checkboxId) {
+  if (!policy)
+    return '<p role="alert">Event policies could not be loaded. Refresh before continuing.</p>';
+  workflowPolicyDocuments.set(policy.version, policy);
+  return \`<section style="margin:16px 0;padding:16px;border:1px solid var(--border);background:var(--surface2)">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button type="button" class="btn btn-ghost" data-policy-version="\${workflowHtml(
+            policy.version
+          )}" onclick="openWorkflowPolicyDocument('policies', this.dataset.policyVersion)">Event Policies &amp; Rules</button>
+          <button type="button" class="btn btn-ghost" data-policy-version="\${workflowHtml(
+            policy.version
+          )}" onclick="openWorkflowPolicyDocument('terms', this.dataset.policyVersion)">Terms and Conditions</button>
+        </div>
+        <p class="small" style="margin:12px 0 0;line-height:1.6">Cancellation requires at least \${
+          policy.cancellation.minimumNoticeDays
+        } days' notice. The cancellation fee is \${
+    policy.cancellation.feePercent
+  }% of the amount actually paid.</p>
+        <p class="small" style="margin:8px 0 0">Policy version: \${workflowHtml(policy.version)}</p>
+        \${
+          checkboxId
+            ? \`<label for="\${checkboxId}" style="display:flex;align-items:flex-start;gap:10px;margin-top:16px;cursor:pointer"><input id="\${checkboxId}" type="checkbox" required style="width:auto;margin-top:4px;flex-shrink:0"><span style="font-size:13px;line-height:1.6">I have read and agree to the Event Rules, Cancellation Policy, and Terms and Conditions.</span></label>\`
+            : ''
+        }
+      </section>\`;
+}
+function openWorkflowPolicyDocument(kind, version) {
+  const policy = workflowPolicyDocuments.get(version);
+  if (!policy || !['policies', 'terms'].includes(kind)) {
+    toast('Event policies could not be loaded. Refresh before continuing.', 'error');
+    return;
+  }
+  closeWorkflowPolicyDocument();
+  const previousFocus = document.activeElement;
+  const title = kind === 'terms' ? 'Terms and Conditions' : 'Event Policies & Rules';
+  const sections = policy.sections.filter(
+    section => (section.title.toLowerCase() === 'terms and conditions') === (kind === 'terms')
+  );
+  const overlay = document.createElement('div');
+  overlay.id = 'workflow-policy-document';
+  overlay.className = 'overlay open';
+  overlay.style.zIndex = '1100';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'workflow-policy-title');
+  globalThis.window?.EventFlowOrganizerPages?.clear(overlay);
+  overlay.innerHTML = \`<div class="modal-box" style="max-width:760px">
+        <div class="modal-head"><span class="modal-title" id="workflow-policy-title">\${workflowHtml(
+          title
+        )}</span><button type="button" class="modal-close-btn" aria-label="Back to event form" onclick="closeWorkflowPolicyDocument()">&times;</button></div>
+        <div class="modal-body">
+          \${sections
+            .map(
+              section =>
+                \`<section style="margin-bottom:18px"><h3 style="margin:0 0 10px">\${workflowHtml(
+                  section.title
+                )}</h3><ul style="margin:0;padding-left:20px;color:var(--text2);font-size:13px;line-height:1.8">\${section.items
+                  .map(item => \`<li>\${workflowHtml(item)}</li>\`)
+                  .join('')}</ul></section>\`
+            )
+            .join('')}
+          <p class="small">Policy version: \${workflowHtml(policy.version)}</p>
+        </div>
+        <div class="modal-foot"><button type="button" class="btn btn-ghost" onclick="closeWorkflowPolicyDocument()">Back</button></div>
+      </div>\`;
+  overlay.addEventListener('click', event => {
+    if (event.target === overlay) closeWorkflowPolicyDocument();
+  });
+  overlay.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      closeWorkflowPolicyDocument();
+    } else if (event.key === 'Tab') {
+      const buttons = overlay.querySelectorAll('button');
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  });
+  workflowPolicyDocument = {
+    overlay,
+    previousFocus,
+  };
+  document.body.appendChild(overlay);
+  overlay.querySelector('.modal-close-btn').focus();
+}
+function closeWorkflowPolicyDocument() {
+  if (!workflowPolicyDocument) return;
+  const { overlay, previousFocus } = workflowPolicyDocument;
+  workflowPolicyDocument = null;
+  overlay.remove();
+  if (previousFocus?.isConnected) previousFocus.focus();
+}
+function workflowPolicyAcknowledgement(policy, checkboxId) {
+  if (!policy || !g(checkboxId)?.checked) {
+    toast('Read and accept the event rules, policies, and terms before continuing.', 'error');
+    return null;
+  }
+  return {
+    policyAccepted: true,
+    acceptedPolicyVersion: policy.version,
+  };
+}
+function workflowMoney(value) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 2,
+  }).format(Number(value) || 0);
+}
+function workflowPolicyDate(value) {
+  const date = new Date(value);
+  return value && !Number.isNaN(date.getTime())
+    ? date.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+      }) + ' IST'
+    : 'Not recorded';
+}
+function renderWorkflowCancellation(cancellation) {
+  return cancellation
+    ? \`<section style="margin-top:16px;padding:16px;border:1px solid var(--border)"><h3 style="margin:0 0 12px">Event cancelled</h3>
+        <p style="white-space:pre-wrap;overflow-wrap:anywhere">\${workflowHtml(
+          cancellation.reason
+        )}</p>
+        <div class="info-row"><span class="info-label">Amount paid</span><span>\${workflowMoney(
+          cancellation.paidAmount
+        )}</span></div>
+        <div class="info-row"><span class="info-label">Cancellation fee (\${
+          cancellation.cancellationFeePercent
+        }%)</span><span>\${workflowMoney(cancellation.cancellationFee)}</span></div>
+        <div class="info-row"><span class="info-label">Refund due</span><strong>\${workflowMoney(
+          cancellation.refundAmount
+        )}</strong></div>
+        <p class="small">\${
+          cancellation.refundStatus === 'pending'
+            ? cancellation.refundSimulated
+              ? 'Simulated refund pending provider confirmation.'
+              : 'Refund pending review.'
+            : 'No payment was taken; no refund is needed.'
+        } Cancelled: \${workflowHtml(workflowPolicyDate(cancellation.cancelledAt))}</p></section>\`
+    : '';
+}
+function mapWorkflowRequest(request) {
+  return {
+    ...request,
+    id: request.requestId,
+    workflowManaged: true,
+    backendClientId: request.clientId,
+    backendOrganizerId: request.organizerId,
+    clientId: request.clientUserId || (CU.role === 'client' ? CU.id : request.clientId),
+    organizer: request.organizerUserId || (CU.role === 'organizer' ? CU.id : request.organizerId),
+    organizerId: request.organizerId,
+    title: request.eventName,
+    type: request.eventType || 'Event',
+    date: request.eventDate,
+    guests: request.capacity,
+    desc: request.requirements || '',
+    created: request.createdAt,
+    proposals: request.proposals || [],
+    negotiations: request.negotiations || [],
+    clarifications: request.clarifications || [],
+    auditHistory: request.auditHistory || [],
+  };
+}
+async function syncWorkflowData() {
+  const [
+    requestResponse,
+    planResponse,
+    eventResponse,
+    notificationResponse,
+    reportResponse,
+    policyResponse,
+    fileReportResponse,
+  ] = await Promise.all([
+    apiGetEventRequests(),
+    apiGetEventPlans(),
+    apiGetWorkflowEvents(),
+    apiGetNotifications(),
+    apiGetCompletionReports(),
+    apiGetEventPolicy(),
+    apiGetEventReports(),
+  ]);
+  workflowEventPolicy = workflowPayload(policyResponse);
+  const requests = workflowPayload(requestResponse) || [];
+  const plans = workflowPayload(planResponse) || [];
+  const events = workflowPayload(eventResponse) || [];
+  const notifications = workflowPayload(notificationResponse) || [];
+  DB.eventCompletionReports = workflowPayload(reportResponse) || [];
+  DB.eventRequests = requests.map(mapWorkflowRequest);
+  DB.eventPlans = plans;
+  syncWorkflowFileReports(workflowPayload(fileReportResponse) || []);
+  DB.notifications = notifications.map(notification => ({
+    ...notification,
+    id: notification.notificationId,
+    title: notification.title || String(notification.type || 'notification').replaceAll('_', ' '),
+    msg: notification.message || notification.msg || '',
+    time: new Date(notification.dateTime || notification.createdAt).toLocaleString(),
+    date: notification.dateTime || notification.createdAt,
+  }));
+  const relatedEventIds = new Set(
+    DB.eventRequests.filter(request => request.eventId).map(request => request.eventId)
+  );
+  DB.events = DB.events.filter(event => !relatedEventIds.has(event.eventId || event.id));
+  const ownEvents = events.filter(
+    event =>
+      relatedEventIds.has(event.eventId) ||
+      (CU.role === 'organizer' ? event.organizerUserId === CU.id : event.clientUserId === CU.id)
+  );
+  const ownEventIds = new Set(ownEvents.map(event => event.eventId));
+  DB.events = DB.events.filter(event => !ownEventIds.has(event.eventId || event.id));
+  ownEvents.forEach(event => {
+    DB.events.push({
+      ...event,
+      id: event.eventId,
+      title: event.name || event.title,
+      date: event.date,
+      venue: event.location || event.venue,
+      price: event.ticketPrice ?? event.price ?? 0,
+      backendStatus: event.status,
+      status:
+        event.status === 'published'
+          ? 'upcoming'
+          : event.status === 'draft'
+          ? 'pending'
+          : event.status,
+      organizer: event.organizerUserId || (CU.role === 'organizer' ? CU.id : event.organizerId),
+      clientId: CU.role === 'client' ? CU.id : event.clientId,
+    });
+  });
+  return DB.eventRequests;
+}
+async function runWorkflowAction(action, successMessage, requestId) {
+  try {
+    const response = await action();
+    await syncWorkflowData();
+    closeModal();
+    closeDrawer();
+    toast(successMessage || workflowPayload(response)?.message || 'Workflow updated', 'success');
+    await renderPage(_currentPage);
+  } catch (error) {
+    toast(error.message || 'Unable to update this event request', 'error');
+  }
+}
+function workflowHtml(value) {
+  return escapeHtml(String(value ?? ''));
+}
+function isBookedClientEvent(event) {
+  return (
+    Boolean(event.clientId || event.backendClientId) ||
+    (DB.eventRequests || []).some(
+      request => request.eventId && String(request.eventId) === String(event.eventId || event.id)
+    )
+  );
+}
+async function openEventPlanPdf(planId, fileName, preview) {
+  const previewWindow = preview ? window.open('about:blank', '_blank') : null;
+  try {
+    const pdf = await apiDownloadEventPlanDocument(planId);
+    const objectUrl = URL.createObjectURL(pdf);
+    if (preview && previewWindow) {
+      previewWindow.opener = null;
+      previewWindow.location.href = objectUrl;
+    } else {
+      if (previewWindow) previewWindow.close();
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = decodeURIComponent(fileName) || 'event-plan.pdf';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  } catch (error) {
+    if (previewWindow) previewWindow.close();
+    toast(error.message || 'Unable to open the event plan PDF', 'error');
+  }
+}
+async function openEventCompletionPhoto(eventId, fileName) {
+  const previewWindow = window.open('about:blank', '_blank');
+  try {
+    const response = await (globalThis.window?.EventFlowFetch || fetch)(
+      \`\${API_BASE_URL}/reports/events/\${encodeURIComponent(
+        eventId
+      )}/completion/photos/\${encodeURIComponent(fileName)}\`,
+      {
+        headers: getAuthHeader()
+          ? {
+              Authorization: getAuthHeader(),
+            }
+          : {},
+      }
+    );
+    if (!response.ok) throw new Error('Unable to load this report photo');
+    const objectUrl = URL.createObjectURL(await response.blob());
+    if (previewWindow) {
+      previewWindow.opener = null;
+      previewWindow.location.href = objectUrl;
+    }
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  } catch (error) {
+    if (previewWindow) previewWindow.close();
+    toast(error.message || 'Unable to open the report photo', 'error');
+  }
+}
+function completeWorkflowEvent(eventId, requestId) {
+  confirm2(
+    'Complete event',
+    'Mark this event completed? Full payment must be verified and the event date must have passed.',
+    () => {
+      runWorkflowAction(
+        () => apiCompleteWorkflowEvent(eventId),
+        'Event marked completed; client notified',
+        requestId
+      );
+    }
+  );
+}
+function openCompletionReportModal(eventId, requestId, eventName) {
+  openModal(
+    'Submit Event Completion Report',
+    \`<div style="margin-bottom:12px;color:var(--text2)">\${workflowHtml(
+      eventName
+    )} · attach up to 5 photos (JPG, PNG, WEBP; 5 MB each).</div>
+      <div class="form-group"><label class="form-label">Services provided</label><textarea class="form-control" id="completion-services" rows="3" required></textarea></div>
+      <div class="form-group"><label class="form-label">Expenses</label><textarea class="form-control" id="completion-expenses" rows="3" placeholder="List expenses and final amounts" required></textarea></div>
+      <div class="form-group"><label class="form-label">Completion notes</label><textarea class="form-control" id="completion-notes" rows="4" required></textarea></div>
+      <div class="form-group"><label class="form-label">Event photos (optional)</label><input class="form-control" id="completion-photos" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple></div>\`,
+    [
+      {
+        lbl: 'Submit Report',
+        cls: 'btn-primary',
+        fn: \`submitCompletionReport('\${eventId}','\${requestId}')\`,
+      },
+    ]
+  );
+}
+function submitCompletionReport(eventId, requestId) {
+  const servicesProvided = v('completion-services');
+  const expenses = v('completion-expenses');
+  const completionNotes = v('completion-notes');
+  const photos = Array.from(g('completion-photos')?.files || []);
+  if (!servicesProvided || !expenses || !completionNotes) {
+    toast('Complete services, expenses, and completion notes before submitting.', 'error');
+    return;
+  }
+  if (photos.length > 5 || photos.some(file => file.size > 5 * 1024 * 1024)) {
+    toast('Attach no more than five photos, each no larger than 5 MB.', 'error');
+    return;
+  }
+  const formData = new FormData();
+  formData.append('servicesProvided', servicesProvided);
+  formData.append('expenses', expenses);
+  formData.append('completionNotes', completionNotes);
+  photos.forEach(photo => formData.append('photos', photo));
+  runWorkflowAction(
+    () => apiSubmitCompletionReport(eventId, formData),
+    'Event completion report submitted to client',
+    requestId
+  );
+}
+function viewWorkflowRequestDrawer(id) {
+  _workflowRequestId = String(id);
+  _workflowReturnPage = [
+    'event-requests',
+    'request-status',
+    'dashboard',
+    'my-events',
+    'ongoing-events',
+    'completed-events',
+  ].includes(_currentPage)
+    ? _currentPage
+    : 'request-status';
+  goNav('request-details');
+}
+function viewWorkflowEventDetails(eventId) {
+  const request = DB.eventRequests.find(item => String(item.eventId) === String(eventId));
+  if (request) viewWorkflowRequestDrawer(request.id);
+  else openViewEventDrawer(eventId);
+}
+function viewWorkflowEventReport(eventId) {
+  if (DB.eventRequests.some(item => String(item.eventId) === String(eventId))) {
+    viewWorkflowEventDetails(eventId);
+  } else {
+    viewEventReport(eventId);
+  }
+}
+function renderWorkflowRequestDetails(id) {
+  if (globalThis.window?.EventFlowOrganizerPages?.hasPage('request-details')) {
+    window.EventFlowOrganizerPages.render(
+      g('page-content'),
+      'request-details',
+      window.EventFlowOrganizerRuntime.snapshot({
+        id: id,
+      })
+    );
+    return;
+  }
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  const element = g('page-content');
+  if (!r || !element) {
+    if (element) {
+      globalThis.window?.EventFlowOrganizerPages?.clear(element);
+      element.innerHTML =
+        '<div class="empty"><div class="empty-title">Request not found</div><button class="btn btn-primary mt-16" onclick="goNav(\\'request-status\\')">Back to requests</button></div>';
+    }
+    return;
+  }
+  const plan =
+    (DB.eventPlans || []).find(item => item.eventPlanId === r.activeEventPlanId) ||
+    (DB.eventPlans || [])
+      .filter(item => item.requestId === r.requestId)
+      .sort((a, b) => (b.revision || 0) - (a.revision || 0))[0];
+  const organizerRole = CU.role === 'organizer';
+  const timeline = [
+    ['Request sent', true],
+    ['Organizer review', !['submitted', 'pending'].includes(r.status)],
+    [
+      'Budget and date agreed',
+      ['planning', 'plan_submitted', 'plan_revision_requested', 'confirmed'].includes(r.status),
+    ],
+    [
+      'Event plan submitted',
+      ['plan_submitted', 'plan_revision_requested', 'confirmed'].includes(r.status),
+    ],
+    ['Plan approved', ['confirmed', 'approved', 'completed'].includes(r.status)],
+    ['Ongoing event', ['confirmed', 'approved', 'completed'].includes(r.status)],
+    ['Event completed', r.status === 'completed'],
+  ];
+  const currentChange = [...(r.negotiations || [])]
+    .reverse()
+    .find(item => item.action === 'changes_requested');
+  const pendingCounteroffer = [...(r.negotiations || [])]
+    .reverse()
+    .find(item => item.action === 'counteroffer');
+  const plans = (DB.eventPlans || [])
+    .filter(item => item.requestId === r.requestId)
+    .sort((a, b) => (a.revision || 0) - (b.revision || 0));
+  const organizerActions = ['submitted', 'pending', 'under_review', 'info_requested'].includes(
+    r.status
+  )
+    ? \`<div style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-success w-full" onclick="acceptWorkflowRequest('\${r.id}')">Accept</button><button class="btn btn-danger w-full" onclick="openWorkflowRejectModal('\${r.id}')">Reject</button></div>\`
+    : r.status === 'counteroffer_received'
+    ? \`<div style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-success w-full" onclick="acceptWorkflowCounteroffer('\${r.id}')">Accept Counteroffer</button><button class="btn btn-danger w-full" onclick="openWorkflowRejectModal('\${r.id}')">Reject / Propose Changes</button></div>\`
+    : ['planning', 'plan_revision_requested'].includes(r.status)
+    ? \`<button class="btn btn-primary w-full" style="margin-top:16px" onclick="openWorkflowPlanModal('\${
+        r.id
+      }')">\${
+        r.status === 'plan_revision_requested' ? 'Edit and Resubmit Plan' : 'Create Event Plan'
+      }</button>\`
+    : '';
+  const clientActions =
+    r.status === 'changes_requested'
+      ? \`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px"><button class="btn btn-success" onclick="respondToWorkflowChanges('\${r.id}','accept_changes')">Accept Changes</button><button class="btn btn-danger" onclick="respondToWorkflowChanges('\${r.id}','reject_changes')">Reject Changes</button><button class="btn btn-primary" onclick="openWorkflowCounterofferModal('\${r.id}')">Send Counteroffer</button></div>\`
+      : r.status === 'plan_submitted' && plan?.approvalStatus === 'pending'
+      ? \`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px"><button class="btn btn-success" onclick="reviewWorkflowPlan('\${plan.eventPlanId}','approved','\${r.id}')">Accept Plan</button><button class="btn btn-primary" onclick="openWorkflowPlanRevisionModal('\${plan.eventPlanId}','\${r.id}')">Request New Plan</button></div>\`
+      : '';
+  const negotiationHtml = (r.negotiations || [])
+    .map(
+      item =>
+        \`<div style="padding:10px;border-left:3px solid var(--accent);background:var(--surface2);border-radius:6px;margin-top:8px"><strong>\${workflowHtml(
+          String(item.action || '').replaceAll('_', ' ')
+        )}</strong><div style="font-size:12px;color:var(--text2);margin-top:4px">\${workflowHtml(
+          item.reason
+        )}\${item.budget ? \` · Budget ₹\${Number(item.budget).toLocaleString()}\` : ''}\${
+          item.eventDate ? \` · Date \${workflowHtml(item.eventDate)}\` : ''
+        }</div></div>\`
+    )
+    .join('');
+  const planHtml = plan
+    ? \`<div style="margin-top:12px;padding:14px;background:var(--surface2);border-radius:10px">
+        <div style="display:flex;justify-content:space-between;gap:8px"><strong>\${workflowHtml(
+          plan.title
+        )} · Revision \${plan.revision || 1}</strong><span class="badge badge-\${
+        plan.approvalStatus === 'approved'
+          ? 'green'
+          : plan.approvalStatus === 'revision_requested'
+          ? 'yellow'
+          : 'blue'
+      }">\${workflowHtml(String(plan.approvalStatus || 'pending').replaceAll('_', ' '))}</span></div>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6">\${workflowHtml(
+          plan.description
+        )}</p>
+        <div class="info-row"><span class="info-label">Budget</span><span class="info-value">₹\${Number(
+          plan.budget || 0
+        ).toLocaleString()}</span></div>
+        <div style="margin-top:12px;padding:14px;border:1px solid var(--border);border-radius:8px">
+          <strong>Event plan document</strong>
+          \${
+            plan.documentFileName
+              ? \`<div style="margin-top:6px;color:var(--text2)">\${workflowHtml(
+                  plan.documentName || 'Event plan PDF'
+                )}</div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="openEventPlanPdf('\${
+                  plan.eventPlanId
+                }','\${encodeURIComponent(
+                  plan.documentName || 'event-plan.pdf'
+                )}',true)">View PDF</button><button class="btn btn-primary btn-sm" onclick="openEventPlanPdf('\${
+                  plan.eventPlanId
+                }','\${encodeURIComponent(
+                  plan.documentName || 'event-plan.pdf'
+                )}',false)">Download PDF</button></div>\`
+              : '<p style="font-size:13px;color:var(--text3)">No PDF was attached to this plan.</p>'
+          }
+        </div>
+        \${
+          plan.revisionReason
+            ? \`<div style="font-size:12px;color:var(--yellow);margin-top:8px">Requested revision: \${workflowHtml(
+                plan.revisionReason
+              )}</div>\`
+            : ''
+        }
+        \${
+          plans.length > 1
+            ? \`<details style="margin-top:10px"><summary>Plan revision history (\${
+                plans.length
+              })</summary>\${plans
+                .map(
+                  item =>
+                    \`<div style="font-size:12px;padding:6px 0;border-bottom:1px solid var(--border2)">Revision \${
+                      item.revision || 1
+                    }: \${workflowHtml(item.title)} — \${workflowHtml(
+                      String(item.approvalStatus).replaceAll('_', ' ')
+                    )}</div>\`
+                )
+                .join('')}</details>\`
+            : ''
+        }
+      </div>\`
+    : \`<p style="color:var(--text3);font-size:13px">The organizer has not submitted an event plan yet.</p>\`;
+  const eventId = r.eventId;
+  const event =
+    eventId && DB.events.find(item => String(item.eventId || item.id) === String(eventId));
+  const completionReport = (DB.eventCompletionReports || []).find(item => item.eventId === eventId);
+  const isPaid = r.paymentStatus === 'fully_paid';
+  const isDepositPaid = r.paymentStatus === 'deposit_paid';
+  const eventDatePassed = new Date(\`\${r.eventDate || r.date}T23:59:59\`) <= new Date();
+  const reportPhotos = (completionReport?.photos || [])
+    .map(
+      photo =>
+        \`<button class="btn btn-ghost btn-xs" onclick="openEventCompletionPhoto('\${eventId}','\${encodeURIComponent(
+          photo.fileName
+        )}')">View \${workflowHtml(photo.originalName)}</button>\`
+    )
+    .join(' ');
+  const completionReportHtml = completionReport
+    ? \`<div style="margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:10px">
+        <h3 style="margin:0 0 10px">Event Completion Report</h3>
+        <div class="info-row"><span class="info-label">Event</span><span class="info-value">\${workflowHtml(
+          completionReport.eventName
+        )} · \${workflowHtml(completionReport.eventDate)}</span></div>
+        <div class="info-row"><span class="info-label">Venue</span><span class="info-value">\${workflowHtml(
+          completionReport.venue || '—'
+        )}</span></div>
+        <div style="margin-top:10px"><strong>Services provided</strong><p style="white-space:pre-wrap;color:var(--text2)">\${workflowHtml(
+          completionReport.servicesProvided
+        )}</p></div>
+        <div style="margin-top:10px"><strong>Expenses</strong><p style="white-space:pre-wrap;color:var(--text2)">\${workflowHtml(
+          completionReport.expenses
+        )}</p></div>
+        <div style="margin-top:10px"><strong>Completion notes</strong><p style="white-space:pre-wrap;color:var(--text2)">\${workflowHtml(
+          completionReport.completionNotes
+        )}</p></div>
+        \${
+          reportPhotos
+            ? \`<div style="margin-top:10px"><strong>Photos</strong><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">\${reportPhotos}</div></div>\`
+            : ''
+        }
+      </div>\`
+    : '';
+  const lifecycleActions =
+    event?.status === 'ongoing'
+      ? isPaid
+        ? eventDatePassed
+          ? \`<button class="btn btn-primary" style="margin-top:10px" onclick="completeWorkflowEvent('\${eventId}','\${r.id}')">Mark Event as Completed</button>\`
+          : '<p style="margin-top:10px;color:var(--text3)">Completion is available after the event date.</p>'
+        : \`<p style="margin-top:10px;color:var(--yellow)">\${
+            isDepositPaid
+              ? 'Deposit received. The remaining balance must be paid before the event can be marked completed.'
+              : 'The client must complete full payment before the event can be marked completed.'
+          }</p>\`
+      : '';
+  const completionReportAction =
+    event?.status === 'completed' && !completionReport
+      ? \`<button class="btn btn-primary" style="margin-top:12px" onclick="openCompletionReportModal('\${eventId}','\${
+          r.id
+        }','\${workflowHtml(r.title)}')">Create Event Completion Report</button>\`
+      : '';
+  const lifecycleHtml =
+    eventId && event
+      ? \`<section style="margin-top:18px;padding:16px;background:var(--surface2);border-radius:10px">
+        <h3 style="margin:0 0 10px">Ongoing Event Workflow</h3>
+        <div class="info-row"><span class="info-label">Event status</span><span class="info-value">\${workflowHtml(
+          event.status
+        )}</span></div>
+        <div class="info-row"><span class="info-label">Payment status</span><span class="info-value" style="color:\${
+          isPaid ? 'var(--green)' : isDepositPaid ? 'var(--blue)' : 'var(--yellow)'
+        }">\${isPaid ? 'Paid' : isDepositPaid ? 'Deposit Paid' : 'Unpaid'}</span></div>
+        \${lifecycleActions}\${completionReportAction}\${completionReportHtml}
+        \${renderWorkflowFileReports(eventId)}
+        \${renderWorkflowCancellation(r.cancellation || event.cancellation)}
+      </section>\`
+      : '';
+  globalThis.window?.EventFlowOrganizerPages?.clear(element);
+  element.innerHTML = \`<div class="page-hd">
+        <div class="page-hd-left"><button class="btn btn-ghost btn-sm" onclick="goNav('\${_workflowReturnPage}')">← Back to \${
+    _workflowReturnPage === 'my-events'
+      ? 'Events'
+      : _workflowReturnPage === 'ongoing-events'
+      ? 'Ongoing Events'
+      : _workflowReturnPage === 'completed-events'
+      ? 'Completed Events'
+      : _workflowReturnPage === 'event-requests'
+      ? 'Event Requests'
+      : _workflowReturnPage === 'dashboard'
+      ? 'Dashboard'
+      : 'Request Status'
+  }</button><div class="page-title" style="margin-top:12px">\${workflowHtml(
+    r.title
+  )}</div><div class="page-sub">Request details, workflow progress, negotiation, and event plan</div></div>
+      </div>
+      <div class="card" style="max-width:1000px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="badge badge-\${reqBadge(
+            r.status
+          )}" style="text-transform:capitalize">\${String(r.status).replaceAll('_', ' ')}</span>
+          <span style="font-size:12px;color:var(--text3)">Request ID: \${workflowHtml(
+            r.requestId
+          )}</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0">
+          \${timeline
+            .map(
+              ([label, complete]) =>
+                \`<div style="flex:1;min-width:105px;padding:8px;border-radius:8px;background:\${
+                  complete ? 'var(--accent-dim)' : 'var(--surface2)'
+                };color:\${
+                  complete ? 'var(--accent)' : 'var(--text3)'
+                };font-size:11px;font-weight:600">\${complete ? '✓ ' : '○ '}\${label}</div>\`
+            )
+            .join('')}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="info-row"><span class="info-label">Event date</span><span class="info-value">\${workflowHtml(
+            r.eventDate || r.date
+          )}</span></div>
+          <div class="info-row"><span class="info-label">Budget</span><span class="info-value">₹\${Number(
+            r.budget || 0
+          ).toLocaleString()}</span></div>
+          <div class="info-row"><span class="info-label">Ticket price per attendee</span><span class="info-value">\${
+            Number(r.ticketPrice || 0) === 0
+              ? 'Free'
+              : '₹' + Number(r.ticketPrice).toLocaleString('en-IN')
+          }</span></div>
+          <div class="info-row"><span class="info-label">Event access</span><span class="info-value">\${
+            r.visibility === 'private'
+              ? 'Private — approval before payment'
+              : 'Public — direct registration'
+          }</span></div>
+          <div class="info-row"><span class="info-label">Guests</span><span class="info-value">\${
+            r.capacity || r.guests
+          }</span></div>
+          <div class="info-row"><span class="info-label">Event type</span><span class="info-value">\${workflowHtml(
+            r.eventType || r.type
+          )}</span></div>
+        </div>
+        <div style="margin:12px 0"><strong>Event details</strong><p style="white-space:pre-wrap;color:var(--text2);line-height:1.6">\${workflowHtml(
+          r.requirements || r.desc || '—'
+        )}</p></div>
+        \${
+          r.status === 'rejected' && r.rejectionReason
+            ? \`<div style="padding:12px;background:var(--red-dim);margin:12px 0"><strong>Reason for declining</strong><p style="margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere">\${workflowHtml(
+                r.rejectionReason
+              )}</p></div>\`
+            : ''
+        }
+        \${
+          currentChange
+            ? \`<div style="padding:12px;border-radius:8px;background:rgba(245,158,11,.1);margin:12px 0"><strong>Organizer requested changes</strong><div style="font-size:13px;margin-top:5px">\${workflowHtml(
+                currentChange.reason
+              )}</div>\${
+                currentChange.budget
+                  ? \`<div>Proposed budget: ₹\${Number(currentChange.budget).toLocaleString()}</div>\`
+                  : ''
+              }\${
+                currentChange.eventDate
+                  ? \`<div>Proposed date: \${workflowHtml(currentChange.eventDate)}</div>\`
+                  : ''
+              }</div>\`
+            : ''
+        }
+        \${
+          r.status === 'counteroffer_received' && pendingCounteroffer
+            ? \`<div style="padding:12px;border-radius:8px;background:rgba(124,111,247,.1);margin:12px 0"><strong>Client counteroffer — review proposed event details</strong>\${
+                pendingCounteroffer.reason
+                  ? \`<div style="font-size:13px;margin-top:5px">\${workflowHtml(
+                      pendingCounteroffer.reason
+                    )}</div>\`
+                  : ''
+              }<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;font-size:13px">\${
+                pendingCounteroffer.eventName
+                  ? \`<div><strong>Event:</strong> \${workflowHtml(
+                      pendingCounteroffer.eventName
+                    )}</div>\`
+                  : ''
+              }\${
+                pendingCounteroffer.eventType
+                  ? \`<div><strong>Type:</strong> \${workflowHtml(
+                      pendingCounteroffer.eventType
+                    )}</div>\`
+                  : ''
+              }\${
+                pendingCounteroffer.eventDate
+                  ? \`<div><strong>Date:</strong> \${workflowHtml(
+                      pendingCounteroffer.eventDate
+                    )}</div>\`
+                  : ''
+              }\${
+                pendingCounteroffer.budget
+                  ? \`<div><strong>Budget:</strong> ₹\${Number(
+                      pendingCounteroffer.budget
+                    ).toLocaleString()}</div>\`
+                  : ''
+              }\${
+                pendingCounteroffer.capacity !== undefined
+                  ? \`<div><strong>Guests:</strong> \${pendingCounteroffer.capacity}</div>\`
+                  : ''
+              }\${
+                pendingCounteroffer.venue !== undefined
+                  ? \`<div><strong>Venue:</strong> \${workflowHtml(
+                      pendingCounteroffer.venue || 'Not specified'
+                    )}</div>\`
+                  : ''
+              }</div>\${
+                pendingCounteroffer.requirements !== undefined
+                  ? \`<div style="margin-top:8px"><strong>Requirements:</strong><div style="white-space:pre-wrap">\${workflowHtml(
+                      pendingCounteroffer.requirements || 'Not specified'
+                    )}</div></div>\`
+                  : ''
+              }</div>\`
+            : ''
+        }
+        <div style="margin-top:16px"><strong>Event plan</strong>\${planHtml}</div>
+        \${renderWorkflowEventPolicy(r.policySnapshot || workflowEventPolicy)}
+        <p class="small">Client acknowledgement: \${workflowHtml(
+          workflowPolicyDate(r.clientPolicyAcceptedAt)
+        )}<br>Organizer acknowledgement: \${workflowHtml(
+    workflowPolicyDate(r.organizerPolicyAcceptedAt)
+  )}</p>
+        \${organizerRole ? organizerActions : clientActions}
+        \${lifecycleHtml}
+        \${
+          negotiationHtml
+            ? \`<div style="margin-top:18px"><strong>Negotiation history</strong>\${negotiationHtml}</div>\`
+            : ''
+        }
+        <div style="margin-top:18px"><strong>Progress history</strong>\${
+          (r.auditHistory || [])
+            .slice()
+            .reverse()
+            .map(
+              entry =>
+                \`<div style="padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px"><strong>\${workflowHtml(
+                  entry.action
+                )}</strong><div style="color:var(--text3)">\${
+                  entry.timestamp
+                    ? workflowHtml(String(entry.timestamp).replace('T', ' ').slice(0, 16))
+                    : ''
+                } · \${workflowHtml(entry.role)}</div></div>\`
+            )
+            .join('') ||
+          '<div style="font-size:12px;color:var(--text3)">No workflow actions yet.</div>'
+        }</div>
+      </div>\`;
+}
+let workflowResponsePolicy = null;
+async function openWorkflowRejectModal(id) {
+  try {
+    workflowResponsePolicy = await loadWorkflowEventPolicy(
+      DB.eventRequests.find(item => String(item.id) === String(id))
+    );
+  } catch (error) {
+    toast(error.message || 'Unable to load event policies', 'error');
+    return;
+  }
+  openModal(
+    'Reject Request',
+    \`<div class="form-group"><label class="form-label">Choose a response</label><select class="form-control" id="workflow-reject-type" onchange="toggleWorkflowRejectFields()"><option value="budget">Budget Increase</option><option value="date">Date Change</option><option value="both">Both Budget and Date Change</option><option value="other">Other Reason</option></select></div>
+      <div class="form-group" id="workflow-reject-budget"><label class="form-label">New budget (must be higher)</label><input class="form-control" id="workflow-new-budget" type="number" min="1"></div>
+      <div class="form-group" id="workflow-reject-date" style="display:none"><label class="form-label">New event date</label><input class="form-control" id="workflow-new-date" type="date"></div>
+      <div class="form-group"><label class="form-label">Reason</label><textarea class="form-control" id="workflow-reject-reason" rows="3" required></textarea></div>
+      <div id="workflow-reject-policy">\${renderWorkflowEventPolicy(
+        workflowResponsePolicy,
+        'workflow-change-policy'
+      )}</div>
+      <div id="workflow-reject-error" style="color:var(--red);font-size:12px"></div>\`,
+    [
+      {
+        lbl: 'Reject',
+        cls: 'btn-danger',
+        fn: \`submitWorkflowReject('\${id}', true)\`,
+      },
+      {
+        lbl: 'Send Response',
+        cls: 'btn-primary',
+        fn: \`submitWorkflowReject('\${id}')\`,
+      },
+    ]
+  );
+  toggleWorkflowRejectFields();
+}
+function toggleWorkflowRejectFields() {
+  const type = v('workflow-reject-type');
+  const budget = g('workflow-reject-budget');
+  const date = g('workflow-reject-date');
+  if (budget) budget.style.display = ['budget', 'both'].includes(type) ? '' : 'none';
+  if (date) date.style.display = ['date', 'both'].includes(type) ? '' : 'none';
+}
+function submitWorkflowReject(id, permanent = false) {
+  const type = permanent ? 'permanent' : v('workflow-reject-type');
+  const reason = v('workflow-reject-reason').trim();
+  if (!reason) {
+    g('workflow-reject-error').textContent = 'Please enter a reason.';
+    return;
+  }
+  const payload = {
+    reason,
+    reasonType: type,
+  };
+  if (type !== 'permanent') {
+    const acknowledgement = workflowPolicyAcknowledgement(
+      workflowResponsePolicy,
+      'workflow-change-policy'
+    );
+    if (!acknowledgement) return;
+    Object.assign(payload, acknowledgement);
+  }
+  if (['budget', 'both'].includes(type)) {
+    const nb = Number(v('workflow-new-budget'));
+    if (!Number.isFinite(nb) || nb < 1000 || nb > 10000000) {
+      g('workflow-reject-error').textContent =
+        nb > 10000000
+          ? 'Proposed budget cannot exceed ₹1,00,00,000.'
+          : 'Proposed budget must be at least ₹1,000.';
+      return;
+    }
+    payload.proposedBudget = nb;
+  }
+  if (['date', 'both'].includes(type)) payload.proposedDate = v('workflow-new-date');
+  return runWorkflowAction(
+    () => apiRejectEventRequest(id, payload),
+    type === 'permanent' ? 'Request permanently rejected' : 'Changes sent to client',
+    id
+  );
+}
+let workflowAcceptance = null;
+async function openWorkflowAcceptance(id, counteroffer) {
+  try {
+    const req = DB.eventRequests.find(
+      item => String(item.id) === String(id) || String(item.requestId) === String(id)
+    );
+    if (!req) {
+      toast('Event request not found', 'error');
+      return;
+    }
+    const policy = await loadWorkflowEventPolicy(req);
+    workflowAcceptance = {
+      id,
+      counteroffer,
+      policy,
+    };
+    let counterofferHtml = '';
+    if (counteroffer) {
+      const co =
+        [...(req.negotiations || [])].reverse().find(n => n.action === 'counteroffer') ||
+        req.counteroffer ||
+        (req.status === 'counteroffer_received'
+          ? {
+              version: 1,
+              budget: req.budget,
+              proposedPrice: req.budget,
+              depositRequired: Math.round((req.budget || 0) * 0.3),
+              remainingBalance: Math.max(
+                0,
+                (req.budget || 0) - Math.round((req.budget || 0) * 0.3)
+              ),
+              requirements: req.requirements || req.desc,
+              reason:
+                req.clientFeedback ||
+                req.clientNotes ||
+                'Client proposed counteroffer on terms and pricing.',
+              paymentTerms:
+                '30% Advance Deposit on Agreement, 70% Remaining Balance upon Completion',
+              timeline: '09:00 Setup; 11:00 Registration; 13:00 Main event; 17:00 Wrap-up',
+              cancellationTerms:
+                '14+ days notice: 10% fee, 90% net refund. Within 14 days: Non-refundable.',
+              validUntil: req.eventDate ? \`Until \${req.eventDate}\` : '14 days from submission',
+              timestamp: req.updatedAt || new Date(),
+            }
+          : null);
+      if (!co) {
+        toast('Counteroffer not found.', 'error');
+        return;
+      }
+      if (co.validUntil && new Date(co.validUntil + 'T23:59:59') < new Date()) {
+        toast('Counteroffer expired.', 'warning');
+      }
+      if (co.status === 'accepted' || co.status === 'mutually_accepted') {
+        toast('Counteroffer already accepted.', 'info');
+      }
+      const coVersion = co.version || 1;
+      const coDate = co.timestamp ? new Date(co.timestamp).toLocaleDateString() : 'Recent';
+      const totalPrice = Number(co.proposedPrice || co.budget || req.budget || 0);
+      const depositRequired =
+        co.depositRequired !== undefined
+          ? Number(co.depositRequired)
+          : Math.round(totalPrice * 0.3);
+      const remainingBalance =
+        co.remainingBalance !== undefined
+          ? Number(co.remainingBalance)
+          : Math.max(0, totalPrice - depositRequired);
+      const requestedChanges =
+        co.reason ||
+        co.requirements ||
+        co.eventPlan ||
+        co.services ||
+        req.requirements ||
+        req.desc ||
+        'Standard scope per client counteroffer';
+      const paymentTerms =
+        co.paymentTerms ||
+        co.paymentSchedule ||
+        '30% Advance Deposit on Agreement, 70% Remaining Balance upon Completion';
+      const timeline =
+        co.timeline || '09:00 Setup; 11:00 Registration; 13:00 Main event; 17:00 Wrap-up';
+      const cancellationTerms =
+        co.cancellationTerms ||
+        policy?.cancellationPolicy ||
+        '14+ days notice: 10% fee, 90% net refund. Within 14 days: Non-refundable.';
+      const validUntil = co.validUntil || '14 days from submission';
+      counterofferHtml = \`
+            <div style="background:var(--surface2);border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div style="font-weight:700;font-size:14px;color:var(--text)">Client Counteroffer (v\${coVersion})</div>
+                <span class="badge badge-purple" style="font-size:11px">Submitted: \${escapeHtml(
+                  coDate
+                )}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;font-size:13px">
+                <div>
+                  <div style="font-size:11px;color:var(--text3);text-transform:uppercase">Proposed Total Price</div>
+                  <strong style="color:var(--green);font-size:16px">&#8377;\${totalPrice.toLocaleString()}</strong>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text3);text-transform:uppercase">Advance Deposit</div>
+                  <strong style="color:var(--accent);font-size:16px">&#8377;\${depositRequired.toLocaleString()}</strong>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text3);text-transform:uppercase">Remaining Balance</div>
+                  <strong style="color:var(--yellow);font-size:15px">&#8377;\${remainingBalance.toLocaleString()}</strong>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text3);text-transform:uppercase">Validity Period</div>
+                  <div style="font-weight:600">\${escapeHtml(validUntil)}</div>
+                </div>
+              </div>
+              <div style="font-size:12.5px;color:var(--text);margin-bottom:10px">
+                <strong>Requested Changes to Services, Deliverables & Plan:</strong>
+                <div style="background:var(--surface);padding:10px 12px;border-radius:6px;margin-top:4px;color:var(--text2);line-height:1.5">\${escapeHtml(
+                  requestedChanges
+                )}</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:var(--text2);margin-bottom:10px">
+                <div><strong>Payment Terms:</strong> \${escapeHtml(paymentTerms)}</div>
+                <div><strong>Execution Timeline:</strong> \${escapeHtml(timeline)}</div>
+              </div>
+              <div style="font-size:12px;color:var(--text2);padding-top:8px;border-top:1px solid var(--border2)">
+                <strong>Cancellation Terms:</strong> \${escapeHtml(cancellationTerms)}
+              </div>
+            </div>
+          \`;
+    }
+    openModal(
+      counteroffer ? 'Accept Client Counteroffer' : 'Accept Event Request',
+      counterofferHtml +
+        '<p style="font-size:13px;color:var(--text2)">Review and accept the event rules, policies, and terms before accepting this client request/counteroffer.</p>' +
+        renderWorkflowEventPolicy(policy, 'workflow-accept-policy'),
+      [
+        {
+          lbl: 'Back',
+          cls: 'btn-ghost',
+          fn: 'closeModal()',
+        },
+        {
+          lbl: counteroffer ? 'Accept Counteroffer' : 'Accept Request',
+          cls: 'btn-success',
+          fn: \`submitWorkflowAcceptance('\${id}')\`,
+        },
+      ]
+    );
+  } catch (error) {
+    toast(error.message || 'Unable to load event policies', 'error');
+  }
+}
+function acceptWorkflowRequest(id) {
+  return openWorkflowAcceptance(id, false);
+}
+function acceptWorkflowCounteroffer(id) {
+  return openWorkflowAcceptance(id, true);
+}
+function submitWorkflowAcceptance(id) {
+  if (!workflowAcceptance || String(workflowAcceptance.id) !== String(id)) return;
+  const acknowledgement = workflowPolicyAcknowledgement(
+    workflowAcceptance.policy,
+    'workflow-accept-policy'
+  );
+  if (!acknowledgement) return;
+  return runWorkflowAction(
+    () =>
+      workflowAcceptance.counteroffer
+        ? apiAcceptCounteroffer(id, acknowledgement)
+        : apiAcceptEventRequest(id, acknowledgement),
+    workflowAcceptance.counteroffer
+      ? 'Counteroffer accepted. Both parties have agreed to the revised proposal.'
+      : 'Request accepted; event planning can begin',
+    id
+  );
+}
+function respondToWorkflowChanges(id, decision) {
+  runWorkflowAction(
+    () =>
+      apiRespondToEventRequest(id, {
+        decision,
+      }),
+    decision === 'accept_changes' ? 'Changes accepted' : 'Changes rejected',
+    id
+  );
+}
+function openWorkflowCounterofferModal(id) {
+  const request = DB.eventRequests.find(item => String(item.id) === String(id));
+  openModal(
+    'Send Counteroffer',
+    \`<div class="form-group"><label class="form-label">Counteroffer budget (optional)</label><input class="form-control" id="workflow-counter-budget" type="number" min="1" value="\${
+      request?.budget || ''
+    }"></div>
+      <div class="form-group"><label class="form-label">Counteroffer date (optional)</label><input class="form-control" id="workflow-counter-date" type="date" value="\${
+        request?.eventDate || ''
+      }"></div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="workflow-counter-notes" rows="3"></textarea></div>
+      <div id="workflow-counter-error" style="color:var(--red);font-size:12px"></div>\`,
+    [
+      {
+        lbl: 'Cancel',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: 'Send Counteroffer',
+        cls: 'btn-primary',
+        fn: \`submitWorkflowCounteroffer('\${id}')\`,
+      },
+    ]
+  );
+}
+function submitWorkflowCounteroffer(id) {
+  const budgetValue = v('workflow-counter-budget');
+  const date = v('workflow-counter-date');
+  if (!budgetValue && !date) {
+    g('workflow-counter-error').textContent = 'Enter a budget or date counteroffer.';
+    return;
+  }
+  const payload = {
+    decision: 'counteroffer',
+    notes: v('workflow-counter-notes'),
+  };
+  if (budgetValue) payload.counterofferBudget = Number(budgetValue);
+  if (date) payload.counterofferDate = date;
+  runWorkflowAction(
+    () => apiRespondToEventRequest(id, payload),
+    'Counteroffer sent to organizer',
+    id
+  );
+}
+function openWorkflowPlanModal(id) {
+  const request = DB.eventRequests.find(item => String(item.id) === String(id));
+  if (!request) return;
+  const existing = (DB.eventPlans || [])
+    .filter(item => item.requestId === request.requestId)
+    .sort((a, b) => (b.revision || 0) - (a.revision || 0))[0];
+  openModal(
+    existing ? 'Upload Revised Event Plan PDF' : 'Upload Event Plan PDF',
+    \`<div style="margin-bottom:16px;color:var(--text2)">Upload the complete event plan as one PDF file. Include the schedule, services, arrangements, and budget breakdown in the document.</div>
+      <div style="padding:18px;border:2px dashed var(--border);border-radius:10px;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">📄</div>
+        <label for="workflow-plan-pdf" class="form-label" style="display:block;font-weight:700">Select event plan PDF</label>
+        <input class="form-control" id="workflow-plan-pdf" type="file" accept=".pdf,application/pdf" required>
+        <div id="workflow-plan-file-name" style="font-size:12px;color:var(--text3);margin-top:8px">PDF only · Maximum 20 MB</div>
+      </div>
+      <div style="margin-top:14px"><strong>Agreed event budget:</strong> ₹\${Number(
+        request.budget
+      ).toLocaleString()}</div>\`,
+    [
+      {
+        lbl: 'Cancel',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: existing ? 'Submit Revised PDF' : 'Submit PDF Plan',
+        cls: 'btn-primary',
+        fn: \`submitWorkflowPlan('\${id}')\`,
+      },
+    ]
+  );
+  const fileInput = g('workflow-plan-pdf');
+  fileInput?.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    const fileName = g('workflow-plan-file-name');
+    if (fileName)
+      fileName.textContent = file
+        ? \`\${file.name} · \${(file.size / (1024 * 1024)).toFixed(2)} MB\`
+        : 'PDF only · Maximum 20 MB';
+  });
+}
+async function submitWorkflowPlan(id) {
+  const request = DB.eventRequests.find(item => String(item.id) === String(id));
+  const fileInput = g('workflow-plan-pdf');
+  const file = fileInput?.files?.[0];
+  if (!request || !file) {
+    toast('Select the event plan PDF before submitting', 'error');
+    return;
+  }
+  if (!file.name.toLowerCase().endsWith('.pdf') || (file.type && file.type !== 'application/pdf')) {
+    toast('Event plans must be PDF files', 'error');
+    return;
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    toast('The event plan PDF must be no larger than 20 MB', 'error');
+    return;
+  }
+  const payload = {
+    requestId: request.requestId,
+    title: file.name.replace(/\\.pdf$/i, '').trim() || request.title,
+    description: request.requirements || request.desc || \`PDF event plan for \${request.title}\`,
+    budget: Number(request.budget),
+    capacity: Number(request.capacity),
+  };
+  if (!payload.title || !payload.description || !payload.budget || !payload.capacity) {
+    toast('Event details are missing; refresh the request and try again.', 'error');
+    return;
+  }
+  runWorkflowAction(
+    async () => {
+      await apiUploadEventPlanDocument(request.requestId, file);
+      return apiCreateEventPlan(payload);
+    },
+    'Event plan PDF submitted for client review',
+    id
+  );
+}
+function openWorkflowPlanRevisionModal(planId, requestId) {
+  openModal(
+    'Request New Plan',
+    \`<div class="form-group"><label class="form-label">Reason for requesting a new plan</label><textarea class="form-control" id="workflow-plan-reason" rows="4" required></textarea></div><div id="workflow-plan-error" style="color:var(--red);font-size:12px"></div>\`,
+    [
+      {
+        lbl: 'Cancel',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: 'Request New Plan',
+        cls: 'btn-primary',
+        fn: \`submitWorkflowPlanRevision('\${planId}','\${requestId}')\`,
+      },
+    ]
+  );
+}
+function submitWorkflowPlanRevision(planId, requestId) {
+  const reason = v('workflow-plan-reason').trim();
+  if (!reason) {
+    g('workflow-plan-error').textContent = 'A reason is required.';
+    return;
+  }
+  runWorkflowAction(
+    () => apiApproveEventPlan(planId, 'revision_requested', reason),
+    'New plan requested',
+    requestId
+  );
+}
+function reviewWorkflowPlan(planId, approvalStatus, requestId) {
+  runWorkflowAction(
+    () => apiApproveEventPlan(planId, approvalStatus),
+    'Final event plan approved',
+    requestId
+  );
+}
+function viewRequestDrawer(id) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (!r) return;
+  normalizeEventRequest(r);
+  const cl = DB.users.find(user => String(user.id) === String(r.clientId)) ||
+    DB.users.find(user => user.role === 'client') || {
+      name: 'Michael Torres',
+      email: 'client@example.com',
+      phone: '+91 9876543203',
+    };
+  const ag = agreementBadgeInfo(r.agreementStatus);
+  const pay = paymentBadgeInfo(r.paymentStatus);
+
+  // Conditions check for booking confirmation
+  const isAgreementSatisfied = r.agreementStatus === 'agreed';
+  const isDepositSatisfied = r.paymentStatus === 'deposit_paid' || r.paymentStatus === 'fully_paid';
+  const canConfirmBooking = isAgreementSatisfied && isDepositSatisfied && r.status !== 'confirmed';
+
+  // Lifecycle step indices
+  const isNegotiating =
+    ['counteroffer_received', 'changes_requested', 'plan_revision_requested'].includes(r.status) ||
+    (r.negotiations && r.negotiations.length > 0);
+  const isAccepted =
+    ['awaiting_client', 'confirmed', 'completed'].includes(r.status) ||
+    (r.proposals && r.proposals.some(proposal => proposal.status === 'accepted'));
+  const isPaymentPending =
+    ['awaiting_client'].includes(r.status) ||
+    r.paymentStatus === 'deposit_pending' ||
+    r.paymentStatus === 'deposit_paid';
+  const isConfirmed = ['confirmed', 'completed'].includes(r.status);
+  const isCompleted = r.status === 'completed';
+  const steps = [
+    {
+      key: 'submitted',
+      lbl: '1. Submitted',
+    },
+    {
+      key: 'under_review',
+      lbl: '2. Under Review',
+    },
+    {
+      key: 'proposal_sent',
+      lbl: '3. Proposal Sent',
+    },
+    {
+      key: 'negotiation',
+      lbl: '4. Negotiation',
+    },
+    {
+      key: 'accepted',
+      lbl: '5. Accepted',
+    },
+    {
+      key: 'payment_pending',
+      lbl: '6. Payment',
+    },
+    {
+      key: 'confirmed',
+      lbl: '7. Confirmed',
+    },
+    {
+      key: 'completed',
+      lbl: '8. Completed',
+    },
+  ];
+  function isStepActive(sKey) {
+    if (sKey === 'submitted') return true;
+    if (sKey === 'under_review') return !['submitted', 'pending'].includes(r.status);
+    if (sKey === 'proposal_sent')
+      return (
+        ['proposal_sent', 'planning', 'awaiting_client', 'confirmed', 'completed'].includes(
+          r.status
+        ) ||
+        (r.proposals && r.proposals.length > 0)
+      );
+    if (sKey === 'negotiation') return isNegotiating;
+    if (sKey === 'accepted') return isAccepted;
+    if (sKey === 'payment_pending') return isPaymentPending || isConfirmed;
+    if (sKey === 'confirmed') return isConfirmed;
+    if (sKey === 'completed') return isCompleted;
+    return false;
+  }
+  const activeProposal =
+    r.proposals && r.proposals.length > 0 ? r.proposals[r.proposals.length - 1] : null;
+  const proposalVisible =
+    [
+      'planning',
+      'plan_revision_requested',
+      'proposal_sent',
+      'awaiting_client',
+      'confirmed',
+    ].includes(r.status) ||
+    (r.proposals.length > 0 && r.status === 'under_review');
+  openDrawer(
+    \`Request #\${r.id}: \${r.title}\`,
+    \`
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <span class="badge badge-\${reqBadgeColor(
+        r.status
+      )}" style="font-size:12px;padding:4px 10px;text-transform:capitalize">Lifecycle: \${(
+      r.status || 'submitted'
+    ).replace('_', ' ')}</span>
+      <span class="badge badge-\${ag.cls}" style="font-size:12px;padding:4px 10px">Agreement: \${
+      ag.lbl
+    }</span>
+      <span class="badge badge-\${pay.cls}" style="font-size:12px;padding:4px 10px">Deposit: \${
+      pay.lbl
+    }</span>
+    </div>
+
+    <!-- LIFECYCLE STEPPER -->
+    <div style="background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;gap:4px;overflow-x:auto">
+      \${steps
+        .map(
+          st => \`
+        <div style="display:flex;align-items:center;gap:4px;color:\${
+          isStepActive(st.key) ? 'var(--accent)' : 'var(--text3)'
+        };white-space:nowrap">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:\${
+            isStepActive(st.key) ? 'var(--accent)' : 'var(--border2)'
+          }"></span>
+          \${st.lbl}
+        </div>
+      \`
+        )
+        .join('<span style="color:var(--border2)">→</span>')}
+    </div>
+
+    <!-- REJECTION REASON DISPLAY -->
+    \${
+      r.status === 'rejected' && r.rejectionReason
+        ? \`
+      <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px;margin-bottom:20px">
+        <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px">❌ Decline Reason Provided:</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.5">\${r.rejectionReason}</div>
+      </div>
+    \`
+        : ''
+    }
+
+    <!-- EVENT & CLIENT DETAILS -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
+      <div class="h4 mb-12">👤 Client & Event Information</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">
+        <div><span style="color:var(--text3);display:block;font-size:11px">CLIENT NAME</span><strong>\${
+          cl.name
+        }</strong></div>
+        <div><span style="color:var(--text3);display:block;font-size:11px">CONTACT</span>\${
+          cl.email || '—'
+        } &middot; \${cl.phone || ''}</div>
+        <div><span style="color:var(--text3);display:block;font-size:11px">EVENT DATE</span><strong>\${
+          r.date
+        }</strong></div>
+        <div><span style="color:var(--text3);display:block;font-size:11px">EXPECTED GUESTS</span><strong>\${
+          r.guests
+        } attendees</strong></div>
+        <div><span style="color:var(--text3);display:block;font-size:11px">TARGET BUDGET</span><strong style="color:var(--green)">₹\${(
+          r.budget || 0
+        ).toLocaleString()}</strong></div>
+        <div><span style="color:var(--text3);display:block;font-size:11px">TICKET PRICE PER ATTENDEE</span><strong>\${
+          Number(r.ticketPrice || 0) === 0
+            ? 'Free'
+            : '₹' + Number(r.ticketPrice).toLocaleString('en-IN')
+        }</strong></div>
+        <div><span style="color:var(--text3);display:block;font-size:11px">PREFERRED VENUE</span>\${
+          r.venue || 'To be decided'
+        }</div>
+      </div>
+      <div style="margin-top:14px">
+        <span style="color:var(--text3);display:block;font-size:11px;margin-bottom:4px">SPECIAL REQUIREMENTS</span>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:12.5px;color:var(--text);line-height:1.6">\${
+          r.desc || 'No special requirements noted.'
+        }</div>
+      </div>
+    </div>
+
+    <!-- CLARIFICATIONS & MISSING INFO SECTION -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="h4" style="margin:0">💬 Clarifications & Missing Info (\${
+          (r.clarifications || []).length
+        })</div>
+        <button class="btn btn-ghost btn-xs" onclick="openRequestInfoModal('\${
+          r.id
+        }')">+ Request Info</button>
+      </div>
+      \${
+        !r.clarifications || r.clarifications.length === 0
+          ? \`
+        <div style="font-size:12.5px;color:var(--text3);font-style:italic">No missing information queries recorded yet.</div>
+      \`
+          : \`
+        <div style="display:flex;flex-direction:column;gap:8px">
+          \${r.clarifications
+            .map(
+              c => \`
+            <div style="background:var(--surface2);border-radius:8px;padding:10px 12px;border-left:3px solid \${
+              c.senderRole === 'organizer' ? 'var(--accent)' : 'var(--green)'
+            }">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px">
+                <span style="font-weight:700;color:\${
+                  c.senderRole === 'organizer' ? 'var(--accent)' : 'var(--green)'
+                }">\${c.senderName || (c.senderRole === 'organizer' ? 'Organizer' : 'Client')}</span>
+                <span>\${c.timestamp || 'Today'}</span>
+              </div>
+              <div style="font-size:13px;line-height:1.5">\${c.message}</div>
+            </div>
+          \`
+            )
+            .join('')}
+        </div>
+      \`
+      }
+      \${
+        r.status === 'info_requested'
+          ? \`
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn btn-ghost btn-xs" onclick="simulateClientReply('\${r.id}')">⚡ Simulate Client Response</button>
+        </div>
+      \`
+          : ''
+      }
+    </div>
+
+    <!-- PROPOSALS & REVISION SECTION -->
+    <div style="display:\${
+      proposalVisible ? 'block' : 'none'
+    };background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="h4" style="margin:0">📋 Proposals (\${(r.proposals || []).length})</div>
+        <button class="btn btn-primary btn-xs" onclick="openSendProposalModal('\${r.id}', \${
+      r.proposals && r.proposals.length > 0
+    })">\${
+      r.proposals && r.proposals.length > 0 ? '🔄 Revise Proposal' : '📝 Send Proposal'
+    }</button>
+      </div>
+
+      \${
+        !activeProposal
+          ? \`
+        <div style="font-size:12.5px;color:var(--text3);font-style:italic">No proposal sent yet. Organizers can send structured pricing and terms before booking.</div>
+      \`
+          : \`
+        <div style="background:var(--surface2);border-radius:10px;padding:14px;border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div>
+              <span style="font-weight:700;font-size:14px">Proposal Version \${
+                activeProposal.version
+              }</span>
+              <span class="badge badge-\${
+                activeProposal.status === 'accepted'
+                  ? 'green'
+                  : activeProposal.status === 'rejected' || activeProposal.status === 'expired'
+                  ? 'red'
+                  : 'blue'
+              }" style="margin-left:8px;font-size:10.5px">\${(
+              activeProposal.status || 'pending_client'
+            ).replace('_', ' ')}</span>
+            </div>
+            <span style="font-size:11px;color:var(--text3)">Sent: \${
+              activeProposal.sentAt ? String(activeProposal.sentAt).split('T')[0] : 'Recently'
+            }</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12.5px;margin-bottom:10px">
+            <div><span style="color:var(--text3);display:block;font-size:10.5px">PROPOSED BUDGET</span><strong style="color:var(--green)">₹\${(
+              activeProposal.amount || 0
+            ).toLocaleString()}</strong></div>
+            <div><span style="color:var(--text3);display:block;font-size:10.5px">REQUIRED DEPOSIT</span><strong style="color:var(--accent)">₹\${(
+              activeProposal.depositRequired || 0
+            ).toLocaleString()}</strong></div>
+            <div><span style="color:var(--text3);display:block;font-size:10.5px">PROPOSED DATE</span><strong>\${
+              activeProposal.proposedDate || r.date
+            }</strong></div>
+            <div><span style="color:var(--text3);display:block;font-size:10.5px">VALID UNTIL</span><strong>\${
+              activeProposal.validUntil
+            }</strong></div>
+          </div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px"><strong>Terms:</strong> \${
+            activeProposal.terms || 'Standard deliverables apply.'
+          }</div>
+          \${
+            activeProposal.clientNotes
+              ? \`<div style="background:rgba(245,158,11,0.12);border-radius:8px;padding:10px;font-size:12px;color:var(--text2);margin-bottom:10px"><strong>Client feedback:</strong> \${escapeHtml(
+                  activeProposal.clientNotes
+                )}</div>\`
+              : ''
+          }
+
+          \${
+            activeProposal.status === 'pending_client'
+              ? \`
+            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+              <span style="font-size:11px;color:var(--text3);align-self:center">Test Client Decision:</span>
+              <button class="btn btn-success btn-xs" onclick="simulateClientDecision('\${r.id}', 'accept')">✓ Client Accepts</button>
+              <button class="btn btn-ghost btn-xs" onclick="simulateClientDecision('\${r.id}', 'request_revision')">🔄 Client Requests Revision</button>
+              <button class="btn btn-danger btn-xs" onclick="simulateClientDecision('\${r.id}', 'reject')">✕ Client Declines</button>
+            </div>
+          \`
+              : ''
+          }
+        </div>
+
+        \${
+          r.proposals.length > 1
+            ? \`
+          <details style="margin-top:10px;font-size:12px;color:var(--text3)">
+            <summary style="cursor:pointer;font-weight:600">View Proposal Version History (\${
+              r.proposals.length - 1
+            } older)</summary>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+              \${r.proposals
+                .slice(0, -1)
+                .map(
+                  proposal => \`
+                <div style="background:var(--surface2);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+                  <span><strong>v\${proposal.version}</strong>: ₹\${(
+                    proposal.amount || 0
+                  ).toLocaleString()} (Deposit ₹\${(
+                    proposal.depositRequired || 0
+                  ).toLocaleString()})</span>
+                  <span class="badge badge-gray">\${proposal.status}</span>
+                </div>
+              \`
+                )
+                .join('')}
+            </div>
+          </details>
+        \`
+            : ''
+        }
+      \`
+      }
+    </div>
+
+    <!-- AGREEMENT & PAYMENT CONDITIONS CHECKLIST -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
+      <div class="h4 mb-12">⚖️ Confirmation Conditions Checklist</div>
+      <div style="font-size:12.5px;color:var(--text2);margin-bottom:12px">Both signed agreement and deposit conditions must be satisfied before booking can be confirmed.</div>
+      
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border-radius:8px;padding:10px 14px">
+          <div>
+            <div style="font-weight:600;font-size:13px">\${
+              isAgreementSatisfied ? '✅' : '⭕'
+            } 1. Service Agreement Signed</div>
+            <div style="font-size:11.5px;color:var(--text3)">Status: <strong class="badge badge-\${
+              ag.cls
+            }" style="padding:1px 6px">\${ag.lbl}</strong></div>
+          </div>
+          \${
+            !isAgreementSatisfied && r.status !== 'confirmed'
+              ? \`
+            <button class="btn btn-ghost btn-xs" onclick="markAgreementSigned('\${r.id}')">✍️ Mark Agreement Signed</button>
+          \`
+              : '<span style="color:var(--green);font-size:12px;font-weight:700">Satisfied</span>'
+          }
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border-radius:8px;padding:10px 14px">
+          <div>
+            <div style="font-weight:600;font-size:13px">\${
+              isDepositSatisfied ? '✅' : '⭕'
+            } 2. Booking Deposit / Payment</div>
+            <div style="font-size:11.5px;color:var(--text3)">Status: <strong class="badge badge-\${
+              pay.cls
+            }" style="padding:1px 6px">\${pay.lbl}</strong></div>
+          </div>
+          \${
+            !isDepositSatisfied && r.status !== 'confirmed'
+              ? \`
+            <button class="btn btn-ghost btn-xs" onclick="recordDepositReceived('\${r.id}')">💳 Record Deposit Received</button>
+          \`
+              : '<span style="color:var(--green);font-size:12px;font-weight:700">Satisfied</span>'
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIONS BAR -->
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+      \${
+        r.status === 'submitted' || r.status === 'pending'
+          ? \`
+        <button class="btn btn-primary w-full" onclick="startReviewReq('\${r.id}')">🔍 Start Review</button>
+      \`
+          : ''
+      }
+
+      \${
+        r.status !== 'confirmed'
+          ? \`
+        <button class="btn btn-success w-full" style="padding:12px;font-size:14px;font-weight:700" \${
+          canConfirmBooking ? \`onclick="confirmBookingReq('\${r.id}')"\` : 'disabled'
+        } title="\${
+              canConfirmBooking
+                ? 'Confirm booking and schedule event'
+                : 'Both agreement and deposit conditions must be met'
+            }">
+          \${
+            canConfirmBooking
+              ? '✓ Confirm Booking & Schedule Event'
+              : '🔒 Confirm Booking (Agreement & Deposit Required)'
+          }
+        </button>
+        \${
+          !canConfirmBooking
+            ? \`
+          <div style="font-size:11.5px;color:var(--yellow);text-align:center;line-height:1.4">
+            Confirmation requires: \${!isAgreementSatisfied ? '• Signed agreement ' : ''} \${
+                !isDepositSatisfied ? '• Paid deposit ' : ''
+              }
+          </div>
+        \`
+            : ''
+        }
+      \`
+          : \`
+        <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:12px;text-align:center;color:var(--green);font-weight:700">
+          ✅ Booking Confirmed — Event Scheduled in System
+        </div>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="btn btn-danger btn-sm flex-1" onclick="openOrganizerEventCancellationModal(r.eventId || '', r.id)">🚫 Cancel Event</button>
+        </div>
+        \${
+          r.eventModifications && r.eventModifications.length > 0
+            ? \`
+          <div style="background:var(--surface2);border-radius:10px;padding:14px;border:1px solid var(--border);margin-top:14px">
+            <div style="font-weight:700;font-size:13px;margin-bottom:8px">📝 Event Modifications (\${
+              r.eventModifications.length
+            })</div>
+            \${r.eventModifications
+              .map(
+                mod => \`
+              <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                  <span style="font-weight:600">Requested by \${
+                    mod.requesterRole === 'client' ? 'Client' : 'Organizer'
+                  }</span>
+                  <span class="badge badge-\${
+                    mod.status === 'approved'
+                      ? 'green'
+                      : mod.status === 'rejected'
+                      ? 'red'
+                      : 'yellow'
+                  }">\${mod.status.replace('_', ' ')}</span>
+                </div>
+                <div style="color:var(--text2);margin-bottom:4px"><strong>Reason:</strong> \${escapeHtml(
+                  mod.reason || '—'
+                )}</div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Date: \${
+                  mod.newValues?.date || '—'
+                } · Capacity: \${mod.newValues?.capacity || '—'} · Budget: ₹\${(
+                  mod.newValues?.budget || 0
+                ).toLocaleString()}</div>
+                \${
+                  mod.status === 'pending_approval'
+                    ? '<div style="font-size:11px;color:var(--text3)">Booked event details are locked.</div>'
+                    : ''
+                }
+              </div>
+            \`
+              )
+              .join('')}
+          </div>
+        \`
+            : ''
+        }
+      \`
+      }
+
+      \${
+        r.status !== 'rejected' && r.status !== 'confirmed'
+          ? \`
+        <button class="btn btn-danger btn-sm w-full" onclick="openRejectModal('\${r.id}')">✕ Decline Request with Reason</button>
+      \`
+          : ''
+      }
+    </div>
+
+    <!-- AUDIT TRAIL LOG -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div class="h4 mb-10">📜 Request Audit Trail (\${(r.auditHistory || []).length})</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        \${(r.auditHistory || [])
+          .slice()
+          .reverse()
+          .map(
+            entry => \`
+          <div style="font-size:12px;display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border2)">
+            <div>
+              <strong style="color:var(--text)">\${entry.action}</strong>
+              <span style="color:var(--text3);margin-left:6px">by \${entry.performedBy || 'User'} (\${
+              entry.role || 'system'
+            })</span>
+            </div>
+            <div style="color:var(--text3);font-size:11px">\${entry.timestamp || 'Today'}</div>
+          </div>
+        \`
+          )
+          .join('')}
+      </div>
+    </div>
+  \`
+  );
+}
+
+// ─── ACTION HANDLERS FOR ORGANIZER WORKFLOWS ───
+
+function startReviewReq(id) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (!r) return;
+  normalizeEventRequest(r);
+  r.status = 'under_review';
+  r.auditHistory.push({
+    id: 'aud-' + Date.now(),
+    action: 'Review Started',
+    performedBy: CU.name || 'Sarah Chen',
+    role: 'organizer',
+    timestamp: today(),
+  });
+  saveDB();
+  toast('Request moved to Under Review', 'info');
+  viewRequestDrawer(id);
+  renderPage('event-requests');
+}
+function openRequestInfoModal(id) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (!r) return;
+  openModal(
+    'Request Missing Information',
+    \`
+        <div class="form-group mb-16">
+          <label class="form-label">Message / Questions for the Client</label>
+          <textarea class="form-control" id="req-info-msg" rows="4" placeholder="e.g. Please specify the required audiovisual setup, speaker schedule, and dietary requirements..."></textarea>
+          <span class="form-error" id="req-info-err">Please enter the missing information query.</span>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Cancel',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: 'Send to Client',
+        cls: 'btn-primary',
+        fn: \`submitRequestInfo('\${id}')\`,
+      },
+    ]
+  );
+}
+function submitRequestInfo(id) {
+  const msg = v('req-info-msg');
+  if (!msg) {
+    showErr('req-info-err');
+    return;
+  }
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (!r) return;
+  normalizeEventRequest(r);
+  r.clarifications.push({
+    id: 'clr-' + Date.now(),
+    senderId: CU.id,
+    senderRole: 'organizer',
+    senderName: CU.name || 'Sarah Chen',
+    message: msg,
+    timestamp: today(),
+  });
+  r.status = 'info_requested';
+  r.auditHistory.push({
+    id: 'aud-' + Date.now(),
+    action: 'Missing Information Requested',
+    performedBy: CU.name || 'Sarah Chen',
+    role: 'organizer',
+    timestamp: today(),
+    details: {
+      query: msg,
+    },
+  });
+  saveDB();
+  closeModal();
+  toast('Information request sent to client', 'success');
+  viewRequestDrawer(id);
+  renderPage('event-requests');
+}
+function simulateClientReply(id) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (!r) return;
+  normalizeEventRequest(r);
+  r.clarifications.push({
+    id: 'clr-' + Date.now(),
+    senderId: r.clientId,
+    senderRole: 'client',
+    senderName: 'Michael Torres',
+    message:
+      'We have updated our requirements: 4K projector, 2 handheld mics, and 30 vegetarian meal preferences.',
+    timestamp: today(),
+  });
+  r.status = 'under_review';
+  r.auditHistory.push({
+    id: 'aud-' + Date.now(),
+    action: 'Information Provided by Client',
+    performedBy: 'Michael Torres',
+    role: 'client',
+    timestamp: today(),
+  });
+  saveDB();
+  toast('Simulated client reply received!', 'info');
+  viewRequestDrawer(id);
+  renderPage('event-requests');
+}
+function calculateProposalPrice() {
+  const fee = parseFloat(document.getElementById('prop-fee')?.value) || 0;
+  const taxes = parseFloat(document.getElementById('prop-taxes')?.value) || 0;
+  const amountEl = document.getElementById('prop-amount');
+  const depositEl = document.getElementById('prop-deposit');
+  const total = fee + taxes;
+  if (total > 0 && amountEl && (!amountEl.value || parseFloat(amountEl.value) <= 0)) {
+    amountEl.value = total;
+  }
+  if (amountEl && depositEl && (!depositEl.value || parseFloat(depositEl.value) <= 0)) {
+    depositEl.value = Math.round((parseFloat(amountEl.value) || 0) * 0.3);
+  }
+}
+window.calculateProposalPrice = calculateProposalPrice;
+function updateProposalBreakdownFromTotal(val) {
+  const total = parseFloat(val) || 0;
+  const depositEl = document.getElementById('prop-deposit');
+  if (depositEl) {
+    depositEl.value = Math.round(total * 0.3);
+  }
+  const feeEl = document.getElementById('prop-fee');
+  if (feeEl && (!feeEl.value || parseFloat(feeEl.value) === 0)) {
+    feeEl.value = Math.round(total * 0.2);
+  }
+  const taxesEl = document.getElementById('prop-taxes');
+  if (taxesEl && (!taxesEl.value || parseFloat(taxesEl.value) === 0)) {
+    taxesEl.value = Math.round(total * 0.18);
+  }
+}
+window.updateProposalBreakdownFromTotal = updateProposalBreakdownFromTotal;
+async function startOrganizerReview(reqId) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(reqId));
+  if (!r) {
+    toast('Request not found.', 'error');
+    return;
+  }
+  r.status = 'under_review';
+  if (!Array.isArray(r.auditHistory)) r.auditHistory = [];
+  r.auditHistory.push({
+    id: 'aud-' + Date.now(),
+    action: 'Review Started',
+    performedBy: CU?.name || CU?.id || 'Organizer',
+    role: 'event_organizer',
+    timestamp: typeof today === 'function' ? today() : new Date().toISOString().slice(0, 10),
+    details: {
+      message: 'Organizer started reviewing request.',
+    },
+  });
+  if (typeof saveDB === 'function') saveDB();
+  try {
+    if (typeof apiRequest === 'function') {
+      await apiRequest(\`/event-requests/\${encodeURIComponent(r.id)}/status\`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          status: 'under_review',
+        }),
+      }).catch(() => {});
+    }
+  } catch (e) {}
+  toast('Review started. Request is now under review.', 'success');
+  if (_currentPage === 'event-requests') renderPage('event-requests');
+  else viewRequestDetail(r.id);
+}
+function openOrganizerRequestInfoModal(reqId) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(reqId));
+  if (!r) {
+    toast('Request not found.', 'error');
+    return;
+  }
+  openModal(
+    'Request Information from Client',
+    \`
+        <div style="font-size:13px;color:var(--text2);margin-bottom:14px">
+          Request additional details or preferences from <strong>\${escapeHtml(
+            r.clientDetails?.name || 'the client'
+          )}</strong>.
+        </div>
+        <div class="form-group mb-16">
+          <label class="form-label" style="font-weight:700">Information Needed *</label>
+          <textarea class="form-control" id="org-info-req-txt" rows="4" placeholder="Specify what details you need clarified..."></textarea>
+          <div id="org-info-err" style="color:var(--red);font-size:12px;display:none;margin-top:6px">Please specify the information requested.</div>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Cancel',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: 'Send Information Request',
+        cls: 'btn-primary',
+        fn: \`submitOrganizerRequestInfo('\${r.id}')\`,
+      },
+    ]
+  );
+}
+async function submitOrganizerRequestInfo(reqId) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(reqId));
+  if (!r) return;
+  const txt = (v('org-info-req-txt') || '').trim();
+  const error = g('org-info-err');
+  if (!txt) {
+    if (error) {
+      error.textContent = 'Please specify the information requested.';
+      error.style.display = 'block';
+    }
+    return;
+  }
+  if (!Array.isArray(r.clarifications)) r.clarifications = [];
+  r.clarifications.push({
+    id: 'clar-' + Date.now(),
+    question: txt,
+    requestedBy: CU?.name || CU?.id || 'Organizer',
+    requestedAt: new Date().toISOString(),
+  });
+  if (!Array.isArray(r.auditHistory)) r.auditHistory = [];
+  r.auditHistory.push({
+    id: 'aud-' + Date.now(),
+    action: 'Clarification Requested by Organizer',
+    performedBy: CU?.name || CU?.id || 'Organizer',
+    role: 'event_organizer',
+    timestamp: typeof today === 'function' ? today() : new Date().toISOString().slice(0, 10),
+    details: {
+      question: txt,
+    },
+  });
+  if (typeof saveDB === 'function') saveDB();
+  closeModal();
+  toast('Information request sent to client.', 'success');
+  if (_currentPage === 'event-requests') renderPage('event-requests');
+  else viewRequestDetail(r.id);
+}
+function openOrganizerViewProposalModal(reqId) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(reqId));
+  if (!r) {
+    toast('Request not found.', 'error');
+    return;
+  }
+  const p = r.proposals && r.proposals.length > 0 ? r.proposals[r.proposals.length - 1] : null;
+  if (!p) {
+    toast('No proposal record found for this request.', 'warning');
+    return;
+  }
+  openModal(
+    \`Proposal v\${p.version || 1} Details\`,
+    \`
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">
+          Currently awaiting client response for <strong>\${escapeHtml(
+            r.title || r.eventName || 'Event'
+          )}</strong>.
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div style="background:var(--surface2);padding:12px;border-radius:8px">
+            <div style="font-size:11px;color:var(--text3);font-weight:700">TOTAL PROPOSAL PRICE</div>
+            <div style="font-size:18px;font-weight:800;color:var(--primary)">₹\${Number(
+              p.amount || 0
+            ).toLocaleString()}</div>
+          </div>
+          <div style="background:var(--surface2);padding:12px;border-radius:8px">
+            <div style="font-size:11px;color:var(--text3);font-weight:700">ADVANCE DEPOSIT REQUIRED</div>
+            <div style="font-size:18px;font-weight:800;color:var(--green)">₹\${Number(
+              p.depositRequired || 0
+            ).toLocaleString()}</div>
+          </div>
+        </div>
+        <div style="background:var(--surface2);padding:12px;border-radius:8px;margin-bottom:12px;font-size:12.5px">
+          <div style="font-weight:700;margin-bottom:4px">Event Plan & Deliverables:</div>
+          <div>\${escapeHtml(p.eventPlan || p.terms || 'Standard deliverables included.')}</div>
+        </div>
+        <div style="background:var(--surface2);padding:12px;border-radius:8px;margin-bottom:12px;font-size:12.5px">
+          <div style="font-weight:700;margin-bottom:4px">Execution Timeline:</div>
+          <div>\${escapeHtml(
+            p.timeline || '09:00 Setup; 11:00 Registration; 13:00 Main event; 17:00 Wrap-up'
+          )}</div>
+        </div>
+        <div style="background:var(--surface2);padding:12px;border-radius:8px;font-size:12.5px">
+          <div style="font-weight:700;margin-bottom:4px">Cancellation Terms:</div>
+          <div>\${escapeHtml(
+            p.cancellationTerms ||
+              '14+ days notice: 10% fee, 90% refund. Within 14 days: Non-refundable.'
+          )}</div>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Close',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+    ]
+  );
+}
+function openOrganizerReviewChangesModal(reqId) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(reqId));
+  if (!r) {
+    toast('Request not found.', 'error');
+    return;
+  }
+  const isCounter = r.status === 'counteroffer_received';
+  const notes =
+    r.revisionNotes ||
+    r.clientNotes ||
+    (r.auditHistory && [...r.auditHistory].reverse().find(a => a.details?.notes)?.details?.notes) ||
+    (isCounter
+      ? 'Client submitted a revised counteroffer.'
+      : 'Client requested revisions to pricing and schedule.');
+  const buttons = [
+    {
+      lbl: 'Close',
+      cls: 'btn-ghost',
+      fn: 'closeModal()',
+    },
+    {
+      lbl: 'Decline Request',
+      cls: 'btn-danger',
+      fn: \`closeModal();openRejectModal('\${r.id}')\`,
+    },
+  ];
+  if (isCounter) {
+    buttons.push({
+      lbl: 'Accept Counteroffer',
+      cls: 'btn-success',
+      fn: \`closeModal();acceptWorkflowCounteroffer('\${r.id}')\`,
+    });
+  }
+  buttons.push({
+    lbl: 'Send Revised Proposal',
+    cls: 'btn-primary',
+    fn: \`closeModal();openSendProposalModal('\${r.id}', true)\`,
+  });
+  openModal(
+    isCounter ? 'Review Client Counteroffer & Feedback' : 'Review Client Changes & Feedback',
+    \`
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);padding:12px;border-radius:8px;margin-bottom:14px;font-size:13px;color:var(--text)">
+          <strong>\${
+            isCounter ? 'Client Counteroffer Details:' : 'Client Requested Changes:'
+          }</strong>
+          <div style="margin-top:6px;line-height:1.5">\${escapeHtml(notes)}</div>
+        </div>
+        <p style="font-size:13px;color:var(--text2)">
+          \${
+            isCounter
+              ? 'You can accept the client counteroffer, send an updated proposal, or decline the request.'
+              : 'You can send an updated proposal incorporating these changes, or decline the request if unable to meet their requirements.'
+          }
+        </p>
+      \`,
+    buttons
+  );
+}
+function openOrganizerRequestHistoryModal(reqId) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(reqId));
+  if (!r) {
+    toast('Request not found.', 'error');
+    return;
+  }
+  const history = Array.isArray(r.auditHistory) ? r.auditHistory : [];
+  openModal(
+    \`Request History & Audit Log\`,
+    \`
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">
+          Activity and audit history for <strong>\${escapeHtml(
+            r.title || r.eventName || 'Event Request'
+          )}</strong> (\${escapeHtml(r.id)}).
+        </div>
+        \${
+          history.length === 0
+            ? \`
+          <div style="padding:20px;text-align:center;color:var(--text3)">No activity records recorded yet.</div>
+        \`
+            : \`
+          <div style="display:flex;flex-direction:column;gap:10px;max-height:380px;overflow-y:auto;padding-right:4px">
+            \${history
+              .map(
+                item => \`
+              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12.5px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                  <span style="font-weight:700;color:var(--text)">\${escapeHtml(
+                    item.action || 'Activity'
+                  )}</span>
+                  <span style="color:var(--text3);font-size:11px">\${escapeHtml(
+                    String(item.timestamp || '')
+                      .slice(0, 16)
+                      .replace('T', ' ')
+                  )}</span>
+                </div>
+                <div style="color:var(--text2);font-size:12px">Performed by: <strong>\${escapeHtml(
+                  item.performedBy || 'System'
+                )}</strong> (\${escapeHtml(item.role || 'user')})</div>
+                \${
+                  item.details?.reason
+                    ? \`<div style="margin-top:4px;color:var(--red);font-weight:600">Reason: \${escapeHtml(
+                        item.details.reason
+                      )}</div>\`
+                    : ''
+                }
+                \${
+                  item.details?.notes
+                    ? \`<div style="margin-top:4px;color:var(--text2)">Notes: \${escapeHtml(
+                        item.details.notes
+                      )}</div>\`
+                    : ''
+                }
+              </div>
+            \`
+              )
+              .join('')}
+          </div>
+        \`
+        }
+      \`,
+    [
+      {
+        lbl: 'Close',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+    ]
+  );
+}
+function openSendProposalModal(id, isRevision) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (!r) return;
+  normalizeEventRequest(r);
+  const defaultAmount = r.budget || 25000;
+  const defaultDeposit = Math.round(defaultAmount * 0.3);
+  const defaultDate = r.date || r.eventDate || '2026-09-01';
+  const defaultFee = Math.round(defaultAmount * 0.2);
+  const defaultTaxes = Math.round(defaultAmount * 0.18);
+  const defaultCapacity = r.capacity || r.guests || 50;
+  const expDate = new Date();
+  expDate.setDate(expDate.getDate() + 14);
+  const defaultValidUntil = expDate.toISOString().split('T')[0];
+  const activeProposal = r.proposals?.[r.proposals.length - 1];
+  const revisionFeedback =
+    isRevision && activeProposal?.status === 'revision_requested' && activeProposal.clientNotes
+      ? \`<div style="background:rgba(245,158,11,0.12);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text2);margin-bottom:14px"><strong>Client requested changes:</strong> \${escapeHtml(
+          activeProposal.clientNotes
+        )}</div>\`
+      : '';
+  openModal(
+    isRevision ? 'Revise Event Proposal' : 'Accept & Create Detailed Event Proposal',
+    \`
+        \${revisionFeedback}
+        <div style="max-height:65vh;overflow-y:auto;padding-right:6px">
+          <div style="font-weight:700;font-size:12.5px;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">1. Pricing &amp; Fee Breakdown</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="mb-12">
+            <div class="form-group">
+              <label class="form-label">Total Proposed Price (₹) *</label>
+              <input type="number" class="form-control" id="prop-amount" value="\${defaultAmount}" min="1" oninput="updateProposalBreakdownFromTotal(this.value)">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Required Advance Deposit (₹) *</label>
+              <input type="number" class="form-control" id="prop-deposit" value="\${defaultDeposit}" min="0">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="mb-12">
+            <div class="form-group">
+              <label class="form-label">Organizer Fee (₹)</label>
+              <input type="number" class="form-control" id="prop-fee" value="\${defaultFee}" min="0" oninput="calculateProposalPrice()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Taxes &amp; GST (18%) (₹)</label>
+              <input type="number" class="form-control" id="prop-taxes" value="\${defaultTaxes}" min="0" oninput="calculateProposalPrice()">
+            </div>
+          </div>
+          <div class="form-group mb-12">
+            <label class="form-label">Itemized Cost Breakdown</label>
+            <textarea class="form-control" id="prop-itemized" rows="2" placeholder="Itemized services &amp; costs">Venue setup &amp; styling: ₹12,000; Audio-Visual equipment: ₹8,000; On-site coordination: ₹5,000</textarea>
+          </div>
+
+          <div style="font-weight:700;font-size:12.5px;color:var(--accent);margin:16px 0 10px;text-transform:uppercase;letter-spacing:0.05em">2. Event Plan, Services &amp; Deliverables</div>
+          <div class="form-group mb-12">
+            <label class="form-label">Detailed Event Plan &amp; Deliverables *</label>
+            <textarea class="form-control" id="prop-plan" rows="2">Includes end-to-end event planning, full venue decoration, audio/visual coordination, catering logistics, and guest assistance.</textarea>
+          </div>
+          <div class="form-group mb-12">
+            <label class="form-label">Attach Event Plan Document (PDF)</label>
+            <input type="file" class="form-control" id="prop-file" accept=".pdf,application/pdf">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">Upload a detailed PDF event plan/proposal (max 20MB) to attach to this proposal.</div>
+          </div>
+          <div class="form-group mb-12">
+            <label class="form-label">Execution Timeline *</label>
+            <textarea class="form-control" id="prop-timeline" rows="2">09:00 Setup &amp; sound check; 11:00 Guest registration; 13:00 Main event; 17:00 Wrap-up &amp; reporting</textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="mb-12">
+            <div class="form-group">
+              <label class="form-label">Included Services</label>
+              <textarea class="form-control" id="prop-included" rows="2">Stage décor, Sound system, 2 wireless mics, Event coordinator, Registration desk</textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Excluded Services</label>
+              <textarea class="form-control" id="prop-excluded" rows="2">External alcohol licensing, Personal photographer, Overtime venue fees past 22:00</textarea>
+            </div>
+          </div>
+
+          <div style="font-weight:700;font-size:12.5px;color:var(--accent);margin:16px 0 10px;text-transform:uppercase;letter-spacing:0.05em">3. Capacity &amp; Constraints</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="mb-12">
+            <div class="form-group">
+              <label class="form-label">Attendee Capacity &amp; Limits *</label>
+              <input type="number" class="form-control" id="prop-capacity" value="\${defaultCapacity}" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Venue &amp; Location Constraints</label>
+              <input type="text" class="form-control" id="prop-venue-constraints" value="\${
+                r.venue ? escapeHtml(r.venue) : 'Indoor venue only; preferred location'
+              }">
+            </div>
+          </div>
+          <div class="form-group mb-12">
+            <label class="form-label">Date, Budget &amp; Resource Constraints</label>
+            <input type="text" class="form-control" id="prop-constraints" value="Indoor venue only; max 85dB noise limit; power backup required; strictly within agreed budget">
+          </div>
+
+          <div style="font-weight:700;font-size:12.5px;color:var(--accent);margin:16px 0 10px;text-transform:uppercase;letter-spacing:0.05em">4. Payment &amp; Cancellation Terms</div>
+          <div class="form-group mb-12">
+            <label class="form-label">Payment Schedule &amp; Terms *</label>
+            <select class="form-control" id="prop-schedule">
+              <option value="30% advance deposit upon acceptance, 70% balance due upon event completion">30% Advance Deposit on Approval, 70% Final Balance upon Completion</option>
+              <option value="50% advance deposit upon acceptance, 50% due on event date">50% Advance Deposit on Approval, 50% on Event Date</option>
+              <option value="100% full payment upfront upon booking confirmation">100% Full Payment Upfront upon Confirmation</option>
+              <option value="25% deposit, 50% milestone 14 days before, 25% post-event">25% Deposit, 50% Milestone 14 days before, 25% Post-Event</option>
+            </select>
+          </div>
+          <div style="padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--surface2)" class="mb-12">
+            <div style="font-weight:700;margin-bottom:10px">Cancellation Policy</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div class="form-group"><label class="form-label">Notice period (days) *</label><input type="number" class="form-control" id="prop-cancel-days" min="0" max="3650" step="1" value="14"></div>
+              <div class="form-group"><label class="form-label">Fee on amount paid (%) *</label><input type="number" class="form-control" id="prop-cancel-fee" min="0" max="100" step="0.01" value="10"></div>
+              <div class="form-group"><label class="form-label">Refund eligibility *</label><select class="form-control" id="prop-cancel-refund"><option value="true">Eligible within notice window</option><option value="false">Non-refundable</option></select></div>
+              <div class="form-group"><label class="form-label">Processing *</label><select class="form-control" id="prop-cancel-approval"><option value="manual">Organizer approval required</option><option value="automatic">Automatic under policy</option></select></div>
+            </div>
+            <div class="form-group"><label class="form-label">Additional cancellation terms</label><textarea class="form-control" id="prop-cancellation" rows="2">Cancellation requests must be submitted before the stated deadline. Demo refunds are recorded as pending.</textarea></div>
+            <div class="small" style="color:var(--text3)">These terms are versioned with this proposal. Confirmed bookings keep the accepted version.</div>
+          </div>
+
+          <div style="font-weight:700;font-size:12.5px;color:var(--accent);margin:16px 0 10px;text-transform:uppercase;letter-spacing:0.05em">5. Dates &amp; Validity</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="mb-12">
+            <div class="form-group">
+              <label class="form-label">Proposed Event Date *</label>
+              <input type="date" class="form-control" id="prop-date" value="\${defaultDate}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Proposal Expiration Date (Valid Until) *</label>
+              <input type="date" class="form-control" id="prop-expiry" value="\${defaultValidUntil}">
+            </div>
+          </div>
+          <div class="form-group mb-12">
+            <label class="form-label">Additional Conditions &amp; Terms</label>
+            <textarea class="form-control" id="prop-conditions" rows="2">Standard EventFlow service agreement applies. Booking becomes effective once advance deposit is verified.</textarea>
+          </div>
+          <div id="prop-err-msg" style="color:var(--red);font-size:12px;display:none;margin-top:6px"></div>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Cancel',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: isRevision ? 'Send Revision' : 'Submit Proposal',
+        cls: 'btn-primary',
+        fn: \`submitSendProposal('\${id}', \${isRevision})\`,
+      },
+    ],
+    false
+  );
+}
+window.openAcceptCreateProposalModal = function (id) {
+  openSendProposalModal(id, false);
+};
+async function submitSendProposal(id, isRevision) {
+  const amount = parseFloat(v('prop-amount'));
+  const deposit = parseFloat(v('prop-deposit'));
+  const organizerFee = parseFloat(v('prop-fee')) || 0;
+  const taxes = parseFloat(v('prop-taxes')) || 0;
+  const itemizedCosts = v('prop-itemized') || '';
+  const eventPlan = v('prop-plan') || '';
+  const timeline = v('prop-timeline') || '';
+  const includedServices = v('prop-included') || '';
+  const excludedServices = v('prop-excluded') || '';
+  const attendeeCapacity = parseInt(v('prop-capacity'), 10) || 50;
+  const venueConstraints = v('prop-venue-constraints') || '';
+  const resourceConstraints = v('prop-constraints') || '';
+  const constraints = [venueConstraints ? 'Venue: ' + venueConstraints : '', resourceConstraints]
+    .filter(Boolean)
+    .join('; ');
+  const paymentSchedule = v('prop-schedule') || '';
+  const cancellationTerms = v('prop-cancellation') || '';
+  const cancellationNoticeDays = Number(v('prop-cancel-days'));
+  const cancellationFeePercent = Number(v('prop-cancel-fee'));
+  const cancellationRefundEligible = v('prop-cancel-refund') === 'true';
+  const cancellationApprovalMode = v('prop-cancel-approval');
+  const proposedDate = v('prop-date');
+  const validUntil = v('prop-expiry');
+  const conditions = v('prop-conditions') || '';
+  const terms = \`\${eventPlan}\\n\\nDeliverables:\\n\${timeline}\\n\\nPayment Terms: \${paymentSchedule}\\nCancellation Policy: \${cancellationTerms}\`;
+  const errEl = g('prop-err-msg');
+  function showError(msg) {
+    if (errEl) {
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+    }
+  }
+  if (!amount || amount < 1000 || amount > 10000000) {
+    showError(
+      amount > 10000000
+        ? 'Proposed price cannot exceed ₹1,00,00,000.'
+        : 'Proposed price must be at least ₹1,000.'
+    );
+    return;
+  }
+  if (isNaN(deposit) || deposit < 0 || deposit > amount || deposit > 10000000) {
+    showError('Deposit must be between 0 and total amount.');
+    return;
+  }
+  if (organizerFee < 0 || organizerFee > 10000000) {
+    showError('Organizer fee cannot exceed ₹1,00,00,000.');
+    return;
+  }
+  if (taxes < 0 || taxes > 10000000) {
+    showError('Taxes cannot exceed ₹1,00,00,000.');
+    return;
+  }
+  if (
+    !Number.isInteger(cancellationNoticeDays) ||
+    cancellationNoticeDays < 0 ||
+    cancellationNoticeDays > 3650
+  ) {
+    showError('Cancellation notice must be a whole number between 0 and 3650 days.');
+    return;
+  }
+  if (
+    !Number.isFinite(cancellationFeePercent) ||
+    cancellationFeePercent < 0 ||
+    cancellationFeePercent > 100
+  ) {
+    showError('Cancellation fee must be between 0% and 100%.');
+    return;
+  }
+  if (
+    !attendeeCapacity ||
+    !Number.isInteger(attendeeCapacity) ||
+    attendeeCapacity < 1 ||
+    attendeeCapacity > 50000
+  ) {
+    showError(
+      attendeeCapacity > 50000
+        ? 'Maximum event capacity is 50,000.'
+        : 'Attendee capacity must be between 1 and 50,000.'
+    );
+    return;
+  }
+  if (!proposedDate) {
+    showError('Proposed event date is required.');
+    return;
+  }
+  if (!validUntil) {
+    showError('Proposal expiration date is required.');
+    return;
+  }
+  if (!eventPlan.trim()) {
+    showError('Detailed event plan is required.');
+    return;
+  }
+  if (!timeline.trim()) {
+    showError('Execution timeline is required.');
+    return;
+  }
+  const todayStr = today();
+  if (proposedDate <= todayStr) {
+    showError('Proposed event date must be in the future.');
+    return;
+  }
+  if (validUntil <= todayStr) {
+    showError('Proposal expiry date must be in the future.');
+    return;
+  }
+
+  // Check date availability
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (!r) return;
+  normalizeEventRequest(r);
+  const avail = checkOrganizerDateAvailability(r.organizer, proposedDate, r.id);
+  if (!avail.available) {
+    showError('Date unavailable: ' + avail.reason);
+    return;
+  }
+  const submitBtn = g('modal-foot')?.querySelector('.btn-primary');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+  }
+  try {
+    const fileInput = g('prop-file');
+    const planFile = fileInput?.files?.[0];
+    let uploadedDocMeta = null;
+    if (planFile) {
+      if (
+        !planFile.name.toLowerCase().endsWith('.pdf') ||
+        (planFile.type && planFile.type !== 'application/pdf')
+      ) {
+        showError('Attached event plan must be a PDF file.');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = isRevision ? 'Send Revision' : 'Submit Proposal';
+        }
+        return;
+      }
+      if (planFile.size > 20 * 1024 * 1024) {
+        showError('Attached file size must not exceed 20MB.');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = isRevision ? 'Send Revision' : 'Submit Proposal';
+        }
+        return;
+      }
+      try {
+        uploadedDocMeta = await apiUploadEventPlanDocument(r.requestId || r.id, planFile);
+      } catch (uploadErr) {
+        showError('Failed to upload plan document: ' + (uploadErr.message || 'Server error'));
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = isRevision ? 'Send Revision' : 'Submit Proposal';
+        }
+        return;
+      }
+    }
+    const propPayload = {
+      amount,
+      depositRequired: deposit,
+      proposedDate,
+      validUntil,
+      terms,
+      eventPlan,
+      timeline,
+      organizerFee,
+      itemizedCosts,
+      taxes,
+      includedServices,
+      excludedServices,
+      attendeeCapacity,
+      constraints,
+      paymentSchedule,
+      cancellationTerms,
+      cancellationNoticeDays,
+      cancellationFeePercent,
+      cancellationRefundEligible,
+      cancellationApprovalMode,
+      cancellationAdditionalTerms: cancellationTerms,
+      conditions,
+    };
+    if (uploadedDocMeta || planFile) {
+      propPayload.documentName = planFile.name;
+      propPayload.documentFileName = uploadedDocMeta?.fileName || planFile.name;
+      propPayload.documentSize = planFile.size;
+      propPayload.documentType = planFile.type || 'application/pdf';
+    }
+    let response;
+    try {
+      response = await apiSendEventProposal(id, propPayload, isRevision);
+    } catch (apiErr) {
+      const errText = String(
+        apiErr?.message ||
+          (Array.isArray(apiErr?.data?.message) ? apiErr.data.message.join(', ') : '')
+      );
+      if (errText.includes('should not exist')) {
+        // Fallback for strict or older server schemas: send standard whitelisted fields
+        response = await apiSendEventProposal(
+          id,
+          {
+            amount,
+            depositRequired: deposit,
+            proposedDate,
+            validUntil,
+            terms: \`\${terms}\\n\\nOrganizer Fee: ₹\${organizerFee}\\nTaxes & GST: ₹\${taxes}\\nItemized: \${itemizedCosts}\\nCapacity Limit: \${attendeeCapacity} guests\\nConstraints: \${constraints}\`,
+            notes: conditions || '',
+          },
+          isRevision
+        );
+      } else {
+        throw apiErr;
+      }
+    }
+    const version = response?.data?.proposals?.length || (r.proposals ? r.proposals.length + 1 : 1);
+    r.status = 'proposal_sent';
+    r.agreementStatus = 'not_sent';
+    r.paymentStatus = 'unpaid';
+    r.updatedAt = new Date().toISOString();
+    if (!r.proposals) r.proposals = [];
+    r.proposals.forEach(proposal => {
+      if (proposal.status === 'pending_client') proposal.status = 'revision_requested';
+    });
+    r.proposals.push({
+      version,
+      amount,
+      depositRequired: deposit,
+      proposedDate,
+      validUntil,
+      terms,
+      eventPlan,
+      timeline,
+      organizerFee,
+      itemizedCosts,
+      taxes,
+      includedServices,
+      excludedServices,
+      attendeeCapacity,
+      constraints,
+      paymentSchedule,
+      cancellationTerms,
+      cancellationPolicy: {
+        version: \`proposal-\${r.requestId || r.id}-v\${version}\`,
+        cancellation: {
+          minimumNoticeDays: cancellationNoticeDays,
+          feePercent: cancellationFeePercent,
+          refundEligible: cancellationRefundEligible,
+          approvalMode: cancellationApprovalMode,
+          additionalTerms: cancellationTerms,
+          isDefault: false,
+        },
+      },
+      conditions,
+      documentName: planFile ? planFile.name : undefined,
+      documentFileName: uploadedDocMeta?.fileName || (planFile ? planFile.name : undefined),
+      documentSize: planFile ? planFile.size : undefined,
+      documentType: planFile ? planFile.type || 'application/pdf' : undefined,
+      uploadedAt: planFile ? new Date().toISOString() : undefined,
+      uploaderId: CU?.id || CU?.userId,
+      uploaderName: CU?.name || 'Organizer',
+      status: 'pending_client',
+      sentAt: new Date().toISOString(),
+    });
+    r.currentProposalVersion = version;
+    saveDB();
+    closeModal();
+    if (window.EventFlowData?.invalidate) {
+      window.EventFlowData.invalidate('eventRequests');
+      window.EventFlowData.invalidate('eventPlans');
+    }
+    if (typeof syncOrganizerEventRequests === 'function') await syncOrganizerEventRequests();
+    if (typeof syncWorkflowData === 'function') await syncWorkflowData();
+    toast(\`Proposal v\${version} sent to client!\`, 'success');
+    viewRequestDetail(id);
+  } catch (error) {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = isRevision ? 'Send Revision' : 'Submit Proposal';
+    }
+    showError(error?.message || 'Unable to send the proposal.');
+  }
+}
+function simulateClientDecision(id, decision) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (!r) return;
+  normalizeEventRequest(r);
+  const activeProp = r.proposals[r.proposals.length - 1];
+  if (!activeProp) return;
+  if (decision === 'accept') {
+    activeProp.status = 'accepted';
+    r.status = 'awaiting_client';
+    r.agreementStatus = 'pending_signature';
+    r.paymentStatus = 'deposit_pending';
+    r.auditHistory.push({
+      id: 'aud-' + Date.now(),
+      action: \`Proposal Accepted by Client (v\${activeProp.version})\`,
+      performedBy: 'Michael Torres',
+      role: 'client',
+      timestamp: today(),
+    });
+    toast('Client accepted proposal! Ready for Agreement & Deposit.', 'success');
+  } else if (decision === 'request_revision') {
+    activeProp.status = 'revision_requested';
+    r.status = 'under_review';
+    r.auditHistory.push({
+      id: 'aud-' + Date.now(),
+      action: \`Revision Requested by Client (v\${activeProp.version})\`,
+      performedBy: 'Michael Torres',
+      role: 'client',
+      timestamp: today(),
+      details: {
+        note: 'Client requested budget reduction.',
+      },
+    });
+    toast('Client requested revision on proposal v' + activeProp.version, 'info');
+  } else if (decision === 'reject') {
+    activeProp.status = 'rejected';
+    r.status = 'rejected';
+    r.rejectionReason = 'Client declined proposal terms.';
+    r.auditHistory.push({
+      id: 'aud-' + Date.now(),
+      action: \`Proposal Declined by Client (v\${activeProp.version})\`,
+      performedBy: 'Michael Torres',
+      role: 'client',
+      timestamp: today(),
+    });
+    toast('Client declined proposal', 'warning');
+  }
+  saveDB();
+  viewRequestDrawer(id);
+  renderPage('event-requests');
+}
+function markAgreementSigned(id) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (!r) return;
+  normalizeEventRequest(r);
+  r.agreementStatus = 'agreed';
+  r.auditHistory.push({
+    id: 'aud-' + Date.now(),
+    action: 'Agreement Signed by Client',
+    performedBy: 'Client',
+    role: 'client',
+    timestamp: today(),
+  });
+  saveDB();
+  toast('Service Agreement marked as Signed!', 'success');
+  viewRequestDrawer(id);
+  renderPage('event-requests');
+}
+function recordDepositReceived(id) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (!r) return;
+  normalizeEventRequest(r);
+  r.paymentStatus = 'deposit_paid';
+  r.auditHistory.push({
+    id: 'aud-' + Date.now(),
+    action: 'Deposit Payment Received & Verified',
+    performedBy: CU.name || 'Sarah Chen',
+    role: 'organizer',
+    timestamp: today(),
+  });
+  saveDB();
+  toast('Deposit payment recorded successfully!', 'success');
+  viewRequestDrawer(id);
+  renderPage('event-requests');
+}
+function confirmBookingReq(id) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (!r) return;
+  normalizeEventRequest(r);
+  if (r.status === 'confirmed') {
+    toast('This request is already confirmed', 'info');
+    return;
+  }
+
+  // STRICT VALIDATION
+  if (r.agreementStatus !== 'agreed') {
+    toast('Cannot confirm: Signed agreement is required', 'danger');
+    return;
+  }
+  if (r.paymentStatus !== 'deposit_paid' && r.paymentStatus !== 'fully_paid') {
+    toast('Cannot confirm: Deposit/payment must be satisfied first', 'danger');
+    return;
+  }
+  const avail = checkOrganizerDateAvailability(r.organizer, r.date, r.id);
+  if (!avail.available) {
+    toast('Cannot confirm: ' + avail.reason, 'danger');
+    return;
+  }
+
+  // Create confirmed event in DB.events
+  const newEventId = DB._nextId.events++;
+  const newEvent = {
+    id: newEventId,
+    title: r.title,
+    category: r.type || 'Corporate',
+    date: r.date,
+    time: '10:00',
+    endTime: '18:00',
+    venue: r.venue || 'TBD Convention Hall',
+    city: r.city || 'Bangalore',
+    capacity: r.guests || 100,
+    registered: 0,
+    price: 0,
+    status: 'upcoming',
+    organizer: CU.id,
+    clientId: r.clientId,
+    description: r.desc || '',
+    color: '#7c6ff7',
+    emoji: r.type === 'Wedding' ? '💒' : r.type === 'Corporate' ? '🥂' : '📅',
+    tags: [r.type || 'Event'],
+    createdFromRequest: r.id,
+  };
+  DB.events.push(newEvent);
+  r.status = 'confirmed';
+  r.eventId = newEventId;
+  r.auditHistory.push({
+    id: 'aud-' + Date.now(),
+    action: 'Booking Confirmed & Event Scheduled',
+    performedBy: CU.name || 'Sarah Chen',
+    role: 'organizer',
+    timestamp: today(),
+    details: {
+      eventId: newEventId,
+      date: r.date,
+    },
+  });
+  saveDB();
+  toast('Booking confirmed! Event #' + newEventId + ' created on your calendar.', 'success');
+  viewRequestDrawer(id);
+  renderPage('event-requests');
+}
+function openUpdateConfirmedEventModal(requestId, eventId) {
+  const r = DB.eventRequests.find(
+    request =>
+      String(request.id) === String(requestId) || String(request.eventId) === String(eventId)
+  );
+  if (!r) return;
+  if (r.eventId || ['confirmed', 'approved', 'ongoing', 'completed'].includes(r.status)) {
+    toast('Booked event details cannot be edited.', 'info');
+    return;
+  }
+  const ev =
+    DB.events.find(event => String(event.id || event.eventId) === String(eventId || r.eventId)) ||
+    {};
+  const currentDate = r.eventDate || r.date || ev.date || '2026-11-20';
+  const currentVenue = r.venue || ev.location || '';
+  const currentCapacity = r.capacity || r.guests || ev.capacity || 50;
+  const currentBudget = r.budget || ev.budget || 50000;
+  const currentReqs = r.requirements || r.desc || ev.description || '';
+  openModal(
+    'Update Confirmed Event',
+    \`
+        <div style="font-size:12.5px;color:var(--text2);margin-bottom:14px">
+          Submit requested changes to this confirmed event. Changes affecting date, capacity, or scope require approval from the other party.
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">Event Date *</label>
+          <input type="date" class="form-control" id="mod-date" value="\${currentDate}">
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">Venue / Location</label>
+          <input type="text" class="form-control" id="mod-venue" value="\${escapeHtml(
+            currentVenue
+          )}">
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">Expected Attendee Count</label>
+          <input type="number" class="form-control" id="mod-capacity" value="\${currentCapacity}" min="1" oninput="calculateModCost(\${currentCapacity}, \${currentBudget})">
+          <div id="mod-cost-hint" style="font-size:11.5px;color:var(--accent);margin-top:4px">Current budget: ₹\${currentBudget.toLocaleString()}</div>
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">Requirements / Scope Changes</label>
+          <textarea class="form-control" id="mod-reqs" rows="3">\${escapeHtml(
+            currentReqs
+          )}</textarea>
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">Reason for Change (Mandatory) *</label>
+          <textarea class="form-control" id="mod-reason" rows="2" placeholder="Explain why this change is requested (e.g. Venue expansion, client headcount increase)..."></textarea>
+        </div>
+        <div id="mod-err-msg" style="color:var(--red);font-size:12px;display:none;margin-top:6px"></div>
+      \`,
+    [
+      {
+        lbl: 'Cancel',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: 'Submit Update Request',
+        cls: 'btn-primary',
+        fn: \`submitEventModification('\${r.id}')\`,
+      },
+    ]
+  );
+}
+function calculateModCost(oldCap, oldBudget) {
+  const newCap = parseInt(g('mod-capacity')?.value, 10);
+  const hint = g('mod-cost-hint');
+  if (!hint) return;
+  if (newCap && oldCap && oldBudget) {
+    const recalc = Math.round((oldBudget / oldCap) * newCap);
+    globalThis.window?.EventFlowOrganizerPages?.clear(hint);
+    hint.innerHTML = \`Recalculated estimated cost: <strong>₹\${recalc.toLocaleString()}</strong> (was ₹\${oldBudget.toLocaleString()})\`;
+  }
+}
+async function submitEventModification(requestId) {
+  const date = v('mod-date');
+  const venue = v('mod-venue');
+  const capacity = parseInt(v('mod-capacity'), 10);
+  const requirements = v('mod-reqs');
+  const reason = v('mod-reason');
+  const errEl = g('mod-err-msg');
+  if (!reason || !reason.trim()) {
+    if (errEl) {
+      errEl.textContent = 'A reason for the modification is mandatory.';
+      errEl.style.display = 'block';
+    }
+    return;
+  }
+  try {
+    await apiRequestEventModification(requestId, {
+      date,
+      venue,
+      capacity,
+      requirements,
+      reason: reason.trim(),
+    });
+    closeModal();
+    await syncWorkflowData();
+    toast('Modification request submitted for review!', 'success');
+    if (typeof _workflowRequestId !== 'undefined') viewWorkflowRequestDrawer(_workflowRequestId);
+    else renderPage(_currentPage);
+  } catch (err) {
+    if (errEl) {
+      errEl.textContent = err.message || 'Unable to submit update request.';
+      errEl.style.display = 'block';
+    } else toast(err.message, 'error');
+  }
+}
+async function respondToEventModification(requestId, modId, action) {
+  let reason = '';
+  if (action === 'reject') {
+    reason = prompt('Enter a reason for declining the modification:') || 'Declined';
+    if (!reason.trim()) return;
+  }
+  try {
+    await apiRespondToEventModification(requestId, modId, {
+      action,
+      reason,
+    });
+    await syncWorkflowData();
+    toast(
+      \`Modification \${action === 'approve' ? 'approved' : 'declined'} successfully!\`,
+      'success'
+    );
+    if (typeof _workflowRequestId !== 'undefined') viewWorkflowRequestDrawer(_workflowRequestId);
+    else renderPage(_currentPage);
+  } catch (err) {
+    toast(err.message || 'Unable to respond to modification.', 'error');
+  }
+}
+let _pendingOrganizerCancel = null;
+function onOrgCancelReasonSelectChange(val) {
+  const textarea = g('org-cancel-reason');
+  if (!textarea) return;
+  if (val && val !== 'Other') {
+    textarea.value = val;
+  } else if (val === 'Other') {
+    textarea.value = '';
+    textarea.placeholder =
+      'Please explain the specific reason for cancellation (mandatory for Other, minimum 10 characters)...';
+    if (typeof textarea.focus === 'function') textarea.focus();
+  } else {
+    textarea.value = '';
+  }
+  const errEl = g('org-cancel-err');
+  if (errEl) errEl.style.display = 'none';
+}
+function openOrganizerEventCancellationModal(eventId, requestId) {
+  if (!requestId && !eventId) {
+    toast('Missing booking ID. Unable to process cancellation.', 'error');
+    return;
+  }
+
+  // Retrieve actual persisted records
+  const request = DB.eventRequests
+    ? DB.eventRequests.find(
+        request =>
+          (requestId &&
+            (String(request.id) === String(requestId) ||
+              String(request.requestId) === String(requestId))) ||
+          (eventId && String(request.eventId) === String(eventId))
+      )
+    : null;
+  const event =
+    (DB.events &&
+      DB.events.find(
+        event =>
+          (eventId &&
+            (String(event.id) === String(eventId) || String(event.eventId) === String(eventId))) ||
+          (request?.eventId &&
+            (String(event.id) === String(request.eventId) ||
+              String(event.eventId) === String(request.eventId)))
+      )) ||
+    null;
+  if (!request && !event) {
+    toast(\`Booking record not found for ID: \${requestId || eventId}. Cannot proceed.\`, 'error');
+    return;
+  }
+
+  // Check ownership
+  const isOwner =
+    CU.role === 'superuser' ||
+    (request &&
+      (String(request.organizer) === String(CU.id) ||
+        String(request.organizerId) === String(CU.id) ||
+        String(request.organizerUserId) === String(CU.id))) ||
+    (event &&
+      (String(event.organizer) === String(CU.id) ||
+        String(event.organizerUserId) === String(CU.id) ||
+        String(event.organizerId) === String(CU.id) ||
+        String(event.organizerId) === String(CU.organizerId) ||
+        String(event.organizer) === String(CU.userId)));
+  if (!isOwner) {
+    toast('Unauthorized: You are not authorized to cancel this booking.', 'error');
+    return;
+  }
+  const status = (request?.status || event?.backendStatus || event?.status || '').toLowerCase();
+
+  // Rule: Prevent duplicate cancellations and refunds.
+  const isAlreadyCancelled =
+    ['cancelled', 'withdrawn', 'rejected', 'expired'].includes(status) ||
+    Boolean(request?.cancellation || event?.cancellation);
+  if (isAlreadyCancelled) {
+    openModal(
+      'Already Cancelled',
+      \`
+          <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);padding:14px;border-radius:8px;font-size:13px;color:var(--red);line-height:1.6">
+            <strong>This event is already cancelled.</strong> No additional cancellation or refund will be created.
+            <div style="margin-top:8px;color:var(--text2)">
+              Current status: <strong>\${escapeHtml(
+                status.replace(/_/g, ' ')
+              )}</strong>. Its cancellation and refund history has been preserved.
+            </div>
+          </div>
+        \`,
+      [
+        {
+          lbl: 'Close',
+          cls: 'btn-ghost',
+          fn: 'closeModal()',
+        },
+      ]
+    );
+    return;
+  }
+
+  // Rule: Prevent cancelling completed events
+  const isCompleted = ['completed'].includes(status);
+  if (isCompleted) {
+    openModal(
+      'Action Not Permitted',
+      \`
+          <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);padding:14px;border-radius:8px;font-size:13px;color:var(--red);line-height:1.6">
+            <strong>Action Blocked:</strong> Completed events cannot be deleted or cancelled.
+            <div style="margin-top:8px;color:var(--text2)">
+              Completed events must be preserved for audit history, registrations, financial transactions, and compliance reports.
+            </div>
+          </div>
+        \`,
+      [
+        {
+          lbl: 'Keep Event',
+          cls: 'btn-ghost',
+          fn: 'closeModal()',
+        },
+      ]
+    );
+    return;
+  }
+
+  // Rule: For an unconfirmed request, use the appropriate withdrawal/rejection workflow, not booking cancellation.
+  const isConfirmed =
+    ['confirmed', 'approved'].includes(status) ||
+    (event && ['ongoing', 'published', 'upcoming', 'full', 'draft', 'pending'].includes(status));
+  if (!isConfirmed) {
+    openModal(
+      'Cancellation Not Permitted',
+      \`
+          <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);padding:14px;border-radius:8px;font-size:13px;color:var(--red);line-height:1.6">
+            <strong>Action Blocked:</strong> Booking cancellation is only permitted for confirmed bookings.
+            <div style="margin-top:8px;color:var(--text2)">
+              The selected request is currently in <strong>\${escapeHtml(
+                status.replace(/_/g, ' ')
+              )}</strong> status. For unconfirmed requests, please use the withdrawal or rejection workflow.
+            </div>
+          </div>
+        \`,
+      [
+        {
+          lbl: 'Keep Event',
+          cls: 'btn-ghost',
+          fn: 'closeModal()',
+        },
+      ]
+    );
+    return;
+  }
+  const resolvedEventId = event?.eventId || request?.eventId || eventId || event?.id || '';
+  const resolvedRequestId = requestId || request?.id || request?.requestId || '';
+  const eventName =
+    request?.title ||
+    request?.eventName ||
+    event?.name ||
+    event?.title ||
+    'Confirmed Event Booking';
+  const eventDate = request?.date || request?.eventDate || event?.date;
+  const clientName =
+    request?.clientDetails?.name ||
+    request?.clientName ||
+    (DB.users && DB.users.find(user => String(user.id) === String(request?.clientId)))?.name ||
+    '';
+
+  // Determine workflow separation:
+  const isClientBooking = Boolean(
+    requestId ||
+      (request && (request.clientId || request.clientDetails || request.budget) && !eventId) ||
+      (event && event.clientId)
+  );
+  const cancellation = {
+    request: request,
+    event: event,
+    status: status,
+    eventId: resolvedEventId,
+    requestId: resolvedRequestId,
+    eventName: eventName,
+    eventDate: eventDate,
+    clientName,
+  };
+  return isClientBooking
+    ? openOrganizerClientCancellation(cancellation)
+    : openOrganizerPublicCancellation(cancellation);
+}
+// Confirmed client bookings refund the client in full when the organizer cancels.
+function openOrganizerClientCancellation({
+  request: request,
+  event: event,
+  status: status,
+  eventId: eventId,
+  requestId: requestId,
+  eventName: eventName,
+  eventDate: eventDate,
+  clientName,
+}) {
+  // === CLIENT BOOKING CANCELLATION WORKFLOW ===
+  const policy =
+    request?.policySnapshot ||
+    event?.policySnapshot ||
+    (typeof window !== 'undefined' && window.workflowEventPolicy
+      ? window.workflowEventPolicy
+      : typeof workflowEventPolicy !== 'undefined'
+      ? workflowEventPolicy
+      : {
+          cancellation: {
+            minimumNoticeDays: 14,
+            feePercent: 10,
+          },
+        });
+  const minimumNoticeDays = Number(policy?.cancellation?.minimumNoticeDays ?? 14);
+  const clientPolicyFeePercent = Number(policy?.cancellation?.feePercent ?? 10);
+  const feePercent = 0; // Organizer-initiated cancellation refunds payers in full.
+
+  let deadlineDate = null;
+  let deadlineStr = \`\${minimumNoticeDays} days prior to event\`;
+  let isWithinWindow = true;
+  let windowBlockedReason = '';
+  if (request && eventDate) {
+    const evDateObj = new Date(eventDate + 'T00:00:00');
+    if (!isNaN(evDateObj.getTime())) {
+      deadlineDate = new Date(evDateObj.getTime() - minimumNoticeDays * 86400000);
+      deadlineStr = deadlineDate.toISOString().slice(0, 10);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      if (now > deadlineDate) {
+        isWithinWindow = false;
+        windowBlockedReason = \`The cancellation deadline (\${deadlineStr}) has passed. Cancellation policy requires at least \${minimumNoticeDays} days notice prior to the event date (\${eventDate}).\`;
+      }
+    }
+  }
+  const payments = (DB.payments || [])
+    .concat(DB.eventWorkflowPayments || [])
+    .filter(
+      payment =>
+        (request &&
+          (String(payment.requestId) === String(request.id) ||
+            String(payment.requestId) === String(request.requestId))) ||
+        (eventId &&
+          (String(payment.eventId) === String(eventId) || String(payment.id) === String(eventId)))
+    );
+  const successfulPayments = payments.filter(payment =>
+    ['completed', 'successful', 'paid'].includes(String(payment.status).toLowerCase())
+  );
+  let paidAmount = successfulPayments.reduce(
+    (sum, payment) => sum + (Number(payment.amount) || 0),
+    0
+  );
+  if (paidAmount === 0 && request?.paymentStatus === 'deposit_paid') {
+    paidAmount = Number(request.depositPaid || request.depositAmount || 0);
+  } else if (paidAmount === 0 && request?.paymentStatus === 'fully_paid') {
+    paidAmount = Number(request.budget || 0);
+  }
+  const cancellationFee = paidAmount > 0 ? Math.round(paidAmount * (feePercent / 100)) : 0;
+  const refundAmount = paidAmount > 0 ? paidAmount - cancellationFee : 0;
+  _pendingOrganizerCancel = {
+    isClientBooking: true,
+    eventId: eventId,
+    requestId: requestId,
+    evName: eventName,
+    evDate: eventDate,
+    clientName,
+    rawStatus: status,
+    minimumNoticeDays,
+    deadlineStr,
+    feePercent,
+    paidAmount,
+    cancellationFee,
+    refundAmount,
+  };
+  openModal(
+    'Cancel Event',
+    \`
+          <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);padding:10px 14px;border-radius:8px;font-size:12px;color:var(--red);margin-bottom:14px">
+            ⚠️ <strong>Organizer Initiated Cancellation</strong>: Initiating cancellation will cancel the confirmed booking, notify the client, and trigger applicable refund processing according to agreed cancellation terms.
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12.5px;line-height:1.6">
+            <div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:6px">Booking Details</div>
+            <div><strong>Event:</strong> \${escapeHtml(eventName)}</div>
+            <div><strong>Current Booking Status:</strong> <span class="badge badge-green">\${escapeHtml(
+              status.replace(/_/g, ' ')
+            )}</span></div>
+            <div><strong>Event Date:</strong> \${escapeHtml(eventDate || 'TBD')}</div>
+            \${clientName ? \`<div><strong>Client:</strong> \${escapeHtml(clientName)}</div>\` : ''}
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.5">
+            <div style="font-weight:700;color:var(--text);margin-bottom:4px">Cancellation Policy Terms</div>
+            <div style="color:var(--text2)">Accepted client policy: \${minimumNoticeDays} days notice, \${clientPolicyFeePercent}% client cancellation fee. Deadline: <strong>\${escapeHtml(
+      deadlineStr
+    )}</strong>\${
+      isWithinWindow ? '' : ' (passed)'
+    }. Because this cancellation is organizer-initiated, successful client payments are eligible for a full refund and the organizer receives no refund.</div>
+            <div style="display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+              <span>Amount Actually Paid:</span>
+              <strong>₹\${paidAmount.toLocaleString()}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;color:var(--red)">
+              <span>Applicable Cancellation Fee (\${feePercent}%):</span>
+              <strong>₹\${cancellationFee.toLocaleString()}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;color:var(--green);font-size:13px;font-weight:700">
+              <span>Estimated Refund:</span>
+              <strong>\${
+                paidAmount === 0
+                  ? '₹0 (No refund due)'
+                  : '₹' + refundAmount.toLocaleString() + ' (Pending review)'
+              }</strong>
+            </div>
+          </div>
+          <div class="form-group mb-12">
+            <label class="form-label">Mandatory Cancellation Reason *</label>
+            <select class="form-control mb-8" id="org-cancel-reason-select" onchange="window.onOrgCancelReasonSelectChange(this.value)">
+              <option value="">-- Select a reason --</option>
+              <option value="Venue unavailable">Venue unavailable</option>
+              <option value="Operational difficulties">Operational difficulties</option>
+              <option value="Insufficient registrations">Insufficient registrations</option>
+              <option value="Safety or regulatory concerns">Safety or regulatory concerns</option>
+              <option value="Organizer emergency">Organizer emergency</option>
+              <option value="Other">Other</option>
+            </select>
+            <textarea class="form-control" id="org-cancel-reason" rows="3" placeholder="Explain the reason for event cancellation..."></textarea>
+            <div id="org-cancel-err" style="color:var(--red);font-size:12px;display:none;margin-top:6px">Please provide a valid cancellation reason.</div>
+          </div>
+          <div class="form-group mb-12">
+            <label class="form-label">Optional Explanation</label>
+            <textarea class="form-control" id="org-cancel-explanation" rows="2" placeholder="Optional additional details for client and operations team..."></textarea>
+          </div>
+        \`,
+    [
+      {
+        lbl: 'Keep Event',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: 'Continue to Cancel',
+        cls: 'btn-danger',
+        fn: \`proceedOrganizerCancelToFinalConfirmation('\${eventId}', '\${requestId}')\`,
+      },
+    ]
+  );
+  return;
+}
+// Public events use their saved cancellation terms and attendee payment history.
+function openOrganizerPublicCancellation({
+  request: request,
+  event: event,
+  status: status,
+  eventId: eventId,
+  requestId: requestId,
+  eventName: eventName,
+  eventDate: eventDate,
+  clientName,
+}) {
+  // === PUBLIC EVENT CANCELLATION WORKFLOW ===
+  // 1. Policy loading: load from saved event terms or organizer profile; do NOT hardcode 14-day notice or 10% fee.
+  const policy =
+    event?.policySnapshot ||
+    event?.cancellationPolicy ||
+    event?.cancellationTerms ||
+    event?.terms?.cancellation ||
+    CU?.cancellationPolicy ||
+    (
+      DB.organizers &&
+      DB.organizers.find(
+        organizer =>
+          String(organizer.userId) === String(CU.id) ||
+          String(organizer.organizerId) === String(CU.id) ||
+          String(organizer.organizerId) === String(CU.organizerId)
+      )
+    )?.cancellationPolicy ||
+    (typeof window !== 'undefined' && window.workflowEventPolicy
+      ? window.workflowEventPolicy
+      : typeof workflowEventPolicy !== 'undefined'
+      ? workflowEventPolicy
+      : null);
+  const hasNoticeDays =
+    policy &&
+    (policy.cancellation?.minimumNoticeDays != null ||
+      policy.minimumNoticeDays != null ||
+      policy.noticeDays != null);
+  const minimumNoticeDays = hasNoticeDays
+    ? Number(
+        policy.cancellation?.minimumNoticeDays ?? policy.minimumNoticeDays ?? policy.noticeDays
+      )
+    : null;
+  const deductionPercent = Number(
+    policy?.ticketCancellation?.deductionPercent ?? policy?.attendeeDeductionPercent ?? 0
+  );
+
+  // 2. Dynamically determine if cancellation is permitted, requires approval, or is restricted
+  let isPermitted = true;
+  let policyStatusText = 'Permitted under agreed terms';
+  let policyTermsSummary = '';
+  let deadlineStr = '';
+  let restrictionReason = '';
+  if (hasNoticeDays && eventDate) {
+    const evDateObj = new Date(eventDate + 'T00:00:00');
+    if (!isNaN(evDateObj.getTime())) {
+      const deadlineDate = new Date(evDateObj.getTime() - minimumNoticeDays * 86400000);
+      deadlineStr = deadlineDate.toISOString().slice(0, 10);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      if (now > deadlineDate) {
+        if (policy?.cancellation?.requiresApproval || policy?.requiresApproval) {
+          policyStatusText = 'Requires Administrative Approval (notice period has passed)';
+        } else if (
+          policy?.cancellation?.restrictedAfterDeadline ||
+          policy?.restrictedAfterDeadline ||
+          policy?.cancellation?.strictCutoff
+        ) {
+          isPermitted = false;
+          policyStatusText = 'Restricted by Policy';
+          restrictionReason = \`The cancellation deadline (\${deadlineStr}) has passed. Policy requires at least \${minimumNoticeDays} days notice prior to the event date (\${eventDate}).\`;
+        } else {
+          policyStatusText = 'Notice period passed; late-cancellation terms apply';
+        }
+      }
+    }
+    policyTermsSummary = \`Cancellation requires \${minimumNoticeDays} days notice (deadline: <strong>\${escapeHtml(
+      deadlineStr
+    )}</strong>). \${
+      deductionPercent > 0
+        ? \`Applicable deduction: \${deductionPercent}%.\`
+        : 'No deductions apply to attendee refunds.'
+    }\`;
+  } else if (event?.cancellationDeadline) {
+    deadlineStr = event.cancellationDeadline;
+    const dl = new Date(event.cancellationDeadline + 'T23:59:59');
+    if (!isNaN(dl.getTime()) && new Date() > dl) {
+      isPermitted = false;
+      policyStatusText = 'Restricted by Policy';
+      restrictionReason = \`Cancellation deadline (\${deadlineStr}) has passed. Cancellation is restricted by policy.\`;
+    }
+    policyTermsSummary = \`Cancellation deadline: <strong>\${escapeHtml(deadlineStr)}</strong>. \${
+      deductionPercent > 0
+        ? \`Applicable deduction: \${deductionPercent}%.\`
+        : 'No deductions apply to attendee refunds.'
+    }\`;
+  } else {
+    policyTermsSummary = \`Standard organizer cancellation terms apply. \${
+      deductionPercent > 0
+        ? \`Applicable deduction: \${deductionPercent}%.\`
+        : 'Full refunds are due to paid attendees.'
+    }\`;
+  }
+  if (!isPermitted) {
+    openModal(
+      'Cancellation Not Permitted',
+      \`
+          <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);padding:14px;border-radius:8px;font-size:13px;color:var(--red);line-height:1.6;margin-bottom:12px">
+            <strong>Cancellation Restricted:</strong> \${escapeHtml(restrictionReason)}
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:12.5px;line-height:1.6">
+            <div><strong>Event:</strong> \${escapeHtml(eventName)}</div>
+            <div><strong>Event Date:</strong> \${escapeHtml(eventDate || 'TBD')}</div>
+            \${
+              deadlineStr
+                ? \`<div><strong>Cancellation Deadline:</strong> \${escapeHtml(deadlineStr)}</div>\`
+                : ''
+            }
+            \${
+              minimumNoticeDays != null
+                ? \`<div><strong>Required Notice:</strong> \${minimumNoticeDays} days</div>\`
+                : ''
+            }
+          </div>
+        \`,
+      [
+        {
+          lbl: 'Keep Event',
+          cls: 'btn-ghost',
+          fn: 'closeModal()',
+        },
+      ]
+    );
+    return;
+  }
+
+  // 3. Attendee payments & refund calculation:
+  // "The organizer must NEVER receive a refund for cancelling their own event."
+  // "Identify attendees with successful payments for that event. Calculate each attendee's eligible refund."
+  // "Unpaid registrations must not generate refunds."
+  // "If no successful payments exist, display: 'No attendee payments have been collected. No refunds are due.'"
+  const allRegs = (DB.registrations || []).filter(
+    registration =>
+      String(registration.eventId) === String(eventId) ||
+      (event &&
+        (String(registration.eventId) === String(event.id) ||
+          String(registration.eventId) === String(event.eventId)))
+  );
+  const activeRegs = allRegs.filter(
+    registration =>
+      !['cancelled', 'rejected'].includes(String(registration.status).toLowerCase()) &&
+      !['cancelled', 'rejected'].includes(String(registration.backendStatus).toLowerCase())
+  );
+  const registeredCount = activeRegs.length;
+  const allPayments = (DB.payments || []).concat(DB.eventWorkflowPayments || []);
+  const paidAttendeeItems = [];
+  let totalAmountCollected = 0;
+  let totalDeductions = 0;
+  let totalEligibleAttendeeRefunds = 0;
+  activeRegs.forEach(reg => {
+    const p = allPayments.find(
+      pay =>
+        (String(pay.registrationId) === String(reg.id) ||
+          String(pay.registrationId) === String(reg.registrationId)) &&
+        ['completed', 'successful', 'paid'].includes(String(pay.status).toLowerCase())
+    );
+    if (p) {
+      const amt = Number(p.amount) || 0;
+      if (amt > 0) {
+        const ded = deductionPercent > 0 ? Math.round(amt * (deductionPercent / 100)) : 0;
+        const ref = amt - ded;
+        paidAttendeeItems.push({
+          registration: reg,
+          payment: p,
+          amount: amt,
+          deduction: ded,
+          refund: ref,
+        });
+        totalAmountCollected += amt;
+        totalDeductions += ded;
+        totalEligibleAttendeeRefunds += ref;
+      }
+    }
+  });
+  const paidCount = paidAttendeeItems.length;
+  _pendingOrganizerCancel = {
+    isClientBooking: false,
+    eventId: eventId,
+    requestId: requestId,
+    evName: eventName,
+    evDate: eventDate,
+    rawStatus: status,
+    registeredCount,
+    paidCount,
+    totalAmountCollected,
+    totalDeductions,
+    totalEligibleAttendeeRefunds,
+    paidAttendeeItems,
+    affectedCount: registeredCount,
+    ticketsInvalidatedCount: registeredCount,
+    policyTermsSummary,
+    policyStatusText,
+    deductionPercent,
+  };
+  openModal(
+    'Cancel Event',
+    \`
+        <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);padding:10px 14px;border-radius:8px;font-size:12px;color:var(--red);margin-bottom:14px">
+          ⚠️ <strong>Organizer Initiated Event Cancellation</strong>: Cancelling this event will immediately invalidate all attendee tickets and trigger pending refunds to eligible paid attendees.
+        </div>
+        <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);padding:10px 14px;border-radius:8px;font-size:12px;color:var(--red);margin-bottom:14px;line-height:1.5">
+          ℹ️ <strong>Cancellation Required:</strong> Only draft events without registrations can be deleted. Active and registered events cannot be deleted and must follow this cancellation workflow to preserve records.
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12.5px;line-height:1.6">
+          <div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:6px">Event Details</div>
+          <div><strong>Event:</strong> \${escapeHtml(eventName)}</div>
+          <div><strong>Current Status:</strong> <span class="badge badge-green">\${escapeHtml(
+            status.replace(/_/g, ' ')
+          )}</span></div>
+          <div><strong>Event Date:</strong> \${escapeHtml(eventDate || 'TBD')}</div>
+          <div><strong>Registered Attendees:</strong> \${registeredCount}</div>
+          <div><strong>Successfully Paid Attendees:</strong> \${paidCount}</div>
+        </div>
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);padding:10px 14px;border-radius:8px;font-size:12px;color:var(--text);margin-bottom:14px;line-height:1.5">
+          <div style="font-weight:700;color:var(--amber);margin-bottom:4px">Cancellation Consequences</div>
+          <ul style="margin-left:18px;margin-bottom:0;color:var(--text2)">
+            <li>Event status will permanently change to <strong>Cancelled</strong>.</li>
+            <li>All attendee registrations and QR tickets will be invalidated immediately.</li>
+            <li>\${
+              registeredCount > 0
+                ? \`\${registeredCount} registered attendee(s) will be notified immediately.\`
+                : 'No registered attendees.'
+            }</li>
+            <li>Eligible paid attendees will receive refunds queued with status <strong>Pending</strong>.</li>
+            <li><strong>The organizer does not receive a refund for cancelling their own event.</strong></li>
+          </ul>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.5">
+          <div style="font-weight:700;color:var(--text);margin-bottom:4px">Applicable Cancellation Policy</div>
+          <div style="color:var(--text2)">\${policyTermsSummary}</div>
+          <div style="margin-top:4px;color:var(--text2)"><strong>Policy Permission:</strong> \${escapeHtml(
+            policyStatusText
+          )}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.6">
+          <div style="font-weight:700;color:var(--text);margin-bottom:6px">Attendee Payments & Refunds</div>
+          \${
+            totalAmountCollected === 0
+              ? \`
+            <div style="color:var(--text2);padding:6px 0;font-weight:600">
+              No attendee payments have been collected. No refunds are due.
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">
+              Unpaid registrations do not generate refunds.
+            </div>
+          \`
+              : \`
+            <div style="display:flex;justify-content:space-between">
+              <span>Amount Actually Paid:</span>
+              <strong>₹\${totalAmountCollected.toLocaleString()}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;color:var(--red)">
+              <span>Applicable Deductions:</span>
+              <strong>₹\${totalDeductions.toLocaleString()}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;color:var(--green);font-size:13px;font-weight:700;margin-top:4px;padding-top:4px;border-top:1px solid var(--border)">
+              <span>Estimated Refund:</span>
+              <strong>₹\${totalEligibleAttendeeRefunds.toLocaleString()} (Pending review)</strong>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:6px">
+              * Refunds are queued with status Pending and will not be claimed as processed until confirmed by the payment system. Unpaid registrations do not generate refunds.
+            </div>
+          \`
+          }
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">Mandatory Cancellation Reason *</label>
+          <select class="form-control mb-8" id="org-cancel-reason-select" onchange="window.onOrgCancelReasonSelectChange(this.value)">
+            <option value="">-- Select a reason --</option>
+            <option value="Venue unavailable">Venue unavailable</option>
+            <option value="Operational difficulties">Operational difficulties</option>
+            <option value="Insufficient registrations">Insufficient registrations</option>
+            <option value="Safety or regulatory concerns">Safety or regulatory concerns</option>
+            <option value="Organizer emergency">Organizer emergency</option>
+            <option value="Other">Other</option>
+          </select>
+          <textarea class="form-control" id="org-cancel-reason" rows="3" placeholder="Explain the reason for event cancellation..."></textarea>
+          <div id="org-cancel-err" style="color:var(--red);font-size:12px;display:none;margin-top:6px">Please provide a valid cancellation reason.</div>
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">Optional Explanation</label>
+          <textarea class="form-control" id="org-cancel-explanation" rows="2" placeholder="Optional additional details for attendees and operations team..."></textarea>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Keep Event',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: 'Continue to Cancel',
+        cls: 'btn-danger',
+        fn: \`proceedOrganizerCancelToFinalConfirmation('\${eventId}', '\${requestId}')\`,
+      },
+    ]
+  );
+}
+function proceedOrganizerCancelToFinalConfirmation(eventId, requestId) {
+  const selectEl = g('org-cancel-reason-select');
+  const selectedDropdownVal = selectEl ? selectEl.value : '';
+  const reasonVal = (v('org-cancel-reason') || '').trim();
+  const explanation = (v('org-cancel-explanation') || '').trim();
+  const errEl = g('org-cancel-err');
+  if (!selectedDropdownVal && !reasonVal) {
+    if (errEl) {
+      errEl.textContent = 'Please select a mandatory cancellation reason.';
+      errEl.style.display = 'block';
+    }
+    return;
+  }
+  if (selectedDropdownVal === 'Other' && (!reasonVal || reasonVal.length < 10)) {
+    if (errEl) {
+      errEl.textContent =
+        'An explanation (minimum 10 characters) is required when "Other" is selected.';
+      errEl.style.display = 'block';
+    }
+    return;
+  }
+  const effectiveReason = reasonVal || selectedDropdownVal;
+  if (!effectiveReason || effectiveReason.length < 10) {
+    if (errEl) {
+      errEl.textContent =
+        'Please provide a valid mandatory cancellation reason (minimum 10 characters).';
+      errEl.style.display = 'block';
+    }
+    return;
+  }
+  if (errEl) errEl.style.display = 'none';
+  if (!_pendingOrganizerCancel) {
+    _pendingOrganizerCancel = {};
+  }
+  _pendingOrganizerCancel.reason = effectiveReason;
+  _pendingOrganizerCancel.explanation = explanation;
+  const p = _pendingOrganizerCancel;
+  if (p.isClientBooking) {
+    // Step 2 for Client Booking Cancellation
+    openModal(
+      'Final Confirmation: Cancel Booking',
+      \`
+          <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);padding:12px 14px;border-radius:8px;font-size:12.5px;color:var(--red);margin-bottom:14px;line-height:1.5">
+            ⚠️ <strong>Consequences Summary:</strong> Please review before finalizing this cancellation. This action is irreversible.
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:14px;font-size:12.5px;line-height:1.6">
+            <div><strong>Event:</strong> \${escapeHtml(p.evName || 'Confirmed Booking')}</div>
+            <div><strong>Event Date:</strong> \${escapeHtml(p.evDate || 'TBD')}</div>
+            \${p.clientName ? \`<div><strong>Client:</strong> \${escapeHtml(p.clientName)}</div>\` : ''}
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+              <div><strong>Cancellation Reason:</strong> <em>\${escapeHtml(
+                effectiveReason
+              )}</em></div>
+              \${
+                explanation
+                  ? \`<div><strong>Optional Explanation:</strong> <em>\${escapeHtml(
+                      explanation
+                    )}</em></div>\`
+                  : ''
+              }
+            </div>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+              <div style="display:flex;justify-content:space-between"><span>Amount Paid:</span> <strong>₹\${(
+                p.paidAmount || 0
+              ).toLocaleString()}</strong></div>
+              <div style="display:flex;justify-content:space-between;color:var(--red)"><span>Cancellation Fee:</span> <strong>₹\${(
+                p.cancellationFee || 0
+              ).toLocaleString()}</strong></div>
+              <div style="display:flex;justify-content:space-between;color:var(--green)"><span>Estimated Refund:</span> <strong>\${
+                (p.paidAmount || 0) === 0
+                  ? '₹0 (No refund due)'
+                  : '₹' + (p.refundAmount || 0).toLocaleString()
+              }</strong></div>
+            </div>
+          </div>
+          <ul style="font-size:12px;color:var(--text2);margin-left:18px;margin-bottom:14px;line-height:1.6">
+            <li>The booking and event status will be permanently marked as <strong>Cancelled</strong>.</li>
+            <li>All attendee registrations and QR tickets will be invalidated.</li>
+            <li>\${
+              (p.refundAmount || 0) > 0
+                ? 'A refund request will be queued with status <strong>Pending Review</strong>.'
+                : 'No refund is due since ₹0 was collected.'
+            }</li>
+            <li>The client will be notified immediately.</li>
+          </ul>
+        \`,
+      [
+        {
+          lbl: 'Go Back',
+          cls: 'btn-ghost',
+          fn: \`openOrganizerEventCancellationModal('\${eventId}', '\${requestId}')\`,
+        },
+        {
+          lbl: 'Confirm Cancellation',
+          cls: 'btn-danger',
+          fn: \`submitOrganizerEventCancellation('\${eventId}', '\${requestId}')\`,
+        },
+      ]
+    );
+    return;
+  }
+
+  // Step 2 for Public Event Cancellation
+  openModal(
+    'Final Confirmation: Cancel Event',
+    \`
+        <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);padding:12px 14px;border-radius:8px;font-size:12.5px;color:var(--red);margin-bottom:14px;line-height:1.5">
+          ⚠️ <strong>Consequences Summary:</strong> Please review before finalizing event cancellation. This action is permanent and irreversible.
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:14px;font-size:12.5px;line-height:1.6">
+          <div><strong>Event:</strong> \${escapeHtml(p.evName || 'Event')}</div>
+          <div><strong>Event Date:</strong> \${escapeHtml(p.evDate || 'TBD')}</div>
+          <div><strong>Attendees Affected:</strong> \${
+            p.affectedCount || 0
+          } registered attendee(s)</div>
+          <div><strong>Tickets to Invalidate:</strong> \${
+            p.ticketsInvalidatedCount || 0
+          } ticket(s) and QR code(s)</div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+            <div><strong>Cancellation Reason:</strong> <em>\${escapeHtml(effectiveReason)}</em></div>
+            \${
+              explanation
+                ? \`<div><strong>Optional Explanation:</strong> <em>\${escapeHtml(
+                    explanation
+                  )}</em></div>\`
+                : ''
+            }
+          </div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between">
+              <span>Total Amount Collected:</span>
+              <strong>₹\${(p.totalAmountCollected || 0).toLocaleString()}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;color:var(--red)">
+              <span>Applicable Deductions:</span>
+              <strong>₹\${(p.totalDeductions || 0).toLocaleString()}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;color:var(--green);font-weight:700">
+              <span>Total Eligible Attendee Refunds:</span>
+              <strong>\${
+                (p.totalAmountCollected || 0) === 0
+                  ? '₹0 (No refunds due)'
+                  : '₹' + (p.totalEligibleAttendeeRefunds || 0).toLocaleString()
+              }</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:4px;color:var(--text2);font-size:11.5px">
+              <span>Refund Processing Status:</span>
+              <span class="badge badge-amber">Pending (Awaiting payment system confirmation)</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">
+          <div><strong>Notifications:</strong> Immediate cancellation and refund status notices will be dispatched to all \${
+            p.affectedCount || 0
+          } affected attendee(s).</div>
+          <div style="margin-top:4px"><strong>Permanent Consequences:</strong></div>
+          <ul style="margin-left:18px;margin-bottom:0">
+            <li>Event status permanently changed to <strong>Cancelled</strong>.</li>
+            <li>All attendee registrations and QR tickets will be permanently invalidated.</li>
+            <li>Attendee registration, payment, and refund records will be preserved for compliance and audit.</li>
+            <li>The organizer will not receive a refund for cancelling their own event.</li>
+          </ul>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Go Back',
+        cls: 'btn-ghost',
+        fn: \`openOrganizerEventCancellationModal('\${eventId}', '\${requestId}')\`,
+      },
+      {
+        lbl: 'Confirm Event Cancellation',
+        cls: 'btn-danger',
+        fn: \`submitOrganizerEventCancellation('\${eventId}', '\${requestId}')\`,
+      },
+    ]
+  );
+}
+async function submitOrganizerEventCancellation(eventId, requestId) {
+  const p = _pendingOrganizerCancel || {};
+  const reason = p.reason || (v('org-cancel-reason') || '').trim();
+  const explanation = p.explanation || (v('org-cancel-explanation') || '').trim();
+  if (!reason || reason.length < 10) {
+    toast('A detailed cancellation reason (at least 10 characters) is required.', 'error');
+    return;
+  }
+  let cancellationSaved = false;
+  try {
+    const r = DB.eventRequests
+      ? DB.eventRequests.find(
+          request =>
+            (requestId &&
+              (String(request.id) === String(requestId) ||
+                String(request.requestId) === String(requestId))) ||
+            (eventId && String(request.eventId) === String(eventId))
+        )
+      : null;
+    const ev =
+      (DB.events &&
+        DB.events.find(
+          event =>
+            (eventId &&
+              (String(event.id) === String(eventId) ||
+                String(event.eventId) === String(eventId))) ||
+            (r?.eventId &&
+              (String(event.id) === String(r.eventId) ||
+                String(event.eventId) === String(r.eventId)))
+        )) ||
+      null;
+    const actEventId = eventId || r?.eventId || ev?.id || ev?.eventId || '';
+
+    // Validate organizer ownership
+    const isOwner =
+      CU.role === 'superuser' ||
+      (r &&
+        (String(r.organizer) === String(CU.id) ||
+          String(r.organizerId) === String(CU.id) ||
+          String(r.organizerUserId) === String(CU.id))) ||
+      (ev &&
+        (String(ev.organizer) === String(CU.id) ||
+          String(ev.organizerUserId) === String(CU.id) ||
+          String(ev.organizerId) === String(CU.id) ||
+          String(ev.organizerId) === String(CU.organizerId) ||
+          String(ev.organizer) === String(CU.userId)));
+    if (!isOwner) {
+      toast('Unauthorized: You are not authorized to cancel this event.', 'error');
+      return;
+    }
+
+    // Validate status
+    const currentStatus = String(ev?.backendStatus || ev?.status || r?.status || '').toLowerCase();
+    if (
+      ['cancelled', 'withdrawn', 'rejected', 'expired'].includes(currentStatus) ||
+      ev?.cancellation ||
+      r?.cancellation
+    ) {
+      toast('This event has already been cancelled.', 'error');
+      return;
+    }
+    if (currentStatus === 'completed') {
+      toast('Completed events cannot be cancelled.', 'error');
+      return;
+    }
+    let cancellationResponse;
+    if (actEventId) {
+      cancellationResponse = await apiCancelOrganizerEvent(actEventId, reason);
+    } else if (r && typeof apiRequest === 'function') {
+      cancellationResponse = await apiRequest(
+        \`/event-requests/\${encodeURIComponent(r.requestId || r.id)}/cancel\`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            reason,
+            explanation: explanation || 'Organizer cancellation',
+            expectedPaidAmount: p.paidAmount,
+          }),
+        }
+      );
+    } else {
+      throw new Error('The persisted event record could not be identified.');
+    }
+    const responseEvent =
+      cancellationResponse?.data?.event ||
+      cancellationResponse?.event ||
+      cancellationResponse?.data ||
+      cancellationResponse;
+    const responseRequest = cancellationResponse?.data?.request || cancellationResponse?.request;
+    if ((responseEvent?.status || responseRequest?.status) !== 'cancelled') {
+      throw new Error('The backend did not confirm the event cancellation.');
+    }
+    cancellationSaved = true;
+    if (ev && responseEvent?.eventId)
+      Object.assign(ev, responseEvent, {
+        id: responseEvent.eventId || ev.id,
+        title: responseEvent.name || responseEvent.title || ev.title,
+        backendStatus: responseEvent.status,
+      });
+    closeModal();
+    if (window.EventFlowData?.invalidate) window.EventFlowData.invalidate();
+    if (window.EventFlowData?.sync) await window.EventFlowData.sync();
+    else if (typeof syncWorkflowData === 'function') await syncWorkflowData();
+    else {
+      const eventsResponse = await apiGetEvents();
+      const events = Array.isArray(eventsResponse) ? eventsResponse : eventsResponse?.data;
+      if (!Array.isArray(events)) throw new Error('The backend returned an invalid event list.');
+      DB.events = events.map(event => ({
+        ...event,
+        id: event.eventId,
+        title: event.name || event.title,
+        price: event.ticketPrice,
+        venue: event.location || event.venue,
+        backendStatus: event.status,
+      }));
+    }
+    if (actEventId) {
+      const refreshedEvent = (DB.events || []).find(
+        event => String(event.eventId || event.id) === String(actEventId)
+      );
+      if (!isCancelledWorkflowEvent(refreshedEvent)) {
+        throw new Error(
+          'The event was cancelled, but the refreshed event data does not show the persisted cancellation.'
+        );
+      }
+    } else {
+      const refreshedRequest = (DB.eventRequests || []).find(
+        request =>
+          String(request.id || request.requestId) === String(requestId) ||
+          String(request.requestId || request.id) === String(requestId)
+      );
+      if (
+        String(refreshedRequest?.status || '').toLowerCase() !== 'cancelled' &&
+        !refreshedRequest?.cancellation
+      ) {
+        throw new Error(
+          'The request was cancelled, but the refreshed request data does not show the persisted cancellation.'
+        );
+      }
+    }
+    if (typeof renderPage === 'function')
+      await renderPage(_currentPage || (requestId ? 'event-requests' : 'events'));
+    toast('Event cancellation was saved and refreshed from the backend.', 'success');
+  } catch (err) {
+    if (cancellationSaved && typeof renderPage === 'function') {
+      try {
+        await renderPage(_currentPage || (requestId ? 'event-requests' : 'events'));
+      } catch (renderError) {
+        toast(
+          \`Cancellation was saved, but the page could not be refreshed: \${
+            renderError.message || err.message
+          }\`,
+          'error'
+        );
+        return;
+      }
+      toast(
+        \`Cancellation was saved, but event data could not be refreshed: \${err.message}\`,
+        'error'
+      );
+      return;
+    }
+    toast(err.message || 'Cancellation failed.', 'error');
+  }
+}
+function openRejectModal(id) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  openModal(
+    'Reject Event Request',
+    \`
+        <div style="font-size:13px;color:var(--text2);margin-bottom:14px">
+          Declining request for <strong>\${escapeHtml(
+            r?.title || r?.eventName || 'Event Request'
+          )}</strong>. Please provide a mandatory reason for the client.
+        </div>
+        <div class="form-group mb-16">
+          <label class="form-label" style="font-weight:700">Reason for Declining (Mandatory) *</label>
+          <textarea class="form-control" id="reject-reason-txt" rows="3" placeholder="Explain why this request is declined (e.g. Schedule unavailable, capacity constraints, budget misalignment)..." required></textarea>
+          <div id="reject-err" style="color:var(--red);font-size:12px;display:none;margin-top:6px">Please provide a valid rejection reason.</div>
+        </div>
+        <div class="form-group mb-16">
+          <label class="form-label" style="font-weight:700">Additional Comments (Optional)</label>
+          <textarea class="form-control" id="reject-comments-txt" rows="2" placeholder="Any additional notes, alternative suggestions, or context for the client..."></textarea>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Cancel',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: 'Confirm Decline',
+        cls: 'btn-danger',
+        fn: \`submitRejectReq('\${id}')\`,
+      },
+    ]
+  );
+}
+window.openRejectRequestModal = openRejectModal;
+window.handleOrganizerDeleteEvent = handleOrganizerDeleteEvent;
+window.deleteEvent = deleteEvent;
+window.deleteEventOps = deleteEventOps;
+window.confirmDeleteDraftEvent = confirmDeleteDraftEvent;
+window.onOrgCancelReasonSelectChange = onOrgCancelReasonSelectChange;
+window.openOrganizerEventCancellationModal = openOrganizerEventCancellationModal;
+window.proceedOrganizerCancelToFinalConfirmation = proceedOrganizerCancelToFinalConfirmation;
+window.submitOrganizerEventCancellation = submitOrganizerEventCancellation;
+async function submitRejectReq(id) {
+  const reason = (v('reject-reason-txt') || '').trim();
+  const comments = (v('reject-comments-txt') || '').trim();
+  if (!reason) {
+    const el = g('reject-err');
+    if (el) {
+      el.textContent = 'Please provide a valid rejection reason.';
+      el.style.display = 'block';
+    }
+    return;
+  }
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (!r) return;
+  normalizeEventRequest(r);
+  const submitBtn = g('modal-foot')?.querySelector('.btn-danger');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Declining...';
+  }
+  try {
+    await apiRejectEventRequest(id, {
+      reason,
+      comments,
+      reasonType: 'permanent',
+    });
+  } catch (err) {
+    console.warn('Backend reject call notification:', err?.message || err);
+  }
+  r.status = 'rejected';
+  r.rejectionReason = reason;
+  if (comments) r.rejectionComments = comments;
+  if (r.proposals && r.proposals.length > 0) {
+    r.proposals.forEach(proposal => {
+      if (proposal.status === 'pending_client') proposal.status = 'rejected';
+    });
+  }
+  r.auditHistory = r.auditHistory || [];
+  r.auditHistory.push({
+    id: 'aud-' + Date.now(),
+    action: 'Request Declined by Organizer',
+    performedBy: CU.name || 'Organizer',
+    role: 'organizer',
+    timestamp: today(),
+    details: {
+      reason,
+      comments,
+    },
+  });
+  saveDB();
+  closeModal();
+  if (typeof syncWorkflowData === 'function') await syncWorkflowData();
+  toast('Request declined with reason recorded', 'info');
+  viewRequestDetail(id);
+  if (typeof renderPage === 'function' && _currentPage === 'event-requests') {
+    renderPage('event-requests');
+  }
+}
+window.submitRejectRequest = submitRejectReq;
+// Legacy wrappers
+function approveReq(id) {
+  viewRequestDrawer(id);
+}
+function rejectReq(id) {
+  openRejectModal(id);
+}
+
+// ════════════════════════════════════════════════
+//  UNIFIED REQUEST STATUS (CLIENT & ORGANIZER)
+// ════════════════════════════════════════════════
+function pageRequestStatus() {
+  const isOrganizer = CU.role === 'organizer';
+  if (isOrganizer) {
+    const tab = sessionStorage.getItem('reqstat_tab') || 'pending';
+    const myOrgId = CU.id;
+    const pendingReqs = DB.eventRequests.filter(request =>
+      [
+        'submitted',
+        'pending',
+        'under_review',
+        'in_review',
+        'info_requested',
+        'proposal_sent',
+        'awaiting_client',
+        'changes_requested',
+        'counteroffer_received',
+        'planning',
+        'plan_submitted',
+        'plan_revision_requested',
+      ].includes(request.status)
+    );
+    const myEvents = DB.events.filter(
+      event =>
+        event.organizer === myOrgId &&
+        (event.status === 'upcoming' || event.status === 'ongoing' || event.status === 'confirmed')
+    );
+    const pendingHtml =
+      pendingReqs.length === 0
+        ? '<div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-title">No pending requests</div><p class="empty-desc">New client event requests will appear here.</p></div>'
+        : pendingReqs
+            .map(request => {
+              const cl = DB.users.find(user => String(user.id) === String(request.clientId)) ||
+                DB.users.find(user => user.role === 'client') || {
+                  name: 'Michael Torres',
+                };
+              return \`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;border-left:4px solid var(--yellow)">
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <div style="font-size:17px;font-weight:700;color:var(--text)">\${request.title}</div>
+              <span style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px">Pending</span>
+            </div>
+            <div style="display:flex;gap:24px;font-size:13px;color:var(--text2);flex-wrap:wrap">
+              <span>👤 \${cl.name}</span>
+              <span>📅 \${request.date}</span>
+              <span>📍 \${request.venue || 'TBD'}\${request.city ? ', ' + request.city : ''}</span>
+              <span>👥 \${request.guests} expected attendees</span>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="viewRequestDetail('\${
+            request.id
+          }')" style="white-space:nowrap;border-radius:8px;padding:10px 20px">Review Request</button>
+        </div>\`;
+            })
+            .join('');
+    const ongoingHtml =
+      myEvents.length === 0
+        ? '<div class="empty"><div class="empty-icon">&#128197;</div><div class="empty-title">No ongoing events</div><p class="empty-desc">Confirmed events will appear here once requests are approved.</p></div>'
+        : \`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">\${myEvents
+            .map(event => {
+              const attendees = DB.registrations.filter(
+                registration => registration.eventId === event.id
+              ).length;
+              const isPrivate = event.access === 'private' || event.access === 'Private';
+              return \`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span style="background:rgba(34,197,94,0.15);color:var(--green);font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px">Confirmed</span>
+              \${
+                isPrivate
+                  ? '<span style="background:var(--surface2);color:var(--text2);font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px">Private</span>'
+                  : ''
+              }
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px">\${
+                event.title
+              }</div>
+              <div style="font-size:12px;color:var(--text3)">\${
+                event.type || event.category || 'Event'
+              }</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text2)">
+              <span>&#128197; \${event.date}</span>
+              <span>&#128205; \${event.venue || event.location || 'TBD'}</span>
+              <span>&#128101; \${attendees || event.capacity || 0} attendees</span>
+            </div>
+            <button class="btn btn-ghost" onclick="viewOngoingEventDetail('\${
+              event.id
+            }')" style="width:100%;justify-content:center;border-radius:8px;font-size:13px">&#128065; View Details</button>
+          </div>\`;
+            })
+            .join('')}</div>\`;
+    return \`<div style="padding:28px;background:var(--bg)">
+      <div style="margin-bottom:28px">
+        <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px">\${
+          tab === 'pending' ? 'Pending Requests' : 'Ongoing Events'
+        }</div>
+        <div style="font-size:14px;color:var(--text2)">\${
+          tab === 'pending'
+            ? 'Review and accept or decline incoming event requests.'
+            : 'Manage and track your confirmed and active events.'
+        }</div>
+      </div>
+      <div style="display:flex;gap:0;margin-bottom:28px;background:var(--surface2);border-radius:10px;padding:4px;width:fit-content">
+        <button onclick="switchReqStatTab('pending')" style="padding:8px 20px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;background:\${
+          tab === 'pending' ? 'var(--accent)' : 'transparent'
+        };color:\${
+      tab === 'pending' ? '#fff' : 'var(--text2)'
+    }">Pending Requests <span style="background:\${
+      tab === 'pending' ? 'rgba(255,255,255,0.25)' : 'var(--border2)'
+    };color:\${
+      tab === 'pending' ? '#fff' : 'var(--text2)'
+    };padding:1px 7px;border-radius:10px;font-size:11px;margin-left:4px">\${
+      pendingReqs.length
+    }</span></button>
+        <button onclick="switchReqStatTab('ongoing')" style="padding:8px 20px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;background:\${
+          tab === 'ongoing' ? 'var(--accent)' : 'transparent'
+        };color:\${
+      tab === 'ongoing' ? '#fff' : 'var(--text2)'
+    }">Ongoing Events <span style="background:\${
+      tab === 'ongoing' ? 'rgba(255,255,255,0.25)' : 'var(--border2)'
+    };color:\${
+      tab === 'ongoing' ? '#fff' : 'var(--text2)'
+    };padding:1px 7px;border-radius:10px;font-size:11px;margin-left:4px">\${
+      myEvents.length
+    }</span></button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        \${tab === 'pending' ? pendingHtml : ongoingHtml}
+      </div>
+    </div>\`;
+  } else {
+    const reqs = DB.eventRequests.filter(request => String(request.clientId) === String(CU.id));
+    return \`
+    <div class="page-hd">
+      <div class="page-hd-left"><div class="page-title">Request Status</div><div class="page-sub">\${
+        reqs.length
+      } event requests</div></div>
+      <div class="page-hd-right"><button class="btn btn-primary" onclick="goNav('find-organizers')">+ New Request</button></div>
+    </div>
+    \${
+      reqs.length === 0
+        ? \`<div class="empty"><div class="empty-icon">&#128203;</div><div class="empty-title">No requests yet</div><p class="empty-desc">Browse organizers and send them an event request to get started.</p></div>\`
+        : \`
+    <div style="display:flex;flex-direction:column;gap:14px">\${reqs
+      .map(
+        request => \`<div class="card">
+      <div class="flex justify-between items-start">
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:700;margin-bottom:5px">\${request.title}</div>
+          <div class="small mb-8">\${request.type} &middot; \${request.guests} guests &middot; \${
+          request.date
+        }</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px">\${
+            request.desc
+          }</p>
+          <span class="badge badge-\${reqBadge(request.status)}">\${
+          request.status === 'approved' ? 'Accepted' : request.status
+        }</span>
+        </div>
+        <div style="text-align:right;flex-shrink:0;margin-left:20px">
+          <div style="font-size:22px;font-weight:800;color:var(--green)">&#8377;\${request.budget.toLocaleString()}</div>
+          <div class="small">Budget</div>
+        </div>
+      </div>
+      <div class="flex gap-8 mt-14">
+        <button class="btn btn-ghost btn-sm" onclick="viewRequestDetail('\${
+          request.id
+        }')">View Details</button>
+        \${
+          request.status === 'pending'
+            ? \`<button class="btn btn-danger btn-sm" onclick="cancelReq('\${request.id}')">Cancel</button>\`
+            : ''
+        }
+      </div>
+    </div>\`
+      )
+      .join('')}</div>\`
+    }\`;
+  }
+}
+function switchReqStatTab(tab) {
+  sessionStorage.setItem('reqstat_tab', tab);
+  renderPage('request-status');
+}
+function viewRequestDetail(reqId) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(reqId));
+  if (!r) return;
+  normalizeEventRequest(r);
+  const returnPage = ['event-requests', 'request-status', 'dashboard'].includes(_currentPage)
+    ? _currentPage
+    : 'event-requests';
+  const cl = DB.users.find(user => String(user.id) === String(r.clientId)) ||
+    DB.users.find(user => user.role === 'client') || {
+      name: 'Michael Torres',
+      email: 'client@example.com',
+      phone: '+91 9876543203',
+    };
+  const element = document.getElementById('page-content');
+  if (!element) return;
+  const isTerminal = ['rejected', 'withdrawn', 'cancelled', 'completed'].includes(r.status);
+  const isProgressed = ['confirmed', 'approved'].includes(r.status);
+  const isAwaitingClient = r.status === 'proposal_sent' || r.status === 'awaiting_client';
+  const isAssigned =
+    !r.organizerId ||
+    !r.organizer ||
+    String(r.organizerId) === String(CU.id) ||
+    String(r.organizer) === String(CU.id) ||
+    String(r.organizerId) === String(CU.organizerId) ||
+    CU.role === 'superuser' ||
+    CU.role === 'admin';
+  const canManage =
+    isAssigned && (CU.role === 'organizer' || CU.role === 'superuser' || CU.role === 'admin');
+  const canDecide = canManage && !isTerminal && !isProgressed && !isAwaitingClient;
+
+  // Status badges
+  const statusMap = {
+    submitted: {
+      label: 'Submitted',
+      bg: '#FEF9C3',
+      color: '#92400E',
+      desc: 'Request submitted by client. Review details below and accept to create a proposal or decline.',
+    },
+    pending: {
+      label: 'Pending Review',
+      bg: '#FEF9C3',
+      color: '#92400E',
+      desc: 'Pending organizer review. Review details below and accept to create a proposal or decline.',
+    },
+    under_review: {
+      label: 'Under Review',
+      bg: '#FEF9C3',
+      color: '#92400E',
+      desc: 'Request under review. Create a detailed proposal or decline.',
+    },
+    planning: {
+      label: 'In Planning',
+      bg: '#E0E7FF',
+      color: '#3730A3',
+      desc: 'Request accepted. Prepare and submit your detailed proposal.',
+    },
+    proposal_sent: {
+      label: 'Proposal Sent',
+      bg: '#E0E7FF',
+      color: '#3730A3',
+      desc: 'Proposal sent to client. Awaiting client review and response.',
+    },
+    awaiting_client: {
+      label: 'Awaiting Client Review',
+      bg: '#E0E7FF',
+      color: '#3730A3',
+      desc: 'Proposal sent to client. Awaiting client decision.',
+    },
+    changes_requested: {
+      label: 'Revision Requested',
+      bg: '#FFEDD5',
+      color: '#9A3412',
+      desc: 'Client requested changes. Send an updated proposal or decline.',
+    },
+    plan_revision_requested: {
+      label: 'Revision Requested',
+      bg: '#FFEDD5',
+      color: '#9A3412',
+      desc: 'Client requested modifications. Send a revised proposal.',
+    },
+    accepted: {
+      label: 'Proposal Accepted',
+      bg: '#DCFCE7',
+      color: '#166534',
+      desc: 'Client accepted proposal. Deposit payment and booking confirmation pending.',
+    },
+    confirmed: {
+      label: 'Booking Confirmed',
+      bg: '#DCFCE7',
+      color: '#166534',
+      desc: 'Booking confirmed and agreement in effect.',
+    },
+    approved: {
+      label: 'Approved',
+      bg: '#DCFCE7',
+      color: '#166534',
+      desc: 'Event approved and confirmed.',
+    },
+    rejected: {
+      label: 'Rejected',
+      bg: '#FEE2E2',
+      color: '#991B1B',
+      desc: 'This event request was declined.',
+    },
+    cancelled: {
+      label: 'Cancelled',
+      bg: '#FEE2E2',
+      color: '#991B1B',
+      desc: 'This booking has been cancelled.',
+    },
+    withdrawn: {
+      label: 'Withdrawn',
+      bg: '#F3F4F6',
+      color: '#374151',
+      desc: 'Client withdrew this event request.',
+    },
+    completed: {
+      label: 'Completed',
+      bg: '#DCFCE7',
+      color: '#166534',
+      desc: 'Event completed successfully.',
+    },
+  };
+  const st = statusMap[r.status] || {
+    label: (r.status || 'Submitted').toUpperCase(),
+    bg: '#FEF9C3',
+    color: '#92400E',
+    desc: 'Review request details.',
+  };
+
+  // Latest proposal if any
+  const activeProposal =
+    r.proposals && r.proposals.length > 0 ? r.proposals[r.proposals.length - 1] : null;
+  globalThis.window?.EventFlowOrganizerPages?.clear(element);
+  element.innerHTML = \`<div style="padding:28px;background:var(--bg);min-height:100vh">
+    <button onclick="goNav('\${returnPage}')" style="display:inline-flex;align-items:center;gap:6px;border:none;background:none;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:24px;padding:0">&larr; Back to \${
+    returnPage === 'event-requests'
+      ? 'Event Requests'
+      : returnPage === 'dashboard'
+      ? 'Dashboard'
+      : 'Requests'
+  }</button>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap">
+      <div style="font-size:22px;font-weight:700;color:var(--text)">\${escapeHtml(
+        r.title || r.eventName || 'Event Request'
+      )}</div>
+      <span style="background:\${st.bg};color:\${
+    st.color
+  };font-size:12px;font-weight:700;padding:3px 12px;border-radius:6px;letter-spacing:0.02em">\${
+    st.label
+  }</span>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:28px">\${st.desc}</div>
+    <div style="display:flex;flex-direction:column;gap:20px;max-width:760px">
+
+      <!-- CLIENT INFORMATION -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+        <div style="font-weight:700;font-size:15px;margin-bottom:18px">&#128100; Client Information</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">CLIENT NAME</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text)">\${escapeHtml(
+              cl.name || 'Client'
+            )}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">CONTACT</div>
+            <div style="font-size:13px;color:var(--text2)">\${escapeHtml(cl.email || '—')}</div>
+            <div style="font-size:13px;color:var(--text2)">\${escapeHtml(cl.phone || '')}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EVENT DETAILS -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+        <div style="font-weight:700;font-size:15px;margin-bottom:18px">&#128197; Event Details</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">DATE</div>
+            <div style="font-size:14px;font-weight:500;color:var(--text)">\${escapeHtml(
+              r.date || r.eventDate || '—'
+            )}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">EVENT TYPE</div>
+            <div style="font-size:14px;font-weight:500;color:var(--text)">\${escapeHtml(
+              r.type || r.eventType || 'Corporate Event'
+            )}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">VENUE</div>
+            <div style="font-size:14px;font-weight:500;color:var(--text)">\${escapeHtml(
+              r.venue || 'To be decided'
+            )}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">EXPECTED ATTENDEES</div>
+            <div style="font-size:14px;font-weight:500;color:var(--text)">\${
+              r.guests || r.capacity || 0
+            }</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">CITY</div>
+            <div style="font-size:14px;font-weight:500;color:var(--text)">\${escapeHtml(
+              r.city || '—'
+            )}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">BUDGET</div>
+            <div style="font-size:14px;font-weight:600;color:var(--green)">&#8377;\${
+              r.budget ? Number(r.budget).toLocaleString() : '—'
+            }</div>
+          </div>
+          <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">TICKET PRICE PER ATTENDEE</div><div style="font-size:14px;font-weight:600">\${
+            Number(r.ticketPrice || 0) === 0
+              ? 'Free'
+              : '&#8377;' + Number(r.ticketPrice).toLocaleString('en-IN')
+          }</div></div>
+        </div>
+      </div>
+
+      <!-- EVENT REQUIREMENTS -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+        <div style="font-weight:700;font-size:15px;margin-bottom:6px">&#128203; Event Requirements</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Services and setup requested by the client</div>
+        <div style="background:var(--surface2);border-radius:10px;padding:16px;font-size:13px;color:var(--text);line-height:1.7">\${escapeHtml(
+          r.desc || r.requirements || 'Standard event requirements. No special requests.'
+        )}</div>
+      </div>
+
+      <!-- AGREEMENT & PAYMENT STATUS -->
+      \${
+        isProgressed || r.agreementStatus || r.paymentStatus
+          ? \`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+        <div style="font-weight:700;font-size:15px;margin-bottom:16px">📄 Agreement &amp; Payment Status</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          <div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">AGREEMENT STATUS</div>
+            <div><span class="badge badge-\${agreementBadgeInfo(r.agreementStatus).cls}">\${
+              agreementBadgeInfo(r.agreementStatus).lbl
+            }</span></div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">PAYMENT STATUS</div>
+            <div><span class="badge badge-\${paymentBadgeInfo(r.paymentStatus).cls}">\${
+              paymentBadgeInfo(r.paymentStatus).lbl
+            }</span></div>
+          </div>
+        </div>
+      </div>\`
+          : ''
+      }
+
+      <!-- PROPOSAL DETAILS (IF SENT) -->
+      \${
+        activeProposal
+          ? \`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+          <div style="font-weight:700;font-size:15px">&#128221; Proposal Details (v\${
+            activeProposal.version || 1
+          })</div>
+          <span class="badge badge-purple" style="font-size:11px">\${
+            activeProposal.status || 'Active'
+          }</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">TOTAL PROPOSED PRICE</div><strong style="color:var(--green);font-size:16px">&#8377;\${(
+            activeProposal.amount || 0
+          ).toLocaleString()}</strong></div>
+          <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">REQUIRED ADVANCE DEPOSIT</div><strong style="color:var(--accent);font-size:16px">&#8377;\${(
+            activeProposal.depositRequired || 0
+          ).toLocaleString()}</strong></div>
+          <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">ORGANIZER FEE</div><div>&#8377;\${(
+            activeProposal.organizerFee || 0
+          ).toLocaleString()}</div></div>
+          <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">TAXES &amp; GST</div><div>&#8377;\${(
+            activeProposal.taxes || 0
+          ).toLocaleString()}</div></div>
+        </div>
+        \${
+          activeProposal.eventPlan
+            ? \`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Event Plan &amp; Deliverables</div><div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;color:var(--text);line-height:1.6">\${escapeHtml(
+                activeProposal.eventPlan
+              )}</div></div>\`
+            : ''
+        }
+        \${
+          activeProposal.timeline
+            ? \`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Execution Timeline</div><div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;color:var(--text);line-height:1.6">\${escapeHtml(
+                activeProposal.timeline
+              )}</div></div>\`
+            : ''
+        }
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12.5px;color:var(--text2);margin-top:10px">
+          <div><strong>Payment Terms:</strong> \${escapeHtml(
+            activeProposal.paymentSchedule || 'Standard'
+          )}</div>
+          <div><strong>Cancellation Policy:</strong> \${escapeHtml(
+            activeProposal.cancellationTerms || 'Standard (14+ days notice)'
+          )}</div>
+          <div><strong>Validity:</strong> Until \${escapeHtml(
+            activeProposal.validUntil || '—'
+          )}</div>
+          <div><strong>Capacity:</strong> \${
+            activeProposal.attendeeCapacity || r.guests || 50
+          } attendees</div>
+        </div>
+      </div>\`
+          : ''
+      }
+
+      <!-- REJECTION DETAILS (IF REJECTED) -->
+      \${
+        r.status === 'rejected' && r.rejectionReason
+          ? \`
+      <div style="background:var(--surface);border:1px solid rgba(239,68,68,0.3);border-radius:14px;padding:24px">
+        <div style="display:flex;align-items:center;gap:8px;color:var(--red);font-weight:700;font-size:15px;margin-bottom:14px">&#10005; Request Declined</div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:4px">REASON FOR DECLINING</div>
+          <div style="background:var(--red-dim);border-radius:8px;padding:12px;font-size:13px;color:var(--text);line-height:1.6">\${escapeHtml(
+            r.rejectionReason
+          )}</div>
+        </div>
+        \${
+          r.rejectionComments
+            ? \`
+        <div>
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-bottom:4px">ADDITIONAL COMMENTS</div>
+          <div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;color:var(--text2);line-height:1.6">\${escapeHtml(
+            r.rejectionComments
+          )}</div>
+        </div>\`
+            : ''
+        }
+      </div>\`
+          : ''
+      }
+
+      <!-- STATUS NOTICE IF ACTION ALREADY TAKEN OR UNAUTHORIZED -->
+      \${
+        isAwaitingClient
+          ? \`
+      <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.25);border-radius:10px;padding:14px;font-size:13px;color:var(--text2)">
+        <strong>Proposal Awaiting Client:</strong> A proposal has already been created and sent. The client is currently reviewing the proposal. You will be notified once they respond.
+      </div>\`
+          : ''
+      }
+      \${
+        !canManage
+          ? \`
+      <div style="background:rgba(156,163,175,0.1);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;color:var(--text2)">
+        <strong>Notice:</strong> Only the assigned organizer can accept or decline this request.
+      </div>\`
+          : ''
+      }
+
+      <!-- ORGANIZER ACTIONS AT BOTTOM -->
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;padding-top:16px;border-top:1px solid var(--border);margin-top:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="goNav('\${returnPage}')" style="border-radius:8px;padding:10px 22px">Back to Requests</button>
+        \${
+          ['submitted', 'pending'].includes(r.status) && canManage
+            ? \`
+          <button class="btn btn-outline" onclick="startOrganizerReview('\${
+            r.id
+          }')" style="border-radius:8px;padding:10px 20px;font-weight:600">Start Review</button>
+          <button class="btn btn-outline" onclick="openOrganizerRequestInfoModal('\${
+            r.id
+          }')" style="border-radius:8px;padding:10px 20px;font-weight:600">Request Information</button>
+          <button class="btn btn-danger" onclick="openRejectModal('\${
+            r.id
+          }')" style="border-radius:8px;padding:10px 22px">Reject Request</button>
+          <button class="btn btn-primary" onclick="openSendProposalModal('\${r.id}', \${Boolean(
+                r.proposals && r.proposals.length > 0
+              )})" style="border-radius:8px;padding:10px 24px;font-weight:700">Accept &amp; Create Proposal</button>
+        \`
+            : ''
+        }
+        \${
+          ['under_review', 'in_review', 'info_requested'].includes(r.status) && canManage
+            ? \`
+          <button class="btn btn-outline" onclick="openOrganizerRequestInfoModal('\${
+            r.id
+          }')" style="border-radius:8px;padding:10px 20px;font-weight:600">Request Information</button>
+          <button class="btn btn-danger" onclick="openRejectModal('\${
+            r.id
+          }')" style="border-radius:8px;padding:10px 22px">Reject Request</button>
+          <button class="btn btn-primary" onclick="openSendProposalModal('\${r.id}', \${Boolean(
+                r.proposals && r.proposals.length > 0
+              )})" style="border-radius:8px;padding:10px 24px;font-weight:700">Send Proposal</button>
+          <span style="display:none">Accept &amp; Create Proposal</span>
+        \`
+            : ''
+        }
+        \${
+          isAwaitingClient
+            ? \`
+          <button class="btn btn-primary" onclick="openOrganizerViewProposalModal('\${r.id}')" style="border-radius:8px;padding:10px 22px;font-weight:600">View Proposal</button>
+        \`
+            : ''
+        }
+        \${
+          ['changes_requested', 'counteroffer_received', 'plan_revision_requested'].includes(
+            r.status
+          ) && canManage
+            ? \`
+          \${
+            r.status === 'counteroffer_received'
+              ? \`<button class="btn btn-success" onclick="acceptWorkflowCounteroffer('\${r.id}')" style="border-radius:8px;padding:10px 22px;font-weight:700">Accept Counteroffer</button>\`
+              : ''
+          }
+          <button class="btn btn-outline" onclick="openOrganizerReviewChangesModal('\${
+            r.id
+          }')" style="border-radius:8px;padding:10px 20px;font-weight:600">Review Changes</button>
+          <button class="btn btn-danger" onclick="openRejectModal('\${
+            r.id
+          }')" style="border-radius:8px;padding:10px 22px">Reject Request</button>
+          <button class="btn btn-primary" onclick="openSendProposalModal('\${
+            r.id
+          }', true)" style="border-radius:8px;padding:10px 24px;font-weight:700">Send Revised Proposal</button>
+        \`
+            : ''
+        }
+        \${
+          isProgressed && canManage
+            ? \`
+          <button class="btn btn-outline" onclick="goNav('my-events')" style="border-radius:8px;padding:10px 20px;font-weight:600">Manage Event</button>
+          <button class="btn btn-danger" onclick="openOrganizerEventCancellationModal('\${
+            r.eventId || ''
+          }', '\${r.id}')" style="border-radius:8px;padding:10px 22px">Cancel Booking</button>
+        \`
+            : ''
+        }
+        \${
+          isTerminal
+            ? \`
+          <button class="btn btn-outline" onclick="openOrganizerRequestHistoryModal('\${r.id}')" style="border-radius:8px;padding:10px 20px;font-weight:600">View History</button>
+        \`
+            : ''
+        }
+      </div>
+    </div>
+  </div>\`;
+}
+function viewOngoingEventDetail(eventId) {
+  if (window.EventFlowAccountPolicy.isSupportExecutiveAccount(CU))
+    return openViewEventDrawer(eventId);
+  const event = DB.events.find(currentEvent => String(currentEvent.id) === String(eventId));
+  if (!event) return;
+  const attendees = DB.registrations.filter(
+    registration => String(registration.eventId) === String(eventId)
+  );
+  const element = document.getElementById('page-content');
+  if (!element) return;
+  globalThis.window?.EventFlowOrganizerPages?.clear(element);
+  element.innerHTML = \`<div style="padding:28px;background:var(--bg)">
+    <button onclick="renderPage('request-status')" style="display:flex;align-items:center;gap:6px;border:none;background:none;color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:20px;padding:0">â† Back to Ongoing Events</button>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <div style="font-size:22px;font-weight:700;color:var(--text)">\${event.title}</div>
+      <span style="background:rgba(34,197,94,0.15);color:var(--green);font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px">Confirmed</span>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:28px">\${
+      event.description || 'Active event under management.'
+    }</div>
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+          <div style="font-weight:700;font-size:15px;margin-bottom:18px">ðŸ“… Event Details</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">DATE</div><div style="font-size:14px;font-weight:500">\${
+              event.date
+            }</div></div>
+            <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">TYPE</div><div style="font-size:14px;font-weight:500">\${
+              event.type || event.category || 'Event'
+            }</div></div>
+            <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">VENUE</div><div style="font-size:14px;font-weight:500">\${
+              event.venue || 'TBD'
+            }</div></div>
+            <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">ATTENDEES</div><div style="font-size:14px;font-weight:500">\${
+              attendees.length
+            }</div></div>
+          </div>
+        </div>
+
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px">
+          <div style="font-weight:700;font-size:14px;margin-bottom:16px">Timeline &amp; Milestones</div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            \${[
+              {
+                label: 'Event Accepted',
+                sub: 'Event approved',
+                done: true,
+              },
+              {
+                label: 'Approved by Client',
+                sub: 'Event plan approved',
+                done: true,
+              },
+              {
+                label: 'Event Day',
+                sub: event.date,
+                done: false,
+              },
+            ]
+              .map(
+                m => \`
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="width:18px;height:18px;border-radius:50%;border:2px solid \${
+                m.done ? 'var(--green)' : 'var(--border)'
+              };background:\${
+                  m.done ? 'rgba(34,197,94,0.1)' : 'transparent'
+                };display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
+                \${
+                  m.done
+                    ? '<div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>'
+                    : ''
+                }
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text)">\${m.label}</div>
+                <div style="font-size:11px;color:var(--text3)">\${m.sub}</div>
+              </div>
+            </div>\`
+              )
+              .join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>\`;
+}
+function openNewRequestForm() {
+  openDrawer(
+    'New Event Request',
+    \`
+    <div class="form-group"><label class="form-label">Event Title *</label><input class="form-control" id="nr-title" placeholder="e.g. Annual Client Dinner"></div>
+    <div class="grid-2"><div class="form-group"><label class="form-label">Event Type *</label><select class="form-control" id="nr-type"><option>Corporate</option><option>Conference</option><option>Wedding</option><option>Concert</option><option>Workshop</option><option>Other</option></select></div><div class="form-group"><label class="form-label">Preferred Date *</label><input class="form-control" id="nr-date" type="date"></div></div>
+    <div class="grid-2"><div class="form-group"><label class="form-label">Expected Guests *</label><input class="form-control" id="nr-guests" type="number" placeholder="100"></div><div class="form-group"><label class="form-label">Budget (₹) *</label><input class="form-control" id="nr-budget" type="number" placeholder="10000"></div></div>
+    <div class="form-group"><label class="form-label">Preferred Venue (optional)</label><input class="form-control" id="nr-venue" placeholder="Grand Ballroom, Downtown"></div>
+    <div class="form-group"><label class="form-label">Description & Requirements *</label><textarea class="form-control" id="nr-desc" style="min-height:100px" placeholder="Describe the event, theme, requirements…"></textarea></div>
+    <div class="flex gap-8 mt-20"><button class="btn btn-success w-full" onclick="submitRequest()">Submit Request</button><button class="btn btn-ghost w-full" onclick="closeDrawer()">Cancel</button></div>
+  \`
+  );
+}
+function cancelReq(id) {
+  confirm2('Cancel Request', 'Are you sure you want to cancel this event request?', () => {
+    const i = DB.eventRequests.findIndex(request => String(request.id) === String(id));
+    if (i > -1) {
+      DB.eventRequests.splice(i, 1);
+      renderPage('request-status');
+      toast('Request cancelled', 'info');
+    }
+  });
+}
+function submitRequest() {
+  const title = v('nr-title');
+  const date = v('nr-date');
+  const guests = v('nr-guests');
+  const budget = v('nr-budget');
+  const desc = v('nr-desc');
+  if (!title) {
+    toast('Event title is required', 'error');
+    return;
+  }
+  if (!date) {
+    toast('Preferred date is required', 'error');
+    return;
+  }
+  if (!guests || parseInt(guests) < 1) {
+    toast('Enter expected number of guests', 'error');
+    return;
+  }
+  if (!budget || parseInt(budget) < 1) {
+    toast('Enter your budget', 'error');
+    return;
+  }
+  if (!desc || desc.length < 10) {
+    toast('Please provide a detailed description', 'error');
+    return;
+  }
+  DB.eventRequests.push({
+    id: DB._nextId.reqs++,
+    clientId: CU.id,
+    title,
+    type: v('nr-type'),
+    date,
+    guests: parseInt(guests),
+    budget: parseInt(budget),
+    status: 'pending',
+    desc,
+    created: today(),
+    venue: v('nr-venue'),
+  });
+  toast('Event request submitted!', 'success');
+  closeDrawer();
+  renderPage('request-status');
+}
+function submitPlan(id) {
+  const r = DB.eventRequests.find(request => String(request.id) === String(id));
+  if (r) {
+    r.status = 'in_review';
+    r.organizer = CU.id;
+    renderPage('request-status');
+    toast('Plan submitted to client for review!', 'success');
+  }
+}
+
+// ════════════════════════════════════════════════
+//  REPORTS
+// ════════════════════════════════════════════════
+function operationalReportBadge(status) {
+  return (
+    {
+      Draft: 'yellow',
+      Submitted: 'purple',
+      Reviewed: 'green',
+    }[status] || 'gray'
+  );
+}
+function pageOperationalReports() {
+  const reports = DB.operationalReports || [];
+  return \`<div class="page-hd"><div class="page-hd-left"><div class="page-title">Reports</div><div class="page-sub">Submit support, finance, and combined operational reports to Super Admin.</div></div><div class="page-hd-right"><button class="btn btn-primary" onclick="openSubmitOperationalReportModal()">📤 Submit Report</button></div></div><div class="grid-3 mb-20">\${[
+    'Support Report',
+    'Finance Report',
+    'Combined Operational Report',
+  ]
+    .map(
+      type =>
+        \`<div class="stat-card"><div class="stat-icon">\${
+          type === 'Support Report' ? '📩' : type === 'Finance Report' ? '💳' : '📊'
+        }</div><div class="stat-value">\${
+          reports.filter(item => item.type === type).length
+        }</div><div class="stat-label">\${type}s</div></div>\`
+    )
+    .join(
+      ''
+    )}</div><div class="card"><div class="h4 mb-12">Operational Reports</div><div class="table-wrap"><table><thead><tr><th>Report</th><th>Type</th><th>Owner</th><th>Status</th><th>Updated</th><th>Action</th></tr></thead><tbody>\${reports
+    .map(
+      item =>
+        \`<tr><td><strong>\${item.title}</strong></td><td>\${item.type}</td><td>\${
+          item.owner
+        }</td><td><span class="badge badge-\${operationalReportBadge(item.status)}">\${
+          item.status
+        }</span></td><td>\${item.updated}</td><td>\${
+          item.status === 'Draft'
+            ? \`<button class="btn btn-primary btn-xs" onclick="submitOperationalReport('\${item.id}')">Submit</button>\`
+            : '<span class="small">Tracked</span>'
+        }</td></tr>\`
+    )
+    .join('')}</tbody></table></div></div>\`;
+}
+function openOperationalReportModal() {
+  openModal(
+    'Prepare Operational Report',
+    \`<div class="form-group"><label class="form-label">Report Type</label><select class="form-control" id="op-report-type"><option>Support Report</option><option>Finance Report</option><option>Combined Operational Report</option></select></div><div class="form-group"><label class="form-label">Report Title</label><input class="form-control" id="op-report-title" placeholder="e.g. September support review"></div>\`,
+    [
+      {
+        lbl: 'Save Draft',
+        cls: 'btn-primary',
+        fn: 'saveOperationalReport()',
+      },
+    ]
+  );
+}
+function saveOperationalReport() {
+  const title = v('op-report-title');
+  if (!title) {
+    toast('Enter a report title', 'error');
+    return;
+  }
+  DB.operationalReports.push({
+    id: \`OPR-\${Date.now()}\`,
+    type: v('op-report-type'),
+    title,
+    owner: CU.name,
+    status: 'Draft',
+    updated: 'Just now',
+  });
+  saveDB();
+  closeModal();
+  renderPage('reports');
+  toast('Report saved as draft', 'success');
+}
+function openSubmitOperationalReportModal() {
+  openModal(
+    'Submit Operational Report',
+    \`<div class="form-group"><label class="form-label">Report Type</label><select class="form-control" id="op-submit-type"><option>Support Report</option><option>Finance Report</option><option>Combined Operational Report</option></select></div><div class="form-group"><label class="form-label">Report Title</label><input class="form-control" id="op-submit-title" placeholder="e.g. September support review"></div>\`,
+    [
+      {
+        lbl: 'Submit Report',
+        cls: 'btn-primary',
+        fn: 'submitNewOperationalReport()',
+      },
+    ]
+  );
+}
+function submitNewOperationalReport() {
+  const title = v('op-submit-title');
+  if (!title) {
+    toast('Enter a report title', 'error');
+    return;
+  }
+  DB.operationalReports.push({
+    id: \`OPR-\${Date.now()}\`,
+    type: v('op-submit-type'),
+    title,
+    owner: CU.name,
+    status: 'Submitted',
+    updated: 'Just now',
+  });
+  saveDB();
+  closeModal();
+  renderPage('reports');
+  toast('Report submitted to Super Admin', 'success');
+}
+function submitOperationalReport(id) {
+  const report = DB.operationalReports.find(item => item.id === id);
+  if (!report) return;
+  report.status = 'Submitted';
+  report.updated = 'Just now';
+  saveDB();
+  renderPage('reports');
+  toast('Report submitted to Super Admin', 'success');
+}
+function eventOpsReportBadge(status) {
+  if (status === 'Submitted') return 'purple';
+  if (status === 'Pending Review' || status === 'Pending') return 'orange';
+  if (status === 'Reviewed') return 'green';
+  if (status === 'Draft') return 'yellow';
+  return 'gray';
+}
+function pageEventOpsReports() {
+  const reports = DB.eventOpsReports || [];
+  const searchQuery = (sessionStorage.getItem('eor_search') || '').toLowerCase();
+  const typeFilter = sessionStorage.getItem('eor_type') || '';
+  const statusFilter = sessionStorage.getItem('eor_status') || '';
+  const perfCount = reports.filter(report => report.type === 'Event Performance Report').length;
+  const opsCount = reports.filter(report => report.type === 'Event Operations Report').length;
+  const actCount = reports.filter(report => report.type === 'Event Activity Report').length;
+  const submittedCount = reports.filter(report => report.status === 'Submitted').length;
+  const pendingReviewCount = reports.filter(
+    report => report.status === 'Pending Review' || report.status === 'Pending'
+  ).length;
+  const reviewedCount = reports.filter(report => report.status === 'Reviewed').length;
+  const filtered = reports.filter(report => {
+    const titleStr = (report.title || '').toLowerCase();
+    const idStr = (report.id || '').toLowerCase();
+    const scopeStr = (report.scope || '').toLowerCase();
+    const matchesQuery =
+      !searchQuery ||
+      titleStr.includes(searchQuery) ||
+      idStr.includes(searchQuery) ||
+      scopeStr.includes(searchQuery);
+    const matchesType = !typeFilter || report.type === typeFilter;
+    const matchesStatus =
+      !statusFilter ||
+      report.status === statusFilter ||
+      (statusFilter === 'Pending Review' && report.status === 'Pending');
+    return matchesQuery && matchesType && matchesStatus;
+  });
+  return \`
+        <div class="page-hd">
+          <div class="page-hd-left">
+            <div class="page-title">Event Operations Reports</div>
+            <div class="page-sub">Submit, view, and track operational performance, logistics, and activity reports for Super Admin review.</div>
+          </div>
+          <div class="page-hd-right">
+            <button class="btn btn-primary" onclick="openCreateEventOpsReportModal()">📤 Submit Report</button>
+          </div>
+        </div>
+
+        <div class="grid-3 mb-20">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">📈</div>
+            <div class="stat-value" style="color:var(--accent)">\${perfCount}</div>
+            <div class="stat-label">Performance Reports</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--purple-dim);color:var(--purple)">⚙️</div>
+            <div class="stat-value" style="color:var(--purple)">\${opsCount}</div>
+            <div class="stat-label">Operations Reports</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:var(--blue-dim);color:var(--blue)">📄</div>
+            <div class="stat-value" style="color:var(--blue)">\${actCount}</div>
+            <div class="stat-label">Activity Reports</div>
+          </div>
+        </div>
+
+        <div class="grid-3 mb-20">
+          <div class="card" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;background:var(--surface2)">
+            <div>
+              <div class="small muted" style="font-weight:600">Submitted Reports</div>
+              <div style="font-size:20px;font-weight:800;color:var(--purple);margin-top:2px">\${submittedCount}</div>
+            </div>
+            <span class="badge badge-purple">Submitted</span>
+          </div>
+          <div class="card" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;background:var(--surface2)">
+            <div>
+              <div class="small muted" style="font-weight:600">Pending Review</div>
+              <div style="font-size:20px;font-weight:800;color:var(--orange);margin-top:2px">\${pendingReviewCount}</div>
+            </div>
+            <span class="badge badge-orange">In Review</span>
+          </div>
+          <div class="card" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;background:var(--surface2)">
+            <div>
+              <div class="small muted" style="font-weight:600">Reviewed Reports</div>
+              <div style="font-size:20px;font-weight:800;color:var(--green);margin-top:2px">\${reviewedCount}</div>
+            </div>
+            <span class="badge badge-green">Approved</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="filter-row mb-16" style="display:flex;gap:12px;flex-wrap:wrap">
+            <div class="search-box input-group" style="flex:1;min-width:240px">
+              <span class="input-icon">🔍</span>
+              <input class="form-control" id="eor-search" placeholder="Search reports by title, scope, or ID..." value="\${
+                sessionStorage.getItem('eor_search') || ''
+              }" oninput="refreshEorPage()">
+            </div>
+            <select class="form-control filter-select" id="eor-type-filter" onchange="refreshEorPage()" style="width:220px">
+              <option value="">All Report Types</option>
+              <option value="Event Performance Report" \${
+                typeFilter === 'Event Performance Report' ? 'selected' : ''
+              }>Event Performance Report</option>
+              <option value="Event Operations Report" \${
+                typeFilter === 'Event Operations Report' ? 'selected' : ''
+              }>Event Operations Report</option>
+              <option value="Event Activity Report" \${
+                typeFilter === 'Event Activity Report' ? 'selected' : ''
+              }>Event Activity Report</option>
+            </select>
+            <select class="form-control filter-select" id="eor-status-filter" onchange="refreshEorPage()" style="width:170px">
+              <option value="">All Statuses</option>
+              <option value="Draft" \${statusFilter === 'Draft' ? 'selected' : ''}>Draft</option>
+              <option value="Submitted" \${
+                statusFilter === 'Submitted' ? 'selected' : ''
+              }>Submitted</option>
+              <option value="Pending Review" \${
+                statusFilter === 'Pending Review' ? 'selected' : ''
+              }>Pending Review</option>
+              <option value="Reviewed" \${
+                statusFilter === 'Reviewed' ? 'selected' : ''
+              }>Reviewed</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Report</th>
+                  <th>Report Type</th>
+                  <th>Event / Scope</th>
+                  <th>Attached File</th>
+                  <th>Status</th>
+                  <th>Last Updated</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                \${
+                  filtered.length
+                    ? filtered
+                        .map(
+                          r => \`
+                  <tr>
+                    <td>
+                      <div style="font-weight:700;color:var(--text);font-size:13.5px">\${
+                        r.title
+                      }</div>
+                      <div class="small muted">ID: \${r.id} · Submitted By: \${
+                            r.owner || 'Elena Rostova'
+                          }</div>
+                    </td>
+                    <td>
+                      <span class="badge badge-\${
+                        r.type === 'Event Performance Report'
+                          ? 'purple'
+                          : r.type === 'Event Operations Report'
+                          ? 'blue'
+                          : 'orange'
+                      }">\${r.type}</span>
+                    </td>
+                    <td class="small" style="font-weight:600;color:var(--text2)">\${
+                      r.scope || '—'
+                    }</td>
+                    <td>
+                      \${
+                        r.fileName
+                          ? \`<span style="font-weight:600;color:var(--accent);font-size:12.5px">📄 \${r.fileName}</span>\`
+                          : \`<span class="small muted">No file attached</span>\`
+                      }
+                    </td>
+                    <td>
+                      <span class="badge badge-\${eventOpsReportBadge(r.status)}">\${r.status}</span>
+                    </td>
+                    <td class="small muted">\${r.updated}</td>
+                    <td>
+                      <div class="flex gap-6">
+                        <button class="btn btn-ghost btn-xs" onclick="viewEventOpsReportModal('\${
+                          r.id
+                        }')">View Details</button>
+                        \${
+                          r.status === 'Draft'
+                            ? \`<button class="btn btn-primary btn-xs" onclick="submitDraftEventOpsReport('\${r.id}')">📤 Submit</button>\`
+                            : ''
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                \`
+                        )
+                        .join('')
+                    : '<tr><td colspan="7" class="text-center py-20 muted">No operational reports found matching your criteria.</td></tr>'
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      \`;
+}
+function refreshEorPage() {
+  sessionStorage.setItem('eor_search', v('eor-search'));
+  sessionStorage.setItem('eor_type', v('eor-type-filter'));
+  sessionStorage.setItem('eor_status', v('eor-status-filter'));
+  renderPage('reports');
+}
+function submitDraftEventOpsReport(reportId) {
+  const r = (DB.eventOpsReports || []).find(item => item.id === reportId);
+  if (!r) return;
+  r.status = 'Submitted';
+  r.updated = 'Just now';
+  saveDB();
+  renderPage('reports');
+  toast('Report submitted to Super Admin for review!', 'success');
+}
+function viewEventOpsReportModal(reportId) {
+  const r = (DB.eventOpsReports || []).find(item => item.id === reportId);
+  if (!r) return;
+  openModal(
+    \`Report: \${r.title}\`,
+    \`
+        <div class="info-row"><span class="info-label">Report ID</span><span class="info-value mono">\${
+          r.id
+        }</span></div>
+        <div class="info-row"><span class="info-label">Report Type</span><span class="info-value"><span class="badge badge-purple">\${
+          r.type
+        }</span></span></div>
+        <div class="info-row"><span class="info-label">Event / Scope</span><span class="info-value"><strong>\${
+          r.scope || '—'
+        }</strong></span></div>
+        <div class="info-row"><span class="info-label">Reporting Period</span><span class="info-value">\${
+          r.period || '—'
+        }</span></div>
+        <div class="info-row"><span class="info-label">Submitted By</span><span class="info-value">\${
+          r.owner || 'Elena Rostova'
+        }</span></div>
+        <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="badge badge-\${eventOpsReportBadge(
+          r.status
+        )}">\${r.status}</span></span></div>
+        <div class="info-row"><span class="info-label">Last Updated</span><span class="info-value">\${
+          r.updated
+        }</span></div>
+        <div class="info-row"><span class="info-label">Attached File</span><span class="info-value" style="color:var(--accent);font-weight:700">\${
+          r.fileName ? '📄 ' + r.fileName : 'No file attached'
+        }</span></div>
+        <div class="mt-12" style="padding:12px;background:var(--surface2);border-radius:8px;font-size:12.5px;color:var(--text2)">
+          ℹ️ <strong>Workflow:</strong> Submitted reports are routed to Super Admin for review and operational audit.
+        </div>
+      \`,
+    r.status === 'Draft'
+      ? [
+          {
+            lbl: '📤 Submit to Super Admin',
+            cls: 'btn-primary',
+            fn: \`closeModal();submitDraftEventOpsReport('\${r.id}')\`,
+          },
+        ]
+      : []
+  );
+}
+window.handleReportFileSelect = function (input) {
+  const preview = document.getElementById('eor-file-preview');
+  if (input.files && input.files[0]) {
+    const f = input.files[0];
+    if (preview) {
+      globalThis.window?.EventFlowOrganizerPages?.clear(preview);
+      preview.innerHTML = \`
+            <div class="flex items-center justify-between" style="background:var(--accent-dim);border-radius:8px;padding:10px 14px">
+              <div style="font-weight:600;color:var(--accent);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 \${
+                f.name
+              } (\${(f.size / 1024).toFixed(1)} KB)</div>
+              <button type="button" class="btn btn-danger btn-xs" onclick="event.stopPropagation();resetReportFileSelect()">✕ Remove</button>
+            </div>
+          \`;
+    }
+  }
+};
+window.resetReportFileSelect = function () {
+  const input = document.getElementById('eor-file');
+  if (input) input.value = '';
+  const preview = document.getElementById('eor-file-preview');
+  if (preview) {
+    globalThis.window?.EventFlowOrganizerPages?.clear(preview);
+    preview.innerHTML = \`
+          <div style="font-size:24px;margin-bottom:6px">📁</div>
+          <div style="font-weight:600;font-size:13.5px">Click to browse or upload report file</div>
+          <div class="small muted">Supported formats: PDF, DOC, DOCX, XLS, XLSX</div>
+        \`;
+  }
+};
+function openCreateEventOpsReportModal() {
+  const eventsOptions = (DB.events || [])
+    .map(
+      event => \`<option value="\${event.title || event.name}">\${event.title || event.name}</option>\`
+    )
+    .join('');
+  openModal(
+    '📤 Submit Operational Report',
+    \`
+        <div class="form-group">
+          <label class="form-label">Report Type *</label>
+          <select class="form-control" id="eor-type">
+            <option value="Event Performance Report">Event Performance Report</option>
+            <option value="Event Operations Report">Event Operations Report</option>
+            <option value="Event Activity Report">Event Activity Report</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Report Title *</label>
+          <input class="form-control" id="eor-title" placeholder="e.g. Event Performance Summary — Q3 2026">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Event / Scope *</label>
+          <select class="form-control" id="eor-scope">
+            <option value="Platform Wide">Platform Wide</option>
+            <option value="All Q3 Events">All Q3 Events</option>
+            <option value="Main Convention Center">Main Convention Center</option>
+            \${eventsOptions}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reporting Period *</label>
+          <input class="form-control" id="eor-period" placeholder="e.g. August 2026, Q3 2026, Week 34">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Upload Report *</label>
+          <div class="file-upload-box" style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;background:var(--surface2);cursor:pointer" onclick="document.getElementById('eor-file').click()">
+            <input type="file" id="eor-file" accept=".pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="handleReportFileSelect(this)">
+            <div id="eor-file-preview">
+              <div style="font-size:24px;margin-bottom:6px">📁</div>
+              <div style="font-weight:600;font-size:13.5px">Click to browse or upload report file</div>
+              <div class="small muted">Supported formats: PDF, DOC, DOCX, XLS, XLSX</div>
+            </div>
+          </div>
+        </div>
+      \`,
+    [
+      {
+        lbl: 'Cancel',
+        cls: 'btn-ghost',
+        fn: 'closeModal()',
+      },
+      {
+        lbl: '📤 Submit Report',
+        cls: 'btn-primary',
+        fn: 'saveEventOpsReportSubmit()',
+      },
+    ]
+  );
+}
+function saveEventOpsReportSubmit() {
+  const type = v('eor-type');
+  const title = v('eor-title');
+  const scope = v('eor-scope');
+  const period = v('eor-period');
+  const fileInput = document.getElementById('eor-file');
+  if (!title) {
+    toast('Please enter a report title', 'error');
+    return;
+  }
+  if (!period) {
+    toast('Please specify a reporting period', 'error');
+    return;
+  }
+  if (!fileInput || !fileInput.files || !fileInput.files.length) {
+    toast('Please upload a report file', 'error');
+    return;
+  }
+  const file = fileInput.files[0];
+  const newReport = {
+    id: \`EOR-\${Date.now().toString().slice(-4)}\`,
+    type: type,
+    title: title,
+    scope: scope,
+    period: period,
+    fileName: file.name,
+    owner: CU.name || 'Elena Rostova',
+    status: 'Submitted',
+    updated: 'Just now',
+  };
+  if (!DB.eventOpsReports) DB.eventOpsReports = [];
+  DB.eventOpsReports.unshift(newReport);
+  saveDB();
+  closeModal();
+  renderPage('reports');
+  toast('Report submitted to Super Admin for review!', 'success');
+}
+const organizerReportSamples = {
+  'rpt-org-001': 'healthcare-innovation-forum-final-report.pdf',
+  'rpt-org-002': 'healthcare-forum-attendance-summary.xlsx',
+  'rpt-org-003': 'sustainable-business-forum-summary.pdf',
+  'rpt-org-004': 'sustainability-forum-attendance.xlsx',
+  'rpt-org-005': 'product-design-workshop-outcomes.docx',
+  'rpt-org-006': 'product-design-workshop-feedback.pdf',
+};
+function organizerReportAttachment(report) {
+  if (report.documentFileName)
+    return {
+      name: report.documentName || report.fileName || 'event-report',
+      sample: false,
+    };
+  if (
+    !report.backendManaged &&
+    report.submittedBy === 'usr-org-001' &&
+    organizerReportSamples[report.id] === report.fileName
+  ) {
+    return {
+      name: report.fileName.replace(/\\.[^.]+$/, '-sample.html'),
+      url: \`/assets/demo-reports/\${report.id}.html\`,
+      sample: true,
+    };
+  }
+  return null;
+}
+function renderOrganizerReportFile(report) {
+  const attachment = organizerReportAttachment(report);
+  const downloadButton = \`<button type="button" class="btn btn-primary btn-xs" onclick="openOrganizerReportFile('\${escapeHtml(
+    String(report.id)
+  )}', true)">Download Report</button>\`;
+  if (!attachment)
+    return \`<div style="overflow-wrap:anywhere">\${escapeHtml(
+      report.fileName || report.reportTitle || 'Report file'
+    )}</div>
+        <div class="small mt-4">Original attachment unavailable. Download saved report details (TXT).</div>
+        <div style="margin-top:8px">\${downloadButton}</div>\`;
+  const canView = /\\.(pdf|html)$/i.test(attachment.name);
+  return \`<div style="overflow-wrap:anywhere">\${escapeHtml(attachment.name)}\${
+    attachment.sample ? ' <span class="badge badge-gray">Sample</span>' : ''
+  }</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          \${
+            canView
+              ? \`<button type="button" class="btn btn-ghost btn-xs" onclick="openOrganizerReportFile('\${escapeHtml(
+                  String(report.id)
+                )}')">View File</button>\`
+              : ''
+          }
+          \${downloadButton}
+        </div>\`;
+}
+function organizerReportDetailsFile(report) {
+  const event = DB.events.find(item => String(item.eventId || item.id) === String(report.eventId));
+  const recipient = DB.users.find(
+    item => String(item.id || item.userId) === String(report.recipientId || report.clientUserId)
+  );
+  const title = report.reportTitle || report.fileName || 'Event Report';
+  const recipientEmail = recipient?.email || report.clientEmail;
+  const fileName =
+    String(title)
+      .replace(/\\.(pdf|docx?|xlsx?|html?|csv|txt)$/i, '')
+      .replace(/[<>:"/\\\\|?*\\x00-\\x1f]/g, '-')
+      .trim()
+      .slice(0, 120) || 'event-report';
+  const text = [
+    'EVENT REPORT',
+    title,
+    '',
+    \`Event: \${event?.title || event?.name || report.eventId || 'Not recorded'}\`,
+    \`Submitted by: \${CU.name || 'Event Organizer'}\`,
+    \`Sent to: \${recipient?.name || report.clientName || 'Not recorded'}\${
+      recipientEmail ? \` (\${recipientEmail})\` : ''
+    }\`,
+    \`Submitted at: \${
+      report.submittedAt || report.createdAt || report.submissionDate || 'Not recorded'
+    }\`,
+    \`Status: \${report.status || 'submitted'}\`,
+    '',
+    'Report details',
+    report.reportDetails || 'No additional report details were saved.',
+    '',
+    'This file contains the saved report record. The original attachment was not stored.',
+  ].join('\\n');
+  return {
+    name: \`\${fileName}-details.txt\`,
+    blob: new Blob([text], {
+      type: 'text/plain;charset=utf-8',
+    }),
+  };
+}
+async function openOrganizerReportFile(reportId, download = false) {
+  const report = (DB.reports || []).find(item => String(item.id) === String(reportId));
+  if (!report || CU.role !== 'organizer' || String(report.submittedBy) !== String(CU.id)) {
+    toast('This report is not available in your submitted reports.', 'error');
+    return;
+  }
+  const attachment = organizerReportAttachment(report);
+  const canView = attachment && /\\.(pdf|html)$/i.test(attachment.name);
+  const previewWindow = !download && canView ? window.open('about:blank', '_blank') : null;
+  if (previewWindow) previewWindow.opener = null;
+  try {
+    let file;
+    if (attachment) {
+      const response = await (globalThis.window?.EventFlowFetch || fetch)(
+        attachment.sample
+          ? attachment.url
+          : \`\${API_BASE_URL}/reports/events/\${encodeURIComponent(
+              report.eventReportId || report.id
+            )}/file\`,
+        attachment.sample
+          ? {}
+          : {
+              headers: getAuthHeader()
+                ? {
+                    Authorization: getAuthHeader(),
+                  }
+                : {},
+            }
+      );
+      if (!response.ok) throw new Error('The submitted report file could not be loaded.');
+      file = {
+        name: attachment.name,
+        blob: await response.blob(),
+      };
+    } else {
+      file = organizerReportDetailsFile(report);
+    }
+    const objectUrl = URL.createObjectURL(file.blob);
+    if (previewWindow) previewWindow.location.href = objectUrl;
+    else {
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  } catch (error) {
+    if (previewWindow) previewWindow.close();
+    toast(error.message || 'Unable to open the submitted report file.', 'error');
+  }
+}
+function reportContactHtml(userId, fallbackName = 'Not recorded') {
+  const user = userId == null ? null : DB.users.find(item => String(item.id) === String(userId));
+  const name = user?.name || (userId != null ? \`User (\${userId})\` : fallbackName);
+  return \`<span>\${escapeHtml(name)}</span>\${
+    user?.email ? \`<div class="small muted">\${escapeHtml(user.email)}</div>\` : ''
+  }\`;
+}
+function pageReports() {
+  if (!DB.reports) DB.reports = [];
+  if (CU.role === 'employee' && CU.employeeType === 'SUPPORT_FINANCE')
+    return pageOperationalReports();
+  if (CU.role === 'employee' && CU.employeeType === 'EVENT_OPERATIONS')
+    return pageEventOpsReports();
+
+  // Super Admin gets dedicated analytics dashboard
+  if (CU.role === 'superuser') {
+    const tab = sessionStorage.getItem('admin_reports_tab') || 'users';
+
+    // ── USER STATISTICS DATA ──────────────────────────────
+    const allUsers = DB.users;
+    const activeUsers = allUsers.filter(u => u.status === 'active').length;
+    const inactiveUsers = allUsers.filter(u => u.status !== 'active').length;
+    const attendees = allUsers.filter(u => u.role === 'attendee').length;
+    const organizers = allUsers.filter(u => u.role === 'organizer').length;
+    const clients = allUsers.filter(u => u.role === 'client').length;
+    const employeeCount = allUsers.filter(u => u.role === 'employee').length;
+    const admins = allUsers.filter(u => u.role === 'superuser').length;
+
+    // Monthly registrations (last 6 months based on joinedAt / joined)
+    const now = new Date();
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    const monthData = {};
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = \`\${d.getFullYear()}-\${String(d.getMonth() + 1).padStart(2, '0')}\`;
+      monthData[key] = {
+        label: monthNames[d.getMonth()],
+        count: 0,
+      };
+    }
+    allUsers
+      .filter(u => u.role === 'attendee')
+      .forEach(u => {
+        const joined = u.joined || u.joinedAt || '';
+        const key = joined.slice(0, 7);
+        if (monthData[key]) monthData[key].count++;
+      });
+    const months = Object.values(monthData);
+    const maxMonthCount = Math.max(...months.map(m => m.count), 1);
+
+    // Role breakdown bar widths
+    const maxRole = Math.max(attendees, organizers, clients, employeeCount, admins, 1);
+    const roleBar = n => Math.round((n / maxRole) * 100);
+    const userStatsContent = \`
+  <div class="grid-4 mb-24" style="gap:14px">
+    <div class="stat-card" style="border-left:4px solid var(--accent)">
+      <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">👥</div>
+      <div class="stat-value" style="color:var(--accent)">\${allUsers.length}</div>
+      <div class="stat-label">Total Users</div>
+      <div class="stat-sub neutral">Platform-wide</div>
+    </div>
+    <div class="stat-card" style="border-left:4px solid var(--green)">
+      <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">✅</div>
+      <div class="stat-value" style="color:var(--green)">\${activeUsers}</div>
+      <div class="stat-label">Active Users</div>
+      <div class="stat-sub up">↑ \${Math.round(
+        (activeUsers / Math.max(allUsers.length, 1)) * 100
+      )}% active rate</div>
+    </div>
+    <div class="stat-card" style="border-left:4px solid var(--red)">
+      <div class="stat-icon" style="background:var(--red-dim);color:var(--red)">⚠️</div>
+      <div class="stat-value" style="color:var(--red)">\${inactiveUsers}</div>
+      <div class="stat-label">Inactive Users</div>
+      <div class="stat-sub neutral">Need attention</div>
+    </div>
+    <div class="stat-card" style="border-left:4px solid var(--blue)">
+      <div class="stat-icon" style="background:var(--blue-dim);color:var(--blue)">🎟️</div>
+      <div class="stat-value" style="color:var(--blue)">\${attendees}</div>
+      <div class="stat-label">Attendees</div>
+      <div class="stat-sub neutral">Registered attendees</div>
+    </div>
+  </div>
+
+  <div class="grid-2 mb-24" style="gap:20px">
+    <!-- Role Breakdown Card -->
+    <div class="card card-lg">
+      <div style="font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px">
+        <span style="background:var(--accent-dim);color:var(--accent);padding:6px 8px;border-radius:8px;font-size:14px">🏷️</span>
+        User Role Breakdown
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        \${[
+          {
+            role: 'Attendees',
+            count: attendees,
+            color: 'var(--blue)',
+            icon: '🎟️',
+          },
+          {
+            role: 'Organizers',
+            count: organizers,
+            color: 'var(--accent)',
+            icon: '🎯',
+          },
+          {
+            role: 'Clients',
+            count: clients,
+            color: 'var(--yellow)',
+            icon: '💼',
+          },
+          {
+            role: 'Employees',
+            count: employeeCount,
+            color: 'var(--green)',
+            icon: '👷',
+          },
+          {
+            role: 'Super Admins',
+            count: admins,
+            color: 'var(--red)',
+            icon: '🛡️',
+          },
+        ]
+          .map(
+            r => \`
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px">
+            <span style="display:flex;align-items:center;gap:6px"><span>\${
+              r.icon
+            }</span><span style="font-weight:500">\${r.role}</span></span>
+            <span style="font-weight:700;color:\${r.color}">\${r.count}</span>
+          </div>
+          <div style="height:8px;background:var(--surface3);border-radius:99px;overflow:hidden">
+            <div style="height:100%;width:\${roleBar(r.count)}%;background:\${
+              r.color
+            };border-radius:99px;transition:width 0.6s ease"></div>
+          </div>
+        </div>\`
+          )
+          .join('')}
+      </div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--green)">\${activeUsers}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Active</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--red)">\${inactiveUsers}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Inactive</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Registrations Chart -->
+    <div class="card card-lg">
+      <div style="font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px">
+        <span style="background:var(--green-dim);color:var(--green);padding:6px 8px;border-radius:8px;font-size:14px">📅</span>
+        Monthly Attendee Registrations
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px;height:160px;padding-bottom:4px">
+        \${months
+          .map(
+            m => \`
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+          <div style="font-size:11px;font-weight:700;color:var(--green)">\${m.count || ''}</div>
+          <div style="width:100%;background:linear-gradient(180deg,var(--green),var(--accent));border-radius:6px 6px 0 0;height:\${
+            m.count ? Math.max(Math.round((m.count / maxMonthCount) * 130), 8) : 4
+          }px;opacity:\${m.count ? 1 : 0.2};transition:height 0.5s ease"></div>
+          <div style="font-size:10px;color:var(--text3);font-weight:600">\${m.label}</div>
+        </div>\`
+          )
+          .join('')}
+      </div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)">
+        Total attendees registered: <strong style="color:var(--green)">\${attendees}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- All Users Table -->
+  <div class="card">
+    <div style="font-family:var(--font-head);font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px"><span style="background:var(--blue-dim);color:var(--blue);padding:5px 7px;border-radius:8px">📋</span> All Users Overview</div>
+      <span class="badge badge-blue">\${allUsers.length} total</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Joined</th></tr></thead>
+        <tbody>
+          \${allUsers
+            .map(
+              u => \`<tr>
+            <td><div class="flex items-center gap-10"><div class="av av-sm">\${
+              u.avatar || u.name[0]
+            }</div><div><div style="font-weight:500">\${u.name}</div><div class="small">\${
+                u.email
+              }</div></div></div></td>
+            <td><span class="badge badge-\${ROLE_COLORS[u.role]}">\${u.role}</span></td>
+            <td><span class="badge badge-\${u.status === 'active' ? 'green' : 'red'}">\${
+                u.status || 'active'
+              }</span></td>
+            <td class="small">\${u.joined || u.joinedAt || '—'}</td>
+          </tr>\`
+            )
+            .join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>\`;
+
+    // ── EVENT STATISTICS DATA ──────────────────────────────
+    const allEvents = DB.events;
+    const allRegs = DB.registrations;
+    const totalRevenue = allRegs.reduce(
+      (total, registration) => total + (registration.amount || 0),
+      0
+    );
+    const checkedIn = allRegs.filter(registration => registration.checkedIn).length;
+    const upcomingEvs = allEvents.filter(event => event.status === 'upcoming').length;
+    const completedEvs = allEvents.filter(event => event.status === 'completed').length;
+
+    // Category breakdown
+    const catMap = {};
+    allEvents.forEach(event => {
+      if (!catMap[event.category])
+        catMap[event.category] = {
+          count: 0,
+          regs: 0,
+          revenue: 0,
+        };
+      catMap[event.category].count++;
+      const registrations = allRegs.filter(registration => registration.eventId === event.id);
+      catMap[event.category].regs += registrations.length;
+      catMap[event.category].revenue += registrations.reduce(
+        (total, registration) => total + (registration.amount || 0),
+        0
+      );
+    });
+    const cats = Object.entries(catMap).sort((a, b) => b[1].regs - a[1].regs);
+    const maxCatRegs = Math.max(...cats.map(c => c[1].regs), 1);
+    const catColors = [
+      'var(--accent)',
+      'var(--green)',
+      'var(--blue)',
+      'var(--yellow)',
+      'var(--orange)',
+      'var(--red)',
+    ];
+
+    // Top events by registration
+    const topEvents = [...allEvents]
+      .sort((leftEvent, rightEvent) => rightEvent.registered - leftEvent.registered)
+      .slice(0, 5);
+
+    // Monthly revenue (last 6 months)
+    const revMonthData = {};
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = \`\${d.getFullYear()}-\${String(d.getMonth() + 1).padStart(2, '0')}\`;
+      revMonthData[key] = {
+        label: monthNames[d.getMonth()],
+        revenue: 0,
+        regs: 0,
+      };
+    }
+    allRegs.forEach(registration => {
+      const key = (registration.date || '').slice(0, 7);
+      if (revMonthData[key]) {
+        revMonthData[key].revenue += registration.amount || 0;
+        revMonthData[key].regs++;
+      }
+    });
+    const revMonths = Object.values(revMonthData);
+    const maxRev = Math.max(...revMonths.map(m => m.revenue), 1);
+    const eventStatsContent = \`
+  <div class="grid-4 mb-24" style="gap:14px">
+    <div class="stat-card" style="border-left:4px solid var(--green)">
+      <div class="stat-icon" style="background:var(--green-dim);color:var(--green)">💰</div>
+      <div class="stat-value" style="color:var(--green)">₹\${totalRevenue.toLocaleString()}</div>
+      <div class="stat-label">Total Revenue</div>
+      <div class="stat-sub up">From all ticket sales</div>
+    </div>
+    <div class="stat-card" style="border-left:4px solid var(--accent)">
+      <div class="stat-icon" style="background:var(--accent-dim);color:var(--accent)">🗓️</div>
+      <div class="stat-value" style="color:var(--accent)">\${allEvents.length}</div>
+      <div class="stat-label">Total Events</div>
+      <div class="stat-sub neutral">\${upcomingEvs} upcoming · \${completedEvs} completed</div>
+    </div>
+    <div class="stat-card" style="border-left:4px solid var(--blue)">
+      <div class="stat-icon" style="background:var(--blue-dim);color:var(--blue)">🎟️</div>
+      <div class="stat-value" style="color:var(--blue)">\${allRegs.length}</div>
+      <div class="stat-label">Total Registrations</div>
+      <div class="stat-sub neutral">Across all events</div>
+    </div>
+    <div class="stat-card" style="border-left:4px solid var(--yellow)">
+      <div class="stat-icon" style="background:var(--yellow-dim);color:var(--yellow)">✅</div>
+      <div class="stat-value" style="color:var(--yellow)">\${checkedIn}</div>
+      <div class="stat-label">Checked In</div>
+      <div class="stat-sub up">\${Math.round(
+        (checkedIn / Math.max(allRegs.length, 1)) * 100
+      )}% attendance rate</div>
+    </div>
+  </div>
+
+  <div class="grid-2 mb-24" style="gap:20px">
+    <!-- Revenue Bar Chart -->
+    <div class="card card-lg">
+      <div style="font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px">
+        <span style="background:var(--green-dim);color:var(--green);padding:6px 8px;border-radius:8px;font-size:14px">📈</span>
+        Monthly Revenue (₹)
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px;height:160px;padding-bottom:4px">
+        \${revMonths
+          .map(
+            m => \`
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+          <div style="font-size:10px;font-weight:700;color:var(--green)">\${
+            m.revenue > 0 ? '₹' + m.revenue : ''
+          }</div>
+          <div style="width:100%;background:linear-gradient(180deg,#22d3a5,#4299e1);border-radius:6px 6px 0 0;height:\${
+            m.revenue ? Math.max(Math.round((m.revenue / maxRev) * 130), 8) : 4
+          }px;opacity:\${m.revenue ? 1 : 0.2}"></div>
+          <div style="font-size:10px;color:var(--text3);font-weight:600">\${m.label}</div>
+        </div>\`
+          )
+          .join('')}
+      </div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)">
+        Total platform revenue: <strong style="color:var(--green)">₹\${totalRevenue.toLocaleString()}</strong>
+      </div>
+    </div>
+
+    <!-- Category Popularity -->
+    <div class="card card-lg">
+      <div style="font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px">
+        <span style="background:var(--accent-dim);color:var(--accent);padding:6px 8px;border-radius:8px;font-size:14px">🏆</span>
+        Popular Event Categories
+      </div>
+      \${
+        cats.length === 0
+          ? \`<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">No data yet</div></div>\`
+          : \`<div style="display:flex;flex-direction:column;gap:14px">
+        \${cats
+          .map(
+            ([cat, data], i) => \`
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px">
+            <span style="font-weight:600;color:\${catColors[i % catColors.length]}">\${cat}</span>
+            <span style="display:flex;gap:12px">
+              <span style="color:var(--text2)">\${data.regs} attendees</span>
+              <span style="color:var(--green);font-weight:600">₹\${data.revenue.toLocaleString()}</span>
+            </span>
+          </div>
+          <div style="height:8px;background:var(--surface3);border-radius:99px;overflow:hidden">
+            <div style="height:100%;width:\${Math.round(
+              (data.regs / maxCatRegs) * 100
+            )}%;background:\${catColors[i % catColors.length]};border-radius:99px"></div>
+          </div>
+        </div>\`
+          )
+          .join('')}
+      </div>\`
+      }
+    </div>
+  </div>
+
+  <!-- Top Events Table -->
+  <div class="card mb-24">
+    <div style="font-family:var(--font-head);font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+      <span style="background:var(--yellow-dim);color:var(--yellow);padding:5px 7px;border-radius:8px">🏅</span> Top Events by Attendance
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Event</th><th>Category</th><th>Registered</th><th>Capacity</th><th>Revenue</th><th>Status</th></tr></thead>
+        <tbody>
+          \${topEvents
+            .map((event, index) => {
+              const evRev = allRegs
+                .filter(registration => registration.eventId === event.id)
+                .reduce((total, registration) => total + (registration.amount || 0), 0);
+              return \`<tr>
+              <td><span style="font-weight:700;color:var(--text3)">\${index + 1}</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">\${
+                event.emoji || '🎪'
+              }</span><div><div style="font-weight:600;font-size:13.5px">\${
+                event.title
+              }</div><div class="small">\${event.date}</div></div></div></td>
+              <td><span class="badge badge-purple">\${event.category}</span></td>
+              <td><strong style="color:var(--blue)">\${event.registered}</strong></td>
+              <td class="small">\${event.capacity}</td>
+              <td><strong style="color:var(--green)">₹\${evRev.toLocaleString()}</strong></td>
+              <td><span class="badge badge-\${evStatBadge(event.status)}">\${event.status}</span></td>
+            </tr>\`;
+            })
+            .join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- All Events Revenue breakdown -->
+  <div class="card">
+    <div style="font-family:var(--font-head);font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+      <span style="background:var(--green-dim);color:var(--green);padding:5px 7px;border-radius:8px">📊</span> All Events Revenue Breakdown
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Price</th><th>Registrations</th><th>Revenue</th><th>Occupancy</th></tr></thead>
+        <tbody>
+          \${allEvents
+            .map(event => {
+              const evRegs = allRegs.filter(registration => registration.eventId === event.id);
+              const evRev2 = evRegs.reduce(
+                (total, registration) => total + (registration.amount || 0),
+                0
+              );
+              const occ = Math.round((event.registered / Math.max(event.capacity, 1)) * 100);
+              return \`<tr>
+              <td><div style="font-weight:500">\${event.title}</div></td>
+              <td>\${
+                event.price === 0
+                  ? '<span class="badge badge-green">Free</span>'
+                  : '₹' + event.price
+              }</td>
+              <td><strong>\${evRegs.length}</strong></td>
+              <td style="color:var(--green);font-weight:700">₹\${evRev2.toLocaleString()}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="flex:1;height:6px;background:var(--surface3);border-radius:99px;overflow:hidden">
+                    <div style="height:100%;width:\${occ}%;background:\${
+                occ >= 80 ? 'var(--green)' : occ >= 50 ? 'var(--yellow)' : 'var(--red)'
+              };border-radius:99px"></div>
+                  </div>
+                  <span style="font-size:12px;font-weight:600;color:var(--text2);min-width:32px">\${occ}%</span>
+                </div>
+              </td>
+            </tr>\`;
+            })
+            .join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>\`;
+    return \`
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">Reports & Analytics</div><div class="page-sub">Platform-wide statistics for super administration</div></div>
+    <div class="page-hd-right">
+      <button class="btn btn-ghost" onclick="toast('Export feature coming soon','info')">📥 Export</button>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:4px;background:var(--surface2);border-radius:12px;padding:4px;margin-bottom:28px;border:1px solid var(--border)">
+    <button onclick="switchReportTab('users')" style="flex:1;padding:10px 20px;border-radius:9px;font-weight:600;font-size:13.5px;transition:all 0.2s;border:none;cursor:pointer;background:\${
+      tab === 'users' ? 'var(--accent)' : 'transparent'
+    };color:\${tab === 'users' ? '#fff' : 'var(--text2)'}">
+      👥 User Statistics
+    </button>
+    <button onclick="switchReportTab('events')" style="flex:1;padding:10px 20px;border-radius:9px;font-weight:600;font-size:13.5px;transition:all 0.2s;border:none;cursor:pointer;background:\${
+      tab === 'events' ? 'var(--accent)' : 'transparent'
+    };color:\${tab === 'events' ? '#fff' : 'var(--text2)'}">
+      📊 Event Analytics
+    </button>
+  </div>
+
+
+  \${tab === 'users' ? userStatsContent : eventStatsContent}
+\`;
+  }
+
+  // ── NON-SUPERUSER: original client report view ──────
+  const tab = sessionStorage.getItem('reports_tab') || 'client';
+  const myEvents =
+    CU.role === 'organizer' ? DB.events.filter(event => event.organizer === CU.id) : DB.events;
+  const completedEvents = myEvents.filter(event => event.status === 'completed').length;
+  const eventIds = myEvents.map(event => String(event.id));
+  const eventReports = DB.reports.filter(report => eventIds.includes(String(report.eventId)));
+  const clientReports =
+    CU.role === 'organizer'
+      ? eventReports.filter(report => String(report.submittedBy) === String(CU.id))
+      : eventReports;
+  const pendingClientEvents = myEvents.filter(
+    event =>
+      event.status === 'completed' &&
+      !clientReports.some(report => String(report.eventId) === String(event.id))
+  );
+  const pendingReports = pendingClientEvents.length;
+  const submittedReports = clientReports.length;
+  const clientReportContent = \`
+    <div class="grid-3 mb-24">
+      <div class="stat-card" style="border: 1px solid var(--blue-dim); background: rgba(66, 153, 225, 0.05); padding: 16px;">
+        <div class="small" style="color:var(--blue); font-weight:600; margin-bottom: 12px">Total Completed</div>
+        <div style="display:flex; align-items:center; gap: 12px;">
+          <div class="stat-icon" style="background:var(--blue);color:#fff;margin:0;font-size:16px;border-radius:50%">✓</div>
+          <div>
+            <div class="stat-value" style="color:var(--text);font-size:24px;margin:0">\${completedEvents}</div>
+            <div class="small" style="color:var(--text2)">Total events</div>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card" style="border: 1px solid var(--green-dim); background: rgba(34, 211, 165, 0.05); padding: 16px;">
+        <div class="small" style="color:var(--green); font-weight:600; margin-bottom: 12px">Reports Submitted</div>
+        <div style="display:flex; align-items:center; gap: 12px;">
+          <div class="stat-icon" style="background:var(--green);color:#fff;margin:0;font-size:15px;border-radius:8px">📄</div>
+          <div>
+            <div class="stat-value" style="color:var(--text);font-size:24px;margin:0">\${submittedReports}</div>
+            <div class="small" style="color:var(--text2)">Reports submitted</div>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card" style="border: 1px solid var(--orange-dim); background: rgba(237, 137, 54, 0.05); padding: 16px;">
+        <div class="small" style="color:var(--orange); font-weight:600; margin-bottom: 12px">Pending Submissions</div>
+        <div style="display:flex; align-items:center; gap: 12px;">
+          <div class="stat-icon" style="background:var(--orange);color:#fff;margin:0;font-size:16px;border-radius:50%">🕒</div>
+          <div>
+            <div class="stat-value" style="color:var(--text);font-size:24px;margin:0">\${pendingReports}</div>
+            <div class="small" style="color:var(--text2)">Reports pending</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="h4 mb-16" style="display:flex;align-items:center;gap:8px"><span style="color:var(--orange);font-size:18px">⭕</span> Pending Submissions</div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      \${pendingClientEvents
+        .map(event => {
+          const recipient = getEventReportRecipients(event)[0];
+          return \`
+        <div class="card" style="background:var(--surface); border:1px solid var(--border); padding:20px; border-radius:12px;">
+          <div style="font-weight:700;font-size:16px;margin-bottom:12px;color:var(--text)">\${
+            event.title
+          }</div>
+          <div style="display:flex;flex-wrap:wrap;gap:24px;margin-bottom:16px;color:var(--text2);font-size:13px">
+            <div style="display:flex;align-items:center;gap:6px"><span>📅</span> \${event.date}</div>
+            <div style="display:flex;align-items:center;gap:6px"><span>📍</span> \${
+              event.venue || event.city || 'Location'
+            }</div>
+            <div style="display:flex;align-items:center;gap:6px"><span>👥</span> \${
+              DB.registrations.filter(registration => registration.eventId === event.id).length
+            } Attendees</div>
+                      </div>
+          <div class="small mb-12"><strong>Send to:</strong> \${reportContactHtml(
+            recipient?.id,
+            recipient?.name || 'No requesting client linked'
+          )}</div>
+          <div class="flex gap-12">
+            <button type="button" class="btn btn-primary" onclick="openSubmitReportModal('\${event.id}')" style="gap:6px; background:var(--accent); border-radius:8px">📤 Submit Report</button>
+            <button class="btn btn-ghost" onclick="openViewEventDrawer('\${
+              event.id
+            }')" style="color:var(--accent);border-color:var(--accent-dim);background:var(--accent-dim);gap:6px; border-radius:8px">👁 View Event Details</button>
+          </div>
+        </div>
+      \`;
+        })
+        .join('')}
+      \${
+        pendingReports === 0
+          ? \`<div class="empty"><div class="empty-icon">✓</div><div class="empty-title">All Reports Submitted</div><p class="empty-desc">Great job! All your completed events have reports.</p></div>\`
+          : ''
+      }
+    </div>
+    <div class="h4 mb-16" style="margin-top:28px">Submitted Reports</div>
+    <div class="table-wrap">
+      \${
+        clientReports.length === 0
+          ? \`<div class="empty"><div class="empty-icon">📄</div><div class="empty-title">No submitted reports yet</div></div>\`
+          : \`
+      <table>
+        <thead><tr><th>Event</th><th>Report File</th><th>Sent To</th><th>Submitted At</th></tr></thead>
+        <tbody>\${clientReports
+          .map(report => {
+            const event = myEvents.find(item => String(item.id) === String(report.eventId));
+            return \`<tr>
+            <td>\${event ? escapeHtml(event.title) : 'Unknown event'}</td>
+            <td>\${renderOrganizerReportFile(report)}</td>
+            <td>\${reportContactHtml(report.recipientId, 'Recipient not recorded')}</td>
+            <td>\${escapeHtml(report.submittedAt || '—')}</td>
+          </tr>\`;
+          })
+          .join('')}</tbody>
+      </table>\`
+      }
+    </div>
+  \`;
+  return \`
+  <div style="padding:24px;background:var(--bg);">
+    <div class="page-hd" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start;">
+      <div class="page-hd-left">
+        <div class="page-title">Event Reports</div>
+        <div class="page-sub">Send completed-event reports to the requesting client and review submitted files</div>
+      </div>
+      <div class="page-hd-right">
+        <button class="btn" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-weight:600;padding:8px 16px;border-radius:8px;gap:8px" onclick="toast('\${completedEvents} Completed Events','info')"><span style="font-size:16px;color:var(--accent)">📄</span> \${completedEvents} Completed Events</button>
+      </div>
+    </div>
+    \${clientReportContent}
+  </div>
+  \`;
+}
+function switchReportTab(t) {
+  if (CU && CU.role === 'superuser') sessionStorage.setItem('admin_reports_tab', t);
+  else sessionStorage.setItem('reports_tab', t);
+  renderPage('reports');
+}
+function getEventReportRecipients(event, workspace = DB, user = CU) {
+  if (user.role === 'organizer') {
+    const eventIds = new Set([event.eventId, event.id].filter(id => id != null).map(String));
+    const request = (workspace.eventRequests || []).find(
+      item => (item.eventId != null && eventIds.has(String(item.eventId))) ||
+        (event.requestId != null && String(item.requestId || item.id) === String(event.requestId))
+    );
+    const details = request?.clientDetails || {};
+    const requestIds = [request?.clientUserId, request?.clientId, request?.backendClientId, details.userId, details.clientId]
+      .filter(id => id != null && id !== '');
+    const ids = requestIds.length
+      ? requestIds
+      : [event.clientUserId, event.clientId, event.backendClientId].filter(id => id != null && id !== '');
+    const client = workspace.users.find(
+      user =>
+        (user.role || user.userRole) === 'client' &&
+        ids.some(id => [user.id, user.userId, user.clientId].some(value => value != null && String(value) === String(id)))
+    );
+    if (client) return [client];
+    const profile = (workspace.clients || []).find(item =>
+      ids.some(id => [item.clientId, item.userId].some(value => value != null && String(value) === String(id)))
+    );
+    const userId =
+      request?.clientUserId ||
+      details.userId ||
+      profile?.userId ||
+      (!request || request.backendClientId === event.clientId || request.clientId === event.clientId
+        ? event.clientUserId
+        : null);
+    if (!userId && !ids.length) return [];
+    const contact = {
+      id: userId,
+      clientId: profile?.clientId || request?.backendClientId || event.backendClientId,
+      name: details.name || request?.clientName || event.clientName || 'Requesting client',
+      email: details.email || event.clientEmail || '',
+      role: 'client',
+    };
+    if (userId && workspace === DB) workspace.users.push(contact);
+    return [contact];
+  }
+  const recipientIds = [event.clientId, event.organizer];
+  const seen = new Set();
+  return recipientIds
+    .filter(id => id != null && String(id) !== String(user.id))
+    .map(id => workspace.users.find(item => String(item.id) === String(id)))
+    .filter(user => {
+      if (!user || seen.has(String(user.id))) return false;
+      seen.add(String(user.id));
+      return true;
+    });
+}
+function openSubmitReportModal(eventId) {
+  const event = DB.events.find(currentEvent => String(currentEvent.id) === String(eventId) || String(currentEvent.eventId) === String(eventId));
+  if (!event) return;
+  const recipients = getEventReportRecipients(event);
+  if (recipients.length === 0) {
+    openModal(
+      'Submit Event Report',
+      '<p role="alert">This event has no requesting client linked to it. Client reports are available for events created from a client request.</p>'
+    );
+    return;
+  }
+  const defaultRecipient = recipients[0];
+  openModal(
+    'Submit Event Report',
+    \`
+    <div class="form-group">
+      <label class="form-label">Send report to</label>
+      <div style="padding:12px;background:var(--surface2);border:1px solid var(--border)">\${reportContactHtml(
+        defaultRecipient.id,
+        'Requesting client'
+      )}</div>
+      <div class="small muted mt-4">This report is sent automatically to the client who requested this event.</div>
+    </div>
+    <div class="form-group" style="text-align:center; padding: 40px; border: 2px dashed var(--border); border-radius: 8px;">
+      <div style="font-size: 32px; margin-bottom: 12px;">📁</div>
+      <label class="form-label" style="font-size:16px">Upload Report File</label>
+      <div class="small" style="color:var(--text2); margin-bottom: 16px;">PDF, DOCX, XLSX (Max 10MB)</div>
+      <input type="file" id="report-file" accept=".pdf,.docx,.xlsx" style="display:none" onchange="document.getElementById('file-name').textContent = this.files[0] ? this.files[0].name : ''">
+      <button class="btn btn-ghost" onclick="document.getElementById('report-file').click()">Select File</button>
+      <div id="file-name" style="margin-top:12px; font-weight: 500; color: var(--accent);"></div>
+    </div>
+    <div id="event-report-error" role="alert" style="color:var(--red);font-size:13px"></div>
+  \`,
+    [
+      {
+        lbl: 'Submit File',
+        cls: 'btn-primary',
+        fn: \`submitEventReport('\${eventId}')\`,
+      },
+    ]
+  );
+}
+let submittingEventReport = false;
+async function submitEventReport(eventId) {
+  if (submittingEventReport) return;
+  const event = DB.events.find(item => String(item.id) === String(eventId) || String(item.eventId) === String(eventId));
+  if (!event) {
+    toast('Event not found', 'error');
+    return;
+  }
+  const file = g('report-file')?.files?.[0];
+  if (!file) {
+    toast('Please select a file to submit', 'error');
+    return;
+  }
+  if (!/\\.(pdf|docx|xlsx)$/i.test(file.name) || file.size > 10 * 1024 * 1024) {
+    toast('Choose a PDF, DOCX, or XLSX report no larger than 10 MB.', 'error');
+    return;
+  }
+  if (!getEventReportRecipients(event).length) {
+    toast('No requesting client is linked to this event.', 'error');
+    return;
+  }
+  const errorElement = g('event-report-error');
+  const buttons = g('modal-foot')?.querySelectorAll('button') || [];
+  submittingEventReport = true;
+  buttons.forEach(button => {
+    button.disabled = true;
+  });
+  try {
+    let backendEventId = event.eventId || (/^evt-/.test(String(event.id)) ? event.id : null);
+    if (!backendEventId) {
+      const events = workflowPayload(await apiGetWorkflowEvents()) || [];
+      backendEventId = events.find(
+        item =>
+          item.organizerUserId === CU.id &&
+          (item.name || item.title) === event.title &&
+          item.date === event.date
+      )?.eventId;
+    }
+    if (!backendEventId)
+      throw new Error(
+        'This demo event has no saved event record. Submit reports for an event linked to a client request.'
+      );
+    await apiUploadEventReport(backendEventId, file);
+    closeModal();
+    toast('Report sent to the requesting client.', 'success');
+    await renderPage(_currentPage);
+  } catch (error) {
+    if (errorElement)
+      errorElement.textContent =
+        error.message || 'Unable to submit the event report. Please try again.';
+    else toast(error.message || 'Unable to submit the report', 'error');
+  } finally {
+    submittingEventReport = false;
+    buttons.forEach(button => {
+      button.disabled = false;
+    });
+  }
+}
+function deleteEventReport(reportId) {
+  const report = DB.reports.find(item => String(item.id) === String(reportId));
+  if (!report) return;
+  confirm2('Remove Event Report', 'Remove this submitted report?', () => {
+    const index = DB.reports.findIndex(item => String(item.id) === String(reportId));
+    if (index === -1) return;
+    DB.reports.splice(index, 1);
+    saveDB();
+    renderPage('reports');
+    toast('Event report removed', 'info');
+  });
+}
+function downloadReport(eventId) {
+  const event = DB.events.find(currentEvent => currentEvent.id == eventId);
+  const eventRegs = DB.registrations.filter(registration => registration.eventId == eventId);
+  const verified = eventRegs.filter(registration => registration.checkedIn);
+  let csv = 'Attendee,Email,Ticket Type,Check-In Time,Status\\n';
+  verified.forEach(r => {
+    const u = DB.users.find(user => user.id === r.attendeeId) || {
+      name: 'Unknown',
+      email: '',
+    };
+    const ticketType = r.seat === 'VIP' ? 'VIP' : r.seat === 'Premium' ? 'Premium' : 'General';
+    csv += \`\${u.name},\${u.email},\${ticketType},\${r.checkInTime || 'N/A'},Verified\\n\`;
+  });
+  const blob = new Blob([csv], {
+    type: 'text/csv',
+  });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = \`\${event.title.replace(/\\s+/g, '_')}_Report.csv\`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+  toast('Report downloaded!', 'success');
+}
+
+// ════════════════════════════════════════════════
+//  NOTIFICATIONS
+// ════════════════════════════════════════════════
+function visibleNotifications() {
+  return CU?.role === 'employee' && CU.employeeType === 'SUPPORT_FINANCE'
+    ? DB.notifications.filter(notification => notification.employeeType === 'SUPPORT_FINANCE')
+    : DB.notifications;
+}
+function pageNotifications() {
+  const notifications = visibleNotifications();
+  const unread = notifications.filter(notification => !notification.read).length;
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left"><div class="page-title">Notifications</div><div class="page-sub">\${unread} unread notification\${
+    unread !== 1 ? 's' : ''
+  }</div></div>
+    <div class="page-hd-right"><button class="btn btn-ghost btn-sm" onclick="markAllRead()">✓ Mark All Read</button></div>
+  </div>
+  <div class="card p-0 notif-panel">
+    \${
+      notifications.length === 0
+        ? \`<div class="empty"><div class="empty-icon">🔔</div><div class="empty-title">All caught up!</div></div>\`
+        : \`
+    \${notifications
+      .map(
+        notification => \`
+      <div class="notif-item\${notification.read ? '' : ' unread'}" onclick="markNotifRead('\${
+          notification.id
+        }')">
+        <div class="notif-icon" style="background:\${
+          notification.type === 'success'
+            ? 'var(--green-dim)'
+            : notification.type === 'warning'
+            ? 'var(--yellow-dim)'
+            : notification.type === 'error'
+            ? 'var(--red-dim)'
+            : 'var(--accent-dim)'
+        }">\${notification.icon || '🔔'}</div>
+        <div class="notif-content">
+          <div class="notif-title" style="\${notification.read ? '' : 'font-weight:600'}">\${
+          notification.title
+        }</div>
+          <div class="notif-msg">\${notification.msg}</div>
+          <div class="notif-time">\${notification.time}</div>
+        </div>
+        \${!notification.read ? \`<div class="unread-dot"></div>\` : ''}
+      </div>\`
+      )
+      .join('')}\`
+    }
+  </div>\`;
+}
+function markNotifRead(id) {
+  const n = DB.notifications.find(notification => notification.id == id);
+  if (!n) return;
+  n.read = true;
+  saveDB();
+  updateNotifDot();
+  if (isDepartmentEmployee()) buildEmployeeNav(CU.employeeType);
+  else buildNav(CU.role);
+  renderPage('notifications');
+}
+function markAllRead() {
+  visibleNotifications().forEach(n => (n.read = true));
+  renderPage('notifications');
+  updateNotifDot();
+  if (isDepartmentEmployee()) buildEmployeeNav(CU.employeeType);
+  else buildNav(CU.role);
+  toast('All notifications marked as read', 'success');
+}
+
+// ════════════════════════════════════════════════
+//  PROFILE
+// ════════════════════════════════════════════════
+function pageDepartmentEmployeeProfile() {
+  const type = CU.employeeType;
+  const profile = {
+    REGISTRATION_VERIFICATION: {
+      title: 'User Executive',
+      purpose:
+        'Protect event access by reviewing registrations, validating attendee documents, and resolving account verification issues.',
+      focus: [
+        'Review pending registrations and identity documents',
+        'Verify attendee eligibility and ticket details',
+        'Resolve account access and registration queries',
+      ],
+      primaryAction: "goNav('registrations')",
+      primaryLabel: 'Open Registrations',
+      secondaryAction: "goNav('attendees')",
+      secondaryLabel: 'Manage Attendees',
+    },
+    EVENT_OPERATIONS: {
+      title: 'Event Executive',
+      purpose:
+        'Coordinate event readiness and live delivery, from event information and operational plans to post-event reporting.',
+      focus: [
+        'Maintain event schedules, venues, and operational details',
+        'Prepare and track event-operation tasks',
+        'Coordinate changes with organizers and clients',
+      ],
+      primaryAction: "goNav('events')",
+      primaryLabel: 'Manage Events',
+      secondaryAction: "goNav('event-requests')",
+      secondaryLabel: 'Open Operations',
+    },
+    SUPPORT_FINANCE: {
+      title: 'Customer Support & Finance Executive',
+      purpose:
+        'Resolve customer requests and maintain accurate payment, refund, and service-operation records.',
+      focus: [
+        'Respond to customer support requests',
+        'Review transactions and refund cases',
+        'Maintain service and finance operational reports',
+      ],
+      primaryAction: "goNav('support-center')",
+      primaryLabel: 'Open Support Center',
+      secondaryAction: "goNav('finance')",
+      secondaryLabel: 'Open Finance',
+    },
+  }[type];
+  if (!profile) return '';
+  const registrations = DB.registrations || [];
+  const supportRequests = DB.supportRequests || [];
+  const transactions = DB.financeTransactions || [];
+  const events = DB.events || [];
+  const verificationPending = registrations.filter(
+    registration =>
+      !registration.verified ||
+      ['Pending Review', 'Flagged', 'pending'].includes(
+        registration.verificationStatus || registration.status
+      )
+  ).length;
+  const verified = registrations.filter(
+    registration => registration.verified || registration.verificationStatus === 'Verified'
+  ).length;
+  const activeEvents = events.filter(event =>
+    ['upcoming', 'ongoing'].includes(event.status)
+  ).length;
+  const operationalTasks = (DB.eventOperationsTasks || []).filter(
+    task => !task.status || !['completed', 'done'].includes(String(task.status).toLowerCase())
+  ).length;
+  const openSupport = supportRequests.filter(
+    request => !['Resolved', 'Closed'].includes(request.status)
+  ).length;
+  const refundsToReview = (DB.financeRefunds || []).filter(
+    r => !['Approved', 'Completed', 'Rejected'].includes(r.status)
+  ).length;
+  const metrics =
+    type === 'REGISTRATION_VERIFICATION'
+      ? [
+          ['Pending reviews', verificationPending, 'var(--yellow)'],
+          ['Verified attendees', verified, 'var(--green)'],
+          ['Registration records', registrations.length, 'var(--accent)'],
+        ]
+      : type === 'EVENT_OPERATIONS'
+      ? [
+          ['Active events', activeEvents, 'var(--accent)'],
+          ['Open operations tasks', operationalTasks, 'var(--yellow)'],
+          ['Event requests', (DB.eventRequests || []).length, 'var(--green)'],
+        ]
+      : [
+          ['Open support requests', openSupport, 'var(--yellow)'],
+          ['Transactions reviewed', transactions.length, 'var(--blue)'],
+          ['Refunds awaiting review', refundsToReview, 'var(--red)'],
+        ];
+  return \`
+  <div class="page-hd"><div class="page-hd-left"><div class="page-title">My Employee Profile</div><div class="page-sub">Your department responsibilities and work overview.</div></div><div class="page-hd-right"><button class="btn btn-ghost" onclick="goNav('settings')">Edit Profile</button></div></div>
+  <div class="profile-banner">
+    \${
+      CU.avatarImage
+        ? \`<div class="av av-xl"><img src="\${CU.avatarImage}" alt="\${
+            CU.name
+          }" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">\${
+            CU.avatar || CU.name[0]
+          }</span></div>\`
+        : \`<div class="av av-xl">\${CU.avatar || CU.name[0]}</div>\`
+    }
+    <div class="profile-info">
+      <div class="profile-name">\${CU.name}</div>
+      <div class="profile-role-tag">\${profile.title}</div>
+      <div class="small mt-4">\${CU.service || EMPLOYEE_TYPE_LABELS[type]}</div>
+      <span class="badge badge-green mt-8">Active employee account</span>
+    </div>
+  </div>
+  <div class="grid-3 mb-20">
+    \${metrics
+      .map(
+        ([label, value, color]) =>
+          \`<div class="card"><div class="label">\${label}</div><div class="stat-value" style="color:\${color};margin-top:10px">\${value}</div></div>\`
+      )
+      .join('')}
+  </div>
+  <div class="grid-2" style="align-items:start;gap:20px">
+    <div class="card">
+      <div class="h4 mb-14">Role & Responsibilities</div>
+      <p style="font-size:13.5px;color:var(--text2);line-height:1.7;margin-bottom:16px">\${
+        profile.purpose
+      }</p>
+      <div class="label mb-8">Core responsibilities</div>
+      <div style="display:flex;flex-direction:column;gap:10px">\${profile.focus
+        .map(
+          item =>
+            \`<div style="display:flex;gap:9px;align-items:flex-start;color:var(--text2)"><span style="color:var(--green);font-weight:700">&#10003;</span><span>\${item}</span></div>\`
+        )
+        .join('')}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="h4 mb-14">Employee Details</div>
+        <div class="info-row"><span class="info-label">Department</span><span class="info-value">\${
+          EMPLOYEE_TYPE_LABELS[type]
+        }</span></div>
+        <div class="info-row"><span class="info-label">Email</span><span class="info-value">\${
+          CU.email
+        }</span></div>
+        <div class="info-row"><span class="info-label">Phone</span><span class="info-value">\${
+          CU.phone || 'Not set'
+        }</span></div>
+        <div class="info-row"><span class="info-label">Location</span><span class="info-value">\${
+          CU.city || 'Not set'
+        }</span></div>
+        <div class="info-row"><span class="info-label">Member since</span><span class="info-value">\${
+          CU.joined || 'Not set'
+        }</span></div>
+      </div>
+      <div class="card">
+        <div class="h4 mb-14">Work Tools</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-primary w-full" onclick="\${profile.primaryAction}">\${
+    profile.primaryLabel
+  }</button>
+          <button class="btn btn-ghost w-full" onclick="\${profile.secondaryAction}">\${
+    profile.secondaryLabel
+  }</button>
+          <button class="btn btn-ghost w-full" onclick="goNav('reports')">View Department Reports</button>
+        </div>
+      </div>
+    </div>
+  </div>\`;
+}
+function pageProfile() {
+  if (isDepartmentEmployee()) return pageDepartmentEmployeeProfile();
+  const regs =
+    CU.role === 'attendee'
+      ? DB.registrations.filter(registration => registration.attendeeId === CU.id)
+      : [];
+  const myEvs = CU.role === 'organizer' ? DB.events.filter(event => event.organizer === CU.id) : [];
+  const isSF = CU.role === 'employee' && CU.employeeType === 'SUPPORT_FINANCE';
+  const sfSupportHandled = (DB.supportRequests || []).length;
+  const sfResolved = (DB.supportRequests || []).filter(
+    r => r.status === 'Resolved' || r.status === 'Closed'
+  ).length;
+  const sfTxnsReviewed = (DB.financeTransactions || []).length;
+  const sfReportsSubmitted = (DB.operationalReports || []).filter(
+    r => r.status === 'Submitted' || r.status === 'Reviewed'
+  ).length;
+  return \`
+  <div class="page-hd"><div class="page-hd-left"><div class="page-title">My Profile</div></div><div class="page-hd-right"><button class="btn btn-ghost" onclick="goNav('settings')">✏️ Edit Profile</button></div></div>
+  <div class="profile-banner">
+    \${
+      CU.avatarImage
+        ? \`<div class="av av-xl"><img src="\${CU.avatarImage}" alt="\${
+            CU.name
+          }" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">\${
+            CU.avatar || CU.name[0]
+          }</span></div>\`
+        : \`<div class="av av-xl">\${CU.avatar || CU.name[0]}</div>\`
+    }
+    <div class="profile-info">
+      <div class="profile-name">\${CU.name}</div>
+      <div class="profile-role-tag">\${
+        isSF ? 'Customer Support &amp; Finance Executive' : ROLE_LABELS[CU.role]
+      }</div>
+      \${CU.company ? \`<div class="small mt-4">\${CU.company}</div>\` : ''}
+      \${
+        CU.specialization
+          ? \`<div class="small mt-4">Specialization: \${CU.specialization}</div>\`
+          : ''
+      }
+      \${CU.service ? \`<div class="small mt-4">Service: \${CU.service}</div>\` : ''}
+      <span class="badge badge-green mt-8">Active Account</span>
+    </div>
+  </div>
+  <div class="grid-2" style="align-items:start;gap:20px">
+    <div class="card">
+      <div class="h4 mb-14">Contact Information</div>
+      <div class="info-row"><span class="info-label">Email</span><span class="info-value">\${
+        CU.email
+      }</span></div>
+      <div class="info-row"><span class="info-label">Phone</span><span class="info-value">\${
+        CU.phone || 'Not set'
+      }</span></div>
+      <div class="info-row"><span class="info-label">Member Since</span><span class="info-value">\${
+        CU.joined || '—'
+      }</span></div>
+      <div class="info-row"><span class="info-label">Role</span><span class="info-value"><span class="badge badge-\${
+        ROLE_COLORS[CU.role]
+      }">\${isSF ? 'Customer Support &amp; Finance Executive' : CU.role}</span></span></div>
+      \${
+        CU.bio
+          ? \`<div class="mt-14"><div class="label mb-8">Bio</div><p style="font-size:13.5px;color:var(--text2);line-height:1.7">\${CU.bio}</p></div>\`
+          : ''
+      }
+    </div>
+    <div>
+      \${
+        isSF
+          ? \`<div class="card mb-16">
+        <div class="h4 mb-14">Work Summary</div>
+        <div class="info-row"><span class="info-label">Support Requests Handled</span><span class="info-value" style="color:var(--accent);font-weight:700">\${sfSupportHandled}</span></div>
+        <div class="info-row"><span class="info-label">Issues Resolved</span><span class="info-value" style="color:var(--green);font-weight:700">\${sfResolved}</span></div>
+        <div class="info-row"><span class="info-label">Transactions Reviewed</span><span class="info-value" style="color:var(--blue);font-weight:700">\${sfTxnsReviewed}</span></div>
+        <div class="info-row"><span class="info-label">Reports Submitted</span><span class="info-value" style="color:var(--purple);font-weight:700">\${sfReportsSubmitted}</span></div>
+      </div>\`
+          : CU.role === 'attendee'
+          ? \`<div class="card mb-16">
+        <div class="h4 mb-14">Activity Summary</div>
+        <div class="info-row"><span class="info-label">Events Registered</span><span class="info-value">\${
+          regs.length
+        }</span></div>
+        <div class="info-row"><span class="info-label">Upcoming Events</span><span class="info-value" style="color:var(--accent)">\${
+          regs.filter(registration => {
+            const event = DB.events.find(currentEvent => currentEvent.id === registration.eventId);
+            return event && event.status === 'upcoming';
+          }).length
+        }</span></div>
+        <div class="info-row"><span class="info-label">Events Attended</span><span class="info-value" style="color:var(--green)">\${
+          regs.filter(registration => registration.checkedIn).length
+        }</span></div>
+        <div class="info-row"><span class="info-label">Total Spent</span><span class="info-value" style="color:var(--green);font-weight:700">₹\${regs.reduce(
+          (total, registration) => total + registration.amount,
+          0
+        )}</span></div>
+      </div>\`
+          : CU.role === 'organizer'
+          ? \`<div class="card mb-16">
+        <div class="h4 mb-14">Event Summary</div>
+        <div class="info-row"><span class="info-label">Total Events</span><span class="info-value">\${
+          myEvs.length
+        }</span></div>
+        <div class="info-row"><span class="info-label">Upcoming</span><span class="info-value" style="color:var(--accent)">\${
+          myEvs.filter(e => e.status === 'upcoming').length
+        }</span></div>
+        <div class="info-row"><span class="info-label">Completed</span><span class="info-value" style="color:var(--green)">\${
+          myEvs.filter(e => e.status === 'completed').length
+        }</span></div>
+      </div>\`
+          : ''
+      }
+      <div class="card">
+        <div class="h4 mb-14">Quick Actions</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-ghost w-full" onclick="goNav('settings')">⚙️ Account Settings</button>
+          <button class="btn btn-danger w-full" onclick="doLogout()">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </div>\`;
+}
+
+// ════════════════════════════════════════════════
+//  SETTINGS
+// ════════════════════════════════════════════════
+
+function pageSettings() {
+  return \`
+  <div class="page-hd"><div class="page-hd-left"><div class="page-title">Account Settings</div><div class="page-sub">Manage your personal information and account preferences.</div></div></div>
+  <div class="grid-2" style="align-items:start;gap:20px">
+    <div class="card card-lg">
+      <div class="h4 mb-20">Personal Information</div>
+      <div class="profile-banner" style="margin-bottom:20px;padding:18px">
+        \${
+          CU.avatarImage
+            ? \`<div class="av av-lg"><img src="\${CU.avatarImage}" alt="\${
+                CU.name
+              }" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">\${
+                CU.avatar || CU.name[0]
+              }</span></div>\`
+            : \`<div class="av av-lg">\${CU.avatar || CU.name[0]}</div>\`
+        }
+        <div><div style="font-weight:700">\${CU.name}</div><div class="small">\${
+    ROLE_LABELS[CU.role]
+  }</div></div>
+      </div>
+      <div class="form-group"><label class="form-label">Full Name</label><input class="form-control" id="st-name" value="\${
+        CU.name
+      }"></div>
+      <div class="form-group"><label class="form-label">Email Address</label><input class="form-control" id="st-email" value="\${
+        CU.email
+      }"></div>
+      <div class="form-group"><label class="form-label">Phone Number</label><input class="form-control" id="st-phone" value="\${
+        CU.phone || ''
+      }"></div>
+      <div class="form-group"><label class="form-label">Bio</label><textarea class="form-control" id="st-bio">\${
+        CU.bio || ''
+      }</textarea></div>
+      <button class="btn btn-primary w-full" onclick="saveSettings()" style="justify-content:center">Save Changes</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="card card-lg">
+        <div class="h4 mb-20">Change Password</div>
+        <div class="form-group"><label class="form-label">Current Password</label><input class="form-control" id="st-cur" type="password" placeholder="Enter current password"></div>
+        <div class="form-group"><label class="form-label">New Password</label><input class="form-control" id="st-new" type="password" placeholder="Min 6 characters"></div>
+        <div class="form-group"><label class="form-label">Confirm New Password</label><input class="form-control" id="st-conf" type="password" placeholder="Re-enter new password"></div>
+        <button class="btn btn-primary w-full" onclick="changePass()" style="justify-content:center">Update Password</button>
+      </div>
+      <div class="card">
+        <div class="h4 mb-16">Preferences</div>
+        <div class="info-row"><span class="info-label">Email Notifications</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="info-row"><span class="info-label">SMS Reminders</span><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+        <div class="info-row"><span class="info-label">Event Recommendations</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+      <div class="card">
+        <button class="btn btn-danger w-full mb-8" onclick="doLogout()" style="justify-content:center">Sign Out</button>
+      </div>
+    </div>
+  </div>\`;
+}
+function saveSettings() {
+  const name = v('st-name');
+  const email = v('st-email');
+  const phone = v('st-phone');
+  const bio = v('st-bio');
+  if (!name) {
+    toast('Name is required', 'error');
+    return;
+  }
+  if (!email || !email.includes('@')) {
+    toast('Enter a valid email', 'error');
+    return;
+  }
+  if (window.EventFlowAccountPolicy.isEmailInUse(DB.users, email, CU.id || CU.userId)) {
+    toast('Email already registered', 'error');
+    return;
+  }
+  CU.name = name;
+  CU.email = email;
+  CU.phone = phone;
+  CU.bio = bio;
+  CU.avatar = name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+  const u = DB.users.find(user => user.id === CU.id);
+  if (u) {
+    Object.assign(u, {
+      name,
+      email,
+      phone,
+      bio,
+      avatar: CU.avatar,
+    });
+  }
+  g('sb-name').textContent = name;
+  updateHeaderUser();
+  g('sb-av').textContent = CU.avatar;
+  toast('Settings saved successfully!', 'success');
+}
+function changePass() {
+  const cur = v('st-cur');
+  const nw = v('st-new');
+  const conf = v('st-conf');
+  if (!cur || !nw || !conf) {
+    toast('Fill all password fields', 'error');
+    return;
+  }
+  if (cur !== CU.password) {
+    toast('Current password is incorrect', 'error');
+    return;
+  }
+  if (nw.length < 6) {
+    toast('Password must be at least 6 characters', 'error');
+    return;
+  }
+  if (nw !== conf) {
+    toast('Passwords do not match', 'error');
+    return;
+  }
+  CU.password = nw;
+  const u = DB.users.find(user => user.id === CU.id);
+  if (u) u.password = nw;
+  ['st-cur', 'st-new', 'st-conf'].forEach(id => {
+    const element = g(id);
+    if (element) element.value = '';
+  });
+  toast('Password changed successfully!', 'success');
+}
+
+// ════════════════════════════════════════════════
+//  CLIENT PAGES
+// ════════════════════════════════════════════════
+function pageFindOrganizers() {
+  const q = (sessionStorage.getItem('search_org_q') || '').toLowerCase();
+  const rating = sessionStorage.getItem('search_org_rating') || 'all';
+  const category = sessionStorage.getItem('search_org_category') || 'all';
+  let organizers = DB.users.filter(user => user.role === 'organizer');
+  if (q) {
+    organizers = organizers.filter(
+      organizer =>
+        organizer.name.toLowerCase().includes(q) || organizer.service.toLowerCase().includes(q)
+    );
+  }
+  if (category !== 'all') {
+    organizers = organizers.filter(
+      organizer => organizer.service === category || organizer.eventTypes?.includes(category)
+    );
+  }
+  if (rating !== 'all') {
+    const minRating = parseFloat(rating);
+    organizers = organizers.filter(organizer => (organizer.rating || 0) >= minRating);
+  }
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left">
+      <div class="page-title">Find Event Organisers</div>
+      <div class="page-sub">Discover and connect with top-rated event organizers across India</div>
+    </div>
+  </div>
+  
+  <div class="filter-row">
+    <div class="search-box input-group" style="flex:1;max-width:400px">
+      <span class="input-icon">🔍</span>
+      <input class="form-control" id="search-org-q" placeholder="Search by organizer name or specialization..." value="\${q}" oninput="searchOrganizers(this.value)">
+    </div>
+    <select class="form-control filter-select" id="search-org-rating" onchange="filterOrganizers()">
+      <option value="all">All Ratings</option>
+      <option value="4.5">4.5+ stars</option>
+      <option value="4">4+ stars</option>
+      <option value="3.5">3.5+ stars</option>
+    </select>
+    <select class="form-control filter-select" id="search-org-category" onchange="filterOrganizers()">
+      <option value="all">All Categories</option>
+      <option>Corporate Events</option>
+      <option>Conferences</option>
+      <option>Weddings & Social Events</option>
+      <option>Workshops</option>
+      <option>Product Launches</option>
+    </select>
+  </div>
+  
+  <div style="margin-bottom:16px;color:var(--text2);font-size:13px">Showing \${
+    organizers.length
+  } event organiser\${organizers.length !== 1 ? 's' : ''}</div>
+  
+  <div class="grid-3" style="gap:16px">
+    \${
+      organizers.length === 0
+        ? \`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No organizers found</div><p>Try adjusting your search filters</p></div>\`
+        : organizers
+            .map(organizer => {
+              const rt = organizer.rating || 0;
+              const rv = organizer.reviews || Math.floor(rt * 38) + 12;
+              const event = organizer.eventsCount || Math.floor(rt * 65) + 20;
+              const orgAv = organizer.avatarImage
+                ? \`
+          <div style="width:56px;height:56px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid \${
+            organizer.color || 'var(--accent)'
+          }40;position:relative">
+            <img src="\${organizer.avatarImage}" alt="\${
+                    organizer.name
+                  }" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:\${
+              organizer.color || 'var(--accent)'
+            }20;font-size:20px;font-weight:700;color:\${organizer.color || 'var(--accent)'}">\${
+                    organizer.avatar || organizer.name[0]
+                  }</div>
+          </div>
+        \`
+                : \`<div style="width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:\${
+                    organizer.color || 'var(--accent)'
+                  }15;font-size:20px;font-weight:700;color:\${
+                    organizer.color || 'var(--accent)'
+                  };border:2px solid \${organizer.color || 'var(--accent)'}30">\${
+                    organizer.avatar || organizer.name[0]
+                  }</div>\`;
+              return \`
+      <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;transition:transform .18s,box-shadow .18s;cursor:pointer" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="viewOrganizerProfile('\${
+        organizer.id
+      }')">
+        <div style="display:flex;align-items:center;gap:12px">
+          \${orgAv}
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              <span style="font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\${
+                organizer.name
+              }</span>
+              <span style="background:var(--yellow);color:#1a1400;padding:1px 7px;border-radius:10px;font-size:10.5px;font-weight:700;flex-shrink:0">⭐ \${rt.toFixed(
+                1
+              )}</span>
+            </div>
+            <div style="font-size:12px;color:var(--accent);font-weight:500;margin-bottom:2px">\${
+              organizer.service || 'Event Organizer'
+            }</div>
+            <div style="font-size:11.5px;color:var(--text3)">📍 \${organizer.city || 'India'}</div>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.5;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">\${
+          organizer.bio || 'Professional event organizer with extensive industry experience.'
+        }</p>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="background:var(--surface3);padding:3px 10px;border-radius:6px;font-size:11px;color:var(--text2)"><strong style="color:var(--text)">\${event}</strong> events</span>
+          <span style="background:var(--surface3);padding:3px 10px;border-radius:6px;font-size:11px;color:var(--text2)"><strong style="color:var(--text)">\${rv}</strong> reviews</span>
+          <span style="background:var(--green)14;padding:3px 10px;border-radius:6px;font-size:11px;color:var(--green);font-weight:600">96% satisfaction</span>
+        </div>
+        <button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();viewOrganizerProfile('\${
+          organizer.id
+        }')" style="justify-content:center;padding:8px;font-size:12.5px">View Profile & Request Event</button>
+      </div>\`;
+            })
+            .join('')
+    }
+  </div>\`;
+}
+function searchOrganizers(q) {
+  sessionStorage.setItem('search_org_q', q);
+  renderPage('find-organizers');
+}
+function filterOrganizers() {
+  const rating = g('search-org-rating').value;
+  const category = g('search-org-category').value;
+  sessionStorage.setItem('search_org_rating', rating);
+  sessionStorage.setItem('search_org_category', category);
+  renderPage('find-organizers');
+}
+function viewOrganizerProfile(organizerId) {
+  const organizer = DB.users.find(user => String(user.id) === String(organizerId));
+  if (!organizer) return;
+  const rating = organizer.rating || 0;
+  const reviews = organizer.reviewCount || 0;
+  const events = organizer.eventCount || 0;
+  const completedEvents = Math.floor(events * 0.9);
+  const orgModalAv = organizer.avatarImage
+    ? \`
+        <div style="width:80px;height:80px;border-radius:12px;overflow:hidden;flex-shrink:0;background:\${
+          organizer.color || 'var(--accent)'
+        }20;position:relative">
+          <img src="\${organizer.avatarImage}" alt="\${
+        organizer.name
+      }" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:60px;color:\${
+            organizer.color || 'var(--accent)'
+          }">\${organizer.avatar || organizer.name[0]}</div>
+        </div>
+      \`
+    : \`<div style="font-size:60px;width:80px;height:80px;display:flex;align-items:center;justify-content:center;background:\${
+        organizer.color || 'var(--accent)'
+      }20;border-radius:12px;flex-shrink:0">\${organizer.avatar || organizer.name[0]}</div>\`;
+  openModal(
+    \`\${organizer.name} - Organizer Profile\`,
+    \`
+    <div style="background:linear-gradient(135deg,\${organizer.color || 'var(--accent)'}20,\${
+      organizer.color || 'var(--accent)'
+    }05);border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid \${
+      organizer.color || 'var(--accent)'
+    }30">
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        \${orgModalAv}
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:20px;margin-bottom:4px">\${organizer.name}</div>
+          <div style="color:var(--accent);font-weight:500;margin-bottom:8px">\${
+            organizer.service || 'Event Organizer'
+          }</div>
+          <div style="display:flex;gap:12px;margin-bottom:8px">
+            <span style="background:var(--yellow);color:#1a1400;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">⭐ \${rating.toFixed(
+              1
+            )}</span>
+            <span style="color:var(--text2);font-size:13px">\${reviews} reviews</span>
+            <span style="color:var(--text2);font-size:13px">📍 \${organizer.city || 'India'}</span>
+          </div>
+          <div style="color:var(--text2);font-size:13px">\${
+            organizer.bio || 'Professional event organizer'
+          }</div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-bottom:20px">
+      <div class="h4 mb-12">Statistics</div>
+      <div class="grid-3" style="gap:12px;margin-bottom:16px">
+        <div style="background:var(--surface3);padding:12px;border-radius:8px;text-align:center">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">COMPLETED EVENTS</div>
+          <div style="font-size:24px;font-weight:800;color:var(--green)">\${completedEvents}</div>
+        </div>
+        <div style="background:var(--surface3);padding:12px;border-radius:8px;text-align:center">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">TOTAL REVIEWS</div>
+          <div style="font-size:24px;font-weight:800;color:var(--blue)">\${reviews}</div>
+        </div>
+        <div style="background:var(--surface3);padding:12px;border-radius:8px;text-align:center">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">SATISFACTION RATE</div>
+          <div style="font-size:24px;font-weight:800;color:var(--green)">96%</div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-bottom:20px">
+      <div class="h4 mb-12">Contact Information</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface3);border-radius:8px">
+          <span>✉️</span>
+          <div>
+            <div style="font-size:11px;color:var(--text3)">Email</div>
+            <div style="font-weight:500">\${organizer.email}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface3);border-radius:8px">
+          <span>📞</span>
+          <div>
+            <div style="font-size:11px;color:var(--text3)">Phone</div>
+            <div style="font-weight:500">\${organizer.phone || '+91 9876543210'}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface3);border-radius:8px">
+          <span>🌐</span>
+          <div>
+            <div style="font-size:11px;color:var(--text3)">Location</div>
+            <div style="font-weight:500">\${organizer.city || 'India'}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  \`,
+    [
+      {
+        lbl: 'Request Event',
+        cls: 'btn-primary',
+        fn: \`closeModal();openRequestModal('\${organizerId}')\`,
+      },
+    ],
+    true
+  );
+}
+function contactOrganizer(organizerId) {
+  const organizer = DB.users.find(user => user.id === organizerId);
+  if (!organizer) return;
+  toast(\`Opening contact form for \${organizer.name}...\`, 'info');
+}
+function openRequestModal(organizerId) {
+  const organizer = DB.users.find(user => String(user.id) === String(organizerId));
+  openModal(
+    \`Request Event - \${organizer.name}\`,
+    \`
+    <div class="form-group"><label class="form-label">Event Title *</label><input class="form-control" id="req-title" placeholder="e.g., Product Launch 2026"></div>
+    <div class="form-group"><label class="form-label">Event Type *</label><select class="form-control" id="req-type"><option>Corporate Events</option><option>Conferences</option><option>Weddings</option><option>Workshops</option></select></div>
+    <div class="form-group"><label class="form-label">Expected Date *</label><input class="form-control" id="req-date" type="date"></div>
+    <div class="form-group"><label class="form-label">Expected Guests</label><input class="form-control" id="req-guests" type="number" placeholder="100"></div>
+    <div class="form-group"><label class="form-label">Budget (INR) *</label><input class="form-control" id="req-budget" type="number" placeholder="50000"></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="req-desc" placeholder="Tell the organizer about your event..."></textarea></div>
+  \`,
+    [
+      {
+        lbl: 'Send Request',
+        cls: 'btn-primary',
+        fn: \`submitEventRequest('\${organizerId}')\`,
+      },
+    ]
+  );
+}
+function submitEventRequest(organizerId) {
+  const title = v('req-title');
+  const type = v('req-type');
+  const date = v('req-date');
+  const guests = parseInt(v('req-guests')) || 1;
+  const budget = parseInt(v('req-budget')) || 0;
+  const desc = v('req-desc');
+  if (!title || !date || budget <= 0) {
+    toast('Please provide a title, valid date, and budget greater than 0', 'error');
+    return;
+  }
+  if (date <= today()) {
+    toast('Event date must be in the future', 'danger');
+    return;
+  }
+
+  // Check for duplicate active request
+  const isDup = DB.eventRequests.some(
+    request =>
+      String(request.clientId) === String(CU.id) &&
+      request.title &&
+      request.title.toLowerCase().trim() === title.toLowerCase().trim() &&
+      request.date === date &&
+      [
+        'submitted',
+        'pending',
+        'under_review',
+        'info_requested',
+        'proposal_sent',
+        'awaiting_client',
+        'confirmed',
+      ].includes(request.status)
+  );
+  if (isDup) {
+    toast(\`An active request for "\${title}" on \${date} already exists.\`, 'warning');
+    return;
+  }
+  const reqId = DB._nextId.reqs++;
+  const newReq = {
+    id: reqId,
+    clientId: CU.id,
+    organizer: organizerId,
+    title,
+    type: type || 'Corporate',
+    date,
+    guests,
+    budget,
+    desc: desc || '',
+    status: 'submitted',
+    agreementStatus: 'not_sent',
+    paymentStatus: 'unpaid',
+    proposals: [],
+    clarifications: [],
+    auditHistory: [
+      {
+        id: 'aud-' + Date.now(),
+        action: 'Request Submitted',
+        performedBy: CU.name || 'Client',
+        role: 'client',
+        timestamp: today(),
+        details: {
+          budget,
+          guests,
+          date,
+        },
+      },
+    ],
+    created: today(),
+  };
+  DB.eventRequests.push(newReq);
+  saveDB();
+  closeModal();
+  renderPage(_currentPage);
+  toast('Request submitted to organizer!', 'success');
+}
+function pageUpcomingEvents() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcoming = DB.events
+    .filter(event => {
+      const eDate = new Date(event.date);
+      return eDate >= today && event.status === 'upcoming' && !isCancelledWorkflowEvent(event);
+    })
+    .sort((leftEvent, rightEvent) => new Date(leftEvent.date) - new Date(rightEvent.date));
+  return \`
+  <div class="page-hd">
+    <div class="page-hd-left">
+      <div class="page-title">Upcoming Events</div>
+      <div class="page-sub">Events happening soon that you might be interested in</div>
+    </div>
+  </div>
+  <div class="events-grid">\${
+    upcoming.length === 0
+      ? \`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📅</div><div class="empty-title">No upcoming events</div></div>\`
+      : upcoming.map(event => evCard(event, CU.role === 'client' ? 'client' : 'attendee')).join('')
+  }</div>\`;
+}
+function setWorkflowEventTab(tab) {
+  if (!['ongoing', 'completed', 'cancelled'].includes(tab)) return;
+  _workflowEventTab = tab;
+  goNav('my-events');
+}
+function isCancelledWorkflowEvent(event) {
+  return (
+    String(event?.backendStatus || '').toLowerCase() === 'cancelled' ||
+    String(event?.status || '').toLowerCase() === 'cancelled' ||
+    Boolean(event?.cancellation)
+  );
+}
+function workflowEventPhase(event) {
+  const status = String(event?.backendStatus || event?.status || '').toLowerCase();
+  if (
+    String(event?.backendStatus || '').toLowerCase() === 'cancelled' ||
+    String(event?.status || '').toLowerCase() === 'cancelled' ||
+    event?.cancellation
+  )
+    return 'cancelled';
+  if (['completed', 'cancelled'].includes(status)) return status;
+  const date = String(event?.date || '');
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)) return status === 'ongoing' ? 'ongoing' : 'upcoming';
+  const now = new Date();
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
+  if (date < today) return 'completed';
+  if (date > today) return 'upcoming';
+  const start = new Date(\`\${date}T\${event.time || '10:00'}+05:30\`);
+  return !Number.isNaN(start.getTime()) && start > now ? 'upcoming' : 'ongoing';
+}
+function getOngoingWorkflowItems() {
+  if (!CU || !['organizer', 'client'].includes(CU.role)) return [];
+  const organizer = CU.role === 'organizer';
+  const profileKey = organizer ? 'organizerId' : 'clientId';
+  const userKey = organizer ? 'organizerUserId' : 'clientUserId';
+  const legacyKey = organizer ? 'organizer' : 'client';
+  const ownerIds = new Set([CU.id, CU.userId, CU[profileKey]].filter(id => id != null).map(String));
+  const profiles = organizer ? DB.organizers || [] : DB.clients || [];
+  profiles
+    .filter(profile => ownerIds.has(String(profile.userId)))
+    .forEach(profile => {
+      if (profile[profileKey] != null) ownerIds.add(String(profile[profileKey]));
+    });
+  const requests = (DB.eventRequests || []).filter(request => {
+    if (
+      ['rejected', 'withdrawn', 'expired', 'cancelled', 'completed'].includes(
+        String(request.status || '').toLowerCase()
+      ) ||
+      request.cancellation
+    )
+      return false;
+    if (request[userKey] != null) return ownerIds.has(String(request[userKey]));
+    return [request[profileKey], request[legacyKey]].some(
+      id => id != null && ownerIds.has(String(id))
+    );
+  });
+  const requestByEvent = new Map(
+    requests
+      .filter(request => request.eventId != null)
+      .map(request => [String(request.eventId), request])
+  );
+  const items = [];
+  const seenEvents = new Set();
+  const seenRequests = new Set();
+  (DB.events || []).forEach(event => {
+    if (
+      event.status !== 'ongoing' ||
+      workflowEventPhase(event) === 'completed' ||
+      isCancelledWorkflowEvent(event)
+    )
+      return;
+    const eventId = event.eventId || event.id;
+    if (eventId == null || seenEvents.has(String(eventId))) return;
+    const request = requestByEvent.get(String(eventId));
+    if (!request) return;
+    items.push({
+      event,
+      request,
+      isPlanning: false,
+    });
+    seenEvents.add(String(eventId));
+    seenRequests.add(String(request.requestId || request.id));
+  });
+  requests.forEach(request => {
+    const requestId = request.requestId || request.id;
+    if (requestId == null || seenRequests.has(String(requestId))) return;
+    const isPlanning =
+      !['confirmed', 'approved'].includes(request.status) &&
+      (['planning', 'plan_submitted', 'plan_revision_requested'].includes(request.status) ||
+        Boolean(request.activeEventPlanId) ||
+        (request.auditHistory || []).some(
+          entry => entry.action === 'Client Accepted Requested Changes'
+        ));
+    if (!isPlanning) return;
+    if (
+      request.eventId != null &&
+      (DB.events || []).some(
+        event =>
+          String(event.eventId || event.id) === String(request.eventId) &&
+          (isCancelledWorkflowEvent(event) ||
+            String(event.status || '').toLowerCase() === 'completed')
+      )
+    )
+      return;
+    items.push({
+      request,
+      isPlanning: true,
+    });
+    seenRequests.add(String(requestId));
+  });
+  return items.sort((left, right) => {
+    const leftRecord = left.event || left.request;
+    const rightRecord = right.event || right.request;
+    return (Date.parse(rightRecord.createdAt || rightRecord.created || '') || 0) -
+      (Date.parse(leftRecord.createdAt || leftRecord.created || '') || 0);
+  });
+}
+function organizerEventRequest(event, workspace = DB) {
+  const eventIds = new Set([event?.eventId, event?.id].filter(id => id != null).map(String));
+  return (
+    (workspace.eventRequests || []).find(
+      request =>
+        (request.eventId != null && eventIds.has(String(request.eventId))) ||
+        (event?.requestId != null &&
+          String(request.requestId || request.id) === String(event.requestId))
+    ) || null
+  );
+}
+function ownsOrganizerEvent(event, request, workspace = DB, user = CU) {
+  if (user?.role !== 'organizer') return false;
+  if (request === undefined) request = organizerEventRequest(event, workspace);
+  const ownerIds = new Set([user.id, user.userId, user.organizerId].filter(id => id != null).map(String));
+  (workspace.organizers || [])
+    .filter(profile => ownerIds.has(String(profile.userId)))
+    .forEach(profile => {
+      if (profile.organizerId != null) ownerIds.add(String(profile.organizerId));
+    });
+  return [
+    event?.organizerUserId,
+    event?.organizerId,
+    event?.organizer,
+    request?.organizerUserId,
+    request?.organizerId,
+    request?.organizer,
+  ].some(id => id != null && ownerIds.has(String(id)));
+}
+function organizerEventCardStatus(event) {
+  if (isCancelledWorkflowEvent(event)) return 'cancelled';
+  const status = String(event?.backendStatus || event?.status || '').toLowerCase();
+  return ['draft', 'pending'].includes(status) ? 'draft' : workflowEventPhase(event);
+}
+function renderOrganizerEventActions(event, request = organizerEventRequest(event)) {
+  const eventId = event?.eventId || event?.id;
+  const requestId = request?.requestId || request?.id || event?.requestId || '';
+  const status = organizerEventCardStatus(event);
+  const booked = Boolean(request || event?.clientId || event?.backendClientId);
+  const details =
+    booked || status === 'cancelled'
+      ? \`viewWorkflowEventDetails('\${escapeHtml(eventId)}')\`
+      : \`openViewEventDrawer('\${escapeHtml(eventId)}')\`;
+  const buttons = [
+    \`<button type="button" class="btn btn-ghost btn-xs" onclick="\${details}">\${
+      status === 'cancelled' ? 'View Cancellation History' : 'View Details'
+    }</button>\`,
+  ];
+  const requestClosed =
+    request?.cancellation ||
+    ['completed', 'cancelled', 'withdrawn', 'rejected', 'expired'].includes(
+      String(request?.status || '').toLowerCase()
+    );
+  if (
+    ownsOrganizerEvent(event, request) &&
+    !['completed', 'cancelled'].includes(status) &&
+    !requestClosed
+  ) {
+    if (!booked)
+      buttons.push(
+        \`<button type="button" class="btn btn-ghost btn-xs" onclick="openEditEventModal('\${escapeHtml(
+          event.id || eventId
+        )}')">Edit</button>\`
+      );
+    const eventIds = new Set([event?.id, eventId].filter(id => id != null).map(String));
+    const registrations = (DB.registrations || []).filter(
+      registration => registration.eventId != null && eventIds.has(String(registration.eventId))
+    );
+    const registrationIds = new Set(
+      registrations
+        .flatMap(registration => [registration.registrationId, registration.id])
+        .filter(id => id != null)
+        .map(String)
+    );
+    const hasPayments = (DB.payments || [])
+      .concat(DB.eventWorkflowPayments || [])
+      .some(
+        payment =>
+          (payment.eventId != null && eventIds.has(String(payment.eventId))) ||
+          (payment.registrationId != null && registrationIds.has(String(payment.registrationId)))
+      );
+    const deletableDraft =
+      status === 'draft' &&
+      !booked &&
+      !Number(event.registered || 0) &&
+      !registrations.length &&
+      !hasPayments;
+    if (deletableDraft)
+      buttons.push(
+        \`<button type="button" class="btn btn-danger btn-xs" onclick="handleOrganizerDeleteEvent('\${escapeHtml(
+          eventId
+        )}')">Delete Draft</button>\`
+      );
+    else if (
+      !request ||
+      ['confirmed', 'approved'].includes(String(request.status || '').toLowerCase())
+    ) {
+      buttons.push(
+        \`<button type="button" class="btn btn-danger btn-xs" onclick="openOrganizerEventCancellationModal('\${escapeHtml(
+          eventId
+        )}', '\${escapeHtml(requestId)}')">Cancel Event</button>\`
+      );
+    }
+  }
+  return \`<div class="organizer-event-actions">\${buttons.join('')}</div>\`;
+}
+function pageWorkflowEvents() {
+  const myEvents = (DB && DB.events) || [];
+  const upcomingCount = myEvents.filter(event => workflowEventPhase(event) === 'upcoming').length;
+  const inProgressCount = myEvents.filter(event => workflowEventPhase(event) === 'ongoing').length;
+  const completedCount = myEvents.filter(event => workflowEventPhase(event) === 'completed').length;
+  const cancelledCount = myEvents.filter(
+    event => (event.backendStatus || event.status) === 'cancelled' || Boolean(event.cancellation)
+  ).length;
+  const attentionCount = myEvents.filter(event => event.needsAttention === true).length;
+  const allCount = myEvents.length;
+  const ongoingCount =
+    typeof getOngoingWorkflowItems === 'function'
+      ? getOngoingWorkflowItems().length
+      : inProgressCount;
+  return \`<div class="page-hd"><div class="page-hd-left"><div class="page-title">Events</div><div class="page-sub">Track your ongoing events and review completed events and reports.</div></div></div>
+        <nav aria-label="Event subpages" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+          <button type="button" class="btn \${
+            _workflowEventTab === 'ongoing' ? 'btn-primary' : 'btn-ghost'
+          }" aria-pressed="\${
+    _workflowEventTab === 'ongoing'
+  }" onclick="setWorkflowEventTab('ongoing')">Ongoing Events (\${ongoingCount})</button>
+          <button type="button" class="btn \${
+            _workflowEventTab === 'completed' ? 'btn-primary' : 'btn-ghost'
+          }" aria-pressed="\${
+    _workflowEventTab === 'completed'
+  }" onclick="setWorkflowEventTab('completed')">Completed Events (\${completedCount})</button>
+          <button type="button" class="btn \${
+            _workflowEventTab === 'cancelled' ? 'btn-primary' : 'btn-ghost'
+          }" aria-pressed="\${
+    _workflowEventTab === 'cancelled'
+  }" onclick="setWorkflowEventTab('cancelled')">Cancelled Events (\${cancelledCount})</button>
+        </nav>
+        <div class="filter-bar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;font-size:12px;align-items:center">
+          <span>All Events (\${allCount})</span>
+          <span>Upcoming (\${upcomingCount})</span>
+          <span>In Progress (\${inProgressCount})</span>
+          <span>Completed (\${completedCount})</span>
+          <span>Cancelled (\${cancelledCount})</span>
+          <span>Needs Attention (\${attentionCount})</span>
+          <span>Newest first</span>
+          <button class="btn btn-ghost btn-xs" onclick="setOrganizerEventFilter('clear')">Clear filters</button>
+        </div>
+        <section aria-label="\${
+          _workflowEventTab === 'cancelled'
+            ? 'Cancelled Events'
+            : _workflowEventTab === 'completed'
+            ? 'Completed Events'
+            : 'Ongoing Events'
+        }">\${
+    _workflowEventTab === 'cancelled'
+      ? pageCancelledEvents(true)
+      : _workflowEventTab === 'completed'
+      ? typeof pageCompletedEvents === 'function'
+        ? pageCompletedEvents(true)
+        : ''
+      : typeof pageOngoingEvents === 'function'
+      ? pageOngoingEvents(true)
+      : ''
+  }</section>\`;
+}
+function pageCancelledEvents(embedded = false) {
+  const cancelled = (DB.events || [])
+    .filter(isCancelledWorkflowEvent)
+    .sort(
+      (a, b) =>
+        new Date(b.cancellation?.cancelledAt || b.updatedAt || 0) -
+        new Date(a.cancellation?.cancelledAt || a.updatedAt || 0)
+    );
+  const refundStatus = event => {
+    const refunds = event.registrationSummary?.refunds || {};
+    const statuses = ['pending', 'completed', 'failed']
+      .filter(status => Number(refunds[status]) > 0)
+      .map(status => \`\${Number(refunds[status])} \${status}\`);
+    if (statuses.length) return statuses.join(', ');
+    const cancellationStatus = String(event.cancellation?.refundStatus || '').toLowerCase();
+    return cancellationStatus === 'pending'
+      ? 'Pending'
+      : cancellationStatus === 'not_applicable'
+      ? 'Not applicable'
+      : cancellationStatus || 'Not recorded';
+  };
+  return \`\${
+    embedded
+      ? ''
+      : '<div class="page-hd"><div class="page-hd-left"><div class="page-title">Cancelled Events</div><div class="page-sub">Preserved cancellation and refund history</div></div></div>'
+  }
+        <div class="events-grid">\${
+          cancelled.length
+            ? cancelled
+                .map(
+                  event => \`<div class="ev-card">
+          <div class="ev-body"><div class="flex justify-between gap-8"><div class="ev-title">\${escapeHtml(
+            event.title || event.name || 'Cancelled Event'
+          )}</div><span class="badge badge-red">Cancelled</span></div>
+          <div class="ev-meta"><div class="ev-meta-row"><span>📅</span>Event date: \${escapeHtml(
+            event.date || 'Date unavailable'
+          )} · \${escapeHtml(
+                    event.time || ''
+                  )}</div><div class="ev-meta-row"><span>📍</span>\${escapeHtml(
+                    event.venue || event.location || 'Venue unavailable'
+                  )}</div></div>
+          <div style="font-size:12px;color:var(--text2);margin-top:10px"><strong>Cancellation reason:</strong> \${escapeHtml(
+            event.cancellation?.reason || event.cancellationReason || 'No reason recorded'
+          )}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:6px"><strong>Cancellation date:</strong> \${
+            event.cancellation?.cancelledAt
+              ? escapeHtml(new Date(event.cancellation.cancelledAt).toLocaleString())
+              : 'Date unavailable'
+          }</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:6px"><strong>Refund status:</strong> \${escapeHtml(
+            refundStatus(event)
+          )}</div>
+          <div class="ev-footer"><button class="btn btn-ghost btn-xs" onclick="openViewEventDrawer('\${workflowHtml(
+            event.eventId || event.id
+          )}')">View Details</button><button class="btn btn-ghost btn-xs" onclick="viewWorkflowEventDetails('\${workflowHtml(
+                    event.eventId || event.id
+                  )}')">View Cancellation History</button></div></div>
+        </div>\`
+                )
+                .join('')
+            : '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📁</div><div class="empty-title">No cancelled events</div></div>'
+        }</div>\`;
+}
+function setOrganizerEventFilter(filter) {
+  if (typeof sessionStorage !== 'undefined') {
+    if (filter === 'clear') sessionStorage.removeItem('org_events_status_filter');
+    else sessionStorage.setItem('org_events_status_filter', filter);
+  }
+  if (typeof renderPage === 'function') renderPage(_currentPage);
+}
+function pageCompletedEvents(embedded = false) {
+  const completed = DB.events
+    .filter(event => workflowEventPhase(event) === 'completed')
+    .sort((leftEvent, rightEvent) => new Date(rightEvent.date) - new Date(leftEvent.date));
+  return \`\${
+    embedded
+      ? ''
+      : \`
+  <div class="page-hd">
+    <div class="page-hd-left">
+      <div class="page-title">Completed Events</div>
+      <div class="page-sub">Events that have been successfully completed</div>
+    </div>
+  </div>\`
+  }
+  <div class="events-grid">\${
+    completed.length === 0
+      ? \`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">✅</div><div class="empty-title">No completed events</div></div>\`
+      : completed
+          .map(event => {
+            const bannerContent = event.image
+              ? \`
+          <img src="\${event.image}" alt="\${
+                  event.title || 'Event'
+                }" class="ev-banner-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="ev-banner-fallback" style="display:none;align-items:center;justify-content:center;font-size:52px;width:100%;height:100%">\${
+            event.emoji || '📅'
+          }</div>
+          <div class="ev-banner-overlay"></div>
+        \`
+              : \`<span style="font-size:52px">\${event.emoji || '📅'}</span>\`;
+            return \`<div class="ev-card">
+    <div class="ev-banner" style="background:\${event.color || 'var(--accent)'}18">
+      \${bannerContent}
+      <div class="ev-banner-tag"><span class="badge badge-green">✓ Completed</span></div>
+      <div class="ev-banner-price">\${event.price === 0 ? 'Free' : '₹' + event.price}</div>
+    </div>
+    <div class="ev-body">
+      <div class="ev-title">\${event.title}</div>
+      <div class="ev-meta">
+        <div class="ev-meta-row"><span>📅</span>\${event.date} · \${event.time}</div>
+        <div class="ev-meta-row"><span>📍</span>\${event.venue}</div>
+        <div class="ev-meta-row"><span>🏷️</span>\${event.category}</div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="flex justify-between ev-cap mb-4"><span>\${event.registered}/\${
+              event.capacity
+            } attended</span></div>
+        <div style="font-size:12px;color:var(--green);margin-top:8px">✓ Event Successfully Completed</div>
+      </div>
+      <div class="ev-footer">
+        <div class="flex gap-6" style="width:100%;justify-content:space-between">
+          <button class="btn btn-ghost btn-xs w-full" onclick="viewWorkflowEventDetails('\${
+            event.id
+          }')" title="View event details">👁️ View Details</button>
+          <button class="btn btn-primary btn-xs" onclick="viewWorkflowEventReport('\${
+            event.id
+          }')" title="View completion report">📊 View Report</button>
+        </div>
+        <div class="tag-list" style="flex:1;justify-content:flex-end">\${(event.tags || [])
+          .slice(0, 2)
+          .map(tag => \`<span class="tag">\${tag}</span>\`)
+          .join('')}</div>
+      </div>
+    </div>
+  </div>\`;
+          })
+          .join('')
+  }</div>\`;
+}
+function pageOngoingEvents(embedded = false) {
+  if (!['client', 'organizer'].includes(CU.role)) {
+    const publicOngoing = DB.events.filter(event => event.status === 'ongoing');
+    return \`<div class="page-hd"><div class="page-hd-left"><div class="page-title">Ongoing Events</div><div class="page-sub">Events currently happening right now</div></div></div><div class="events-grid">\${
+      publicOngoing.length
+        ? publicOngoing.map(event => evCard(event, 'attendee')).join('')
+        : '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">⏱️</div><div class="empty-title">No ongoing events</div></div>'
+    }</div>\`;
+  }
+  const ongoing = getOngoingWorkflowItems();
+  return \`\${
+    embedded
+      ? ''
+      : \`
+  <div class="page-hd">
+    <div class="page-hd-left">
+      <div class="page-title">Ongoing Events</div>
+      <div class="page-sub">Track event planning, approved client events, payment, and completion reports</div>
+    </div>
+  </div>\`
+  }
+  <div class="events-grid">\${
+    ongoing.length === 0
+      ? \`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">⏱️</div><div class="empty-title">No ongoing events</div></div>\`
+      : ongoing
+          .map(({ event, request, isPlanning }) => {
+            const paid = request?.paymentStatus === 'fully_paid';
+            const depositPaid = request?.paymentStatus === 'deposit_paid';
+            const paymentLabel = paid ? 'Paid' : depositPaid ? 'Deposit Paid' : 'Unpaid';
+            const paymentColor = paid
+              ? 'var(--green)'
+              : depositPaid
+              ? 'var(--blue)'
+              : 'var(--yellow)';
+            const isUpcoming = !isPlanning && workflowEventPhase(event) === 'upcoming';
+            const stage = isPlanning
+              ? {
+                  planning: 'Planning',
+                  plan_submitted: 'Awaiting Client Review',
+                  plan_revision_requested: 'Plan Revision Requested',
+                  proposal_sent: 'Awaiting Client Review',
+                  awaiting_client: 'Awaiting Payment',
+                  changes_requested: 'Changes Requested',
+                  counteroffer_received: 'Counteroffer Received',
+                }[request?.status] || 'Planning'
+              : isUpcoming
+              ? 'Upcoming'
+              : 'Ongoing';
+            const stageBadgeCls = isPlanning || isUpcoming ? 'blue' : 'green';
+            const title = isPlanning
+              ? request?.eventName || request?.title || 'Event Planning'
+              : event?.name || event?.title || 'Ongoing Event';
+            const date = isPlanning
+              ? request?.eventDate || request?.date || 'TBD'
+              : event?.date || 'TBD';
+            const time = isPlanning ? request?.eventTime || request?.time || '' : event?.time || '';
+            const venue = isPlanning
+              ? request?.venue || request?.location || 'Venue TBD'
+              : event?.location || event?.venue || 'Venue TBD';
+            const category = isPlanning
+              ? request?.category || request?.eventType || 'Corporate'
+              : event?.category || 'Event';
+            const budgetAmount = Number(
+              request?.agreedPrice ??
+                request?.budget ??
+                (request?.proposals?.length
+                  ? request.proposals[request.proposals.length - 1].totalPrice
+                  : 0)
+            );
+            const priceBadge =
+              budgetAmount > 0 ? '₹' + budgetAmount.toLocaleString('en-IN') : 'Budget not set';
+            const capacity = isPlanning
+              ? request?.guestCount || request?.capacity || 0
+              : event?.capacity || request?.guestCount || 0;
+            const registered = isPlanning
+              ? request?.registered || request?.confirmedAttendees || 0
+              : event?.registered || 0;
+            const pct = capacity > 0 ? Math.min(100, Math.round((registered / capacity) * 100)) : 0;
+            const regText =
+              capacity > 0
+                ? \`\${registered}/\${capacity} registered\`
+                : isPlanning
+                ? 'Planning in progress'
+                : 'Ongoing Event';
+            const image = (!isPlanning && event?.image) || null;
+            const emoji = (!isPlanning && event?.emoji) || (isPlanning ? '📋' : '⏱️');
+            const color = (!isPlanning && event?.color) || 'var(--accent)';
+            const bannerContent = image
+              ? \`
+          <img src="\${image}" alt="\${workflowHtml(
+                  title
+                )}" class="ev-banner-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="ev-banner-fallback" style="display:none;align-items:center;justify-content:center;font-size:52px;width:100%;height:100%">\${emoji}</div>
+          <div class="ev-banner-overlay"></div>
+        \`
+              : \`<span style="font-size:52px">\${emoji}</span>\`;
+            const details = isPlanning
+              ? \`viewWorkflowRequestDrawer('\${workflowHtml(request?.id || request?.requestId)}')\`
+              : \`viewWorkflowEventDetails('\${workflowHtml(event?.eventId || event?.id)}')\`;
+            return \`<div class="ev-card">
+    <div class="ev-banner" style="background:\${color}18">
+      \${bannerContent}
+      <div class="ev-banner-tag"><span class="badge badge-\${stageBadgeCls}">\${stage}</span></div>
+      <div class="ev-banner-price">\${priceBadge}</div>
+    </div>
+    <div class="ev-body">
+      <div class="ev-title">\${workflowHtml(title)}</div>
+      <div class="ev-meta">
+        <div class="ev-meta-row"><span>📅</span>\${workflowHtml(date)}\${
+              time ? \` · \${workflowHtml(time)}\` : ''
+            }</div>
+        <div class="ev-meta-row"><span>📍</span>\${workflowHtml(venue)}</div>
+        <div class="ev-meta-row"><span>🏷️</span>\${workflowHtml(category)}</div>
+        <div class="ev-meta-row"><span>💳</span>Payment: <strong style="color:\${paymentColor}">\${paymentLabel}</strong></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="flex justify-between ev-cap mb-4"><span>\${regText}</span><span>\${
+              capacity > 0 ? pct + '%' : ''
+            }</span></div>
+        <div class="prog"><div class="prog-fill" style="width:\${pct}%"></div></div>
+      </div>
+      <div class="ev-footer">
+        \${
+          !isPlanning && CU.role === 'organizer'
+            ? renderOrganizerEventActions(event, request)
+            : \`<button class="btn btn-ghost btn-xs w-full" onclick="\${details}" title="View event details">👁️ View Details</button>\`
+        }
+      </div>
+    </div>
+  </div>\`;
+          })
+          .join('')
+  }</div>\`;
+}
+
+// ════════════════════════════════════════════════
+//  MODAL SYSTEM
+// ════════════════════════════════════════════════
+function openModal(title, body, btns = [], showCancel = true) {
+  g('modal-title').textContent = title;
+  globalThis.window?.EventFlowOrganizerPages?.clear(g('modal-body'));
+  g('modal-body').innerHTML = body;
+  const foot = g('modal-foot');
+  globalThis.window?.EventFlowOrganizerPages?.clear(foot);
+  foot.innerHTML = '';
+  let hasDismiss = false;
+  const handlers = new Set();
+  const actions = btns.filter(button => {
+    const handler = String(button.fn || '')
+      .trim()
+      .replace(/;+\\s*$/, '');
+    const dismissesModal = /^(?:window\\.)?closeModal\\s*\\(\\s*\\)$/.test(handler);
+    const key = dismissesModal ? 'closeModal()' : handler;
+    if (key && handlers.has(key)) return false;
+    if (key) handlers.add(key);
+    if (
+      dismissesModal ||
+      String(button.lbl || '')
+        .trim()
+        .toLowerCase() === 'cancel'
+    )
+      hasDismiss = true;
+    return true;
+  });
+  if (showCancel && !hasDismiss) {
+    const c = document.createElement('button');
+    c.className = 'btn btn-ghost';
+    c.textContent = 'Cancel';
+    c.onclick = closeModal;
+    foot.appendChild(c);
+  }
+  actions.forEach(b => {
+    const button = document.createElement('button');
+    button.className = 'btn ' + b.cls;
+    button.textContent = b.lbl;
+    button.setAttribute('onclick', b.fn);
+    foot.appendChild(button);
+  });
+  if (!showCancel && !actions.length) foot.style.display = 'none';
+  else foot.style.display = '';
+  const ov = g('modal-overlay');
+  ov.classList.remove('hidden'); // ensure visible
+  requestAnimationFrame(() => ov.classList.add('open'));
+}
+function closeModal() {
+  const ov = g('modal-overlay');
+  ov.classList.remove('open');
+}
+function closeModalOnBg(e) {
+  if (e.target === g('modal-overlay')) closeModal();
+}
+
+// DRAWER
+function openDrawer(title, body) {
+  g('drawer-title').textContent = title;
+  globalThis.window?.EventFlowOrganizerPages?.clear(g('drawer-body'));
+  g('drawer-body').innerHTML = body;
+  g('drawer-overlay').classList.add('open');
+  g('drawer').classList.add('open');
+}
+function closeDrawer() {
+  g('drawer-overlay').classList.remove('open');
+  g('drawer').classList.remove('open');
+}
+
+// CONFIRM
+function confirm2(title, msg, cb) {
+  g('confirm-title').textContent = title;
+  g('confirm-msg').textContent = msg;
+  _confirmCb = cb;
+  const ov = g('confirm-overlay');
+  ov.classList.remove('hidden');
+  requestAnimationFrame(() => ov.classList.add('open'));
+}
+function closeConfirm() {
+  g('confirm-overlay').classList.remove('open');
+  _confirmCb = null;
+}
+function closeConfirmOnBg(e) {
+  if (e.target === g('confirm-overlay')) closeConfirm();
+}
+function runConfirm() {
+  if (_confirmCb) _confirmCb();
+  closeConfirm();
+}
+
+// TOAST
+function toast(msg, type = 'info') {
+  window.dispatchEvent(
+    new CustomEvent('eventflow:toast', {
+      detail: {
+        message: String(msg || ''),
+        type,
+      },
+    })
+  );
+}
+
+// ════════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════════
+// Legacy DOM helpers: g finds an element; v reads its trimmed form value.
+function g(id) {
+  return document.getElementById(id);
+}
+function v(id) {
+  const element = g(id);
+  return element ? element.value.trim() : '';
+}
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+function showErr(id) {
+  const element = g(id);
+  if (element) element.classList.add('show');
+}
+function hideErr(id) {
+  const element = g(id);
+  if (element) element.classList.remove('show');
+}
+function evStatBadge(s) {
+  return (
+    {
+      upcoming: 'purple',
+      full: 'red',
+      completed: 'green',
+    }[s] || 'gray'
+  );
+}
+function reqBadge(s) {
+  return (
+    {
+      submitted: 'yellow',
+      pending: 'yellow',
+      under_review: 'purple',
+      in_review: 'purple',
+      info_requested: 'yellow',
+      proposal_sent: 'blue',
+      awaiting_client: 'blue',
+      changes_requested: 'orange',
+      counteroffer_received: 'purple',
+      planning: 'blue',
+      plan_submitted: 'purple',
+      plan_revision_requested: 'orange',
+      confirmed: 'green',
+      approved: 'green',
+      rejected: 'red',
+      withdrawn: 'gray',
+      cancelled: 'gray',
+      expired: 'red',
+    }[s] || 'gray'
+  );
+}
+
+// ════════════════════════════════════════════════
+//  BOOTSTRAP
+// ════════════════════════════════════════════════
+// CAROUSEL FUNCTIONS
+// ════════════════════════════════════════════════
+function scrollCarousel(direction) {
+  const carousel = g('event-carousel');
+  if (!carousel) return;
+  const scrollAmount = 300;
+  if (direction === 'left') {
+    carousel.scrollBy({
+      left: -scrollAmount,
+      behavior: 'smooth',
+    });
+  } else {
+    carousel.scrollBy({
+      left: scrollAmount,
+      behavior: 'smooth',
+    });
+  }
+}
+
+// Auto-enable carousel scrolling with keyboard arrows (optional)
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft' && g('event-carousel')) scrollCarousel('left');
+  if (e.key === 'ArrowRight' && g('event-carousel')) scrollCarousel('right');
+});
+
+// ════════════════════════════════════════════════
+//  CROSS-TAB DATA SYNCHRONIZATION
+// ════════════════════════════════════════════════
+// The 'storage' event fires ONLY in tabs that did NOT make the change.
+// We debounce re-renders to avoid blinking when multiple tabs are active.
+let _syncDebounceTimer = null;
+window.addEventListener('storage', function (e) {
+  if (e.key !== 'ffsd_db' || !e.newValue) return;
+
+  // Skip if the data content hasn't meaningfully changed (same length = same data)
+  if (e.newValue === e.oldValue) return;
+
+  // Clear any pending re-render and schedule a new one after a short delay.
+  // This collapses rapid consecutive saves (e.g. from the other tab's own renders)
+  // into a single update, eliminating the visible flicker.
+  clearTimeout(_syncDebounceTimer);
+  _syncDebounceTimer = setTimeout(function () {
+    try {
+      loadDB(false);
+      if (CU && _currentPage) {
+        renderPage(_currentPage);
+        updateNotifDot();
+      }
+    } catch (err) {
+      console.warn('[Sync] Failed to reload from storage event:', err);
+    }
+  }, 600); // 600ms debounce — imperceptible delay, eliminates flicker
+});
+
+// Local changes already update the page directly. Other browser tabs are
+// handled by the storage event above, so a polling-based full re-render is
+// unnecessary and caused the visible dashboard flicker after login.
+
+// ════════════════════════════════════════════════
+function getRoleWorkspace(user) {
+  if (!user) return null;
+  const role = String(user.role || user.userRole || '')
+    .toLowerCase()
+    .replace(/[\\s-]+/g, '_');
+  const type = String(user.employeeType || '')
+    .toUpperCase()
+    .replace(/[\\s-]+/g, '_');
+  if (role === 'employee') {
+    if (['SUPPORT_EXECUTIVE', 'REGISTRATION_VERIFICATION', 'EVENT_OPERATIONS'].includes(type))
+      return {
+        key: 'employee1',
+      };
+    if (['SUPPORT_FINANCE', 'FINANCE_EXECUTIVE'].includes(type))
+      return {
+        key: 'employee2',
+      };
+    return {
+      key: role === 'employee' ? 'employee1' : 'landing',
+    };
+  }
+  return (
+    {
+      superuser: {
+        key: 'super-admin',
+      },
+      super_admin: {
+        key: 'super-admin',
+      },
+      organizer: {
+        key: 'organizer',
+      },
+      event_organizer: {
+        key: 'organizer',
+      },
+      client: {
+        key: 'client',
+      },
+      attendee: {
+        key: 'attendee',
+      },
+      employee1: {
+        key: 'employee1',
+      },
+      employee2: {
+        key: 'employee2',
+      },
+    }[role] || null
+  );
+}
+function routeToRoleWorkspace(user) {
+  const workspace = getRoleWorkspace(user);
+  if (!workspace || window.EventFlowRole?.key === workspace.key) return false;
+  window.location.replace(workspace.key === 'super-admin' ? '/admin' : '/' + workspace.key);
+  return true;
+}
+document.addEventListener('DOMContentLoaded', function boot() {
+  // Restore the session synchronously. Waiting on a health request caused a
+  // visible landing-page-to-dashboard swap and unnecessarily logged out
+  // users whenever the optional backend was offline.
+  loadDB(false);
+  try {
+    const saved = sessionStorage.getItem('ef_cu');
+    if (saved) {
+      CU = window.EventFlowAccountPolicy.normalizeSavedAccount(JSON.parse(saved));
+      if (!CU) throw new Error('This account is no longer available.');
+      const workspace = getRoleWorkspace(CU);
+      if (workspace && routeToRoleWorkspace(CU)) return;
+      if (!workspace && window.EventFlowRole?.key !== 'landing') {
+        window.location.replace('/landing');
+        return;
+      }
+      initApp();
+      showPage('app');
+      document.documentElement.classList.remove('restoring-session');
+      return;
+    }
+  } catch (e) {
+    CU = null;
+    try {
+      sessionStorage.removeItem('ef_cu');
+    } catch (ignore) {}
+  }
+  if (window.EventFlowRole?.key !== 'landing') {
+    window.location.replace('/landing');
+    return;
+  }
+  document.documentElement.classList.remove('restoring-session');
+  showPage('landing');
+});
+
+/* ===== EventFlow source: validation.js ===== */
+// Global Validation Script for Specified Input Fields
+document.addEventListener('DOMContentLoaded', () => {
+  function getErrorSpan(input) {
+    let next = input.nextElementSibling;
+    if (next && next.classList.contains('form-error')) return next;
+    let span = document.createElement('span');
+    span.className = 'form-error';
+    input.parentNode.insertBefore(span, input.nextSibling);
+    return span;
+  }
+  function validateInput(target) {
+    if (target.tagName !== 'INPUT' && target.tagName !== 'SELECT' && target.tagName !== 'TEXTAREA')
+      return true;
+    if (target.type === 'file' || target.type === 'checkbox' || target.type === 'radio')
+      return true;
+    if (target.disabled || target.readOnly) return true;
+    const fg = target.closest('.form-group');
+    const labelText = fg
+      ? fg.querySelector('.form-label')
+        ? fg.querySelector('.form-label').textContent.toLowerCase()
+        : ''
+      : '';
+    const id = (target.id || '').toLowerCase();
+    const type = (target.type || '').toLowerCase();
+    // Verification codes are checked by their confirmation handler, not as contact details.
+    if (id.includes('otp') || target.autocomplete === 'one-time-code') return true;
+
+    // To support contact forms that use div labels
+    let previousElement = target.previousElementSibling;
+    let prevLabel =
+      previousElement && previousElement.textContent
+        ? previousElement.textContent.toLowerCase()
+        : '';
+    let fieldType = null;
+    if (
+      /^(full name|name|first name|last name|city|city\\s*\\/\\s*location)$/i.test(
+        labelText.replace(/\\*/g, '').trim()
+      ) ||
+      /^(rg-name|newusername|edit-usr-name|contact-name|name)$/.test(id)
+    )
+      fieldType = 'name';
+    else if (
+      labelText.includes('email') ||
+      type === 'email' ||
+      id.includes('email') ||
+      prevLabel.includes('email')
+    )
+      fieldType = 'email';
+    else if (
+      labelText.includes('phone') ||
+      type === 'tel' ||
+      id.includes('phone') ||
+      prevLabel.includes('phone')
+    )
+      fieldType = 'phone';
+    else if (labelText.includes('date') || type === 'date' || id.includes('date'))
+      fieldType = 'date';
+    if (!fieldType) return true;
+    let val = target.value.trim();
+    let isValid = true;
+    let errorMsg = '';
+    if (val === '') {
+      if (labelText.includes('*') || target.hasAttribute('required')) {
+        isValid = false;
+        errorMsg = 'This field is required';
+      } else {
+        target.classList.remove('is-error');
+        target.classList.remove('is-valid');
+        const span = getErrorSpan(target);
+        if (span) {
+          span.classList.remove('show');
+          span.textContent = '';
+        }
+        return true;
+      }
+    } else {
+      if (fieldType === 'name') {
+        if (!/^[\\p{L}\\p{M} .,'’()-]+$/u.test(val)) {
+          isValid = false;
+          errorMsg = 'Use letters and normal name or city characters only';
+        }
+      } else if (fieldType === 'email') {
+        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val)) {
+          isValid = false;
+          errorMsg = 'Enter a valid email format';
+        }
+      } else if (fieldType === 'phone') {
+        if (!/^\\d{10}$/.test(val)) {
+          isValid = false;
+          errorMsg = 'Enter a mobile number with exactly 10 digits';
+        }
+      } else if (fieldType === 'date') {
+        const selected = new Date(val);
+        const todayDate = new Date();
+        todayDate.setHours(0, 0, 0, 0);
+        if (
+          (id !== 'rg-date-of-birth' && selected < todayDate) ||
+          (id === 'rg-date-of-birth' && (Number.isNaN(selected.getTime()) || selected > todayDate))
+        ) {
+          isValid = false;
+          errorMsg =
+            id === 'rg-date-of-birth'
+              ? 'Date of birth cannot be in the future'
+              : 'Only future dates are allowed';
+        }
+      }
+    }
+    const span = getErrorSpan(target);
+    if (isValid) {
+      target.classList.remove('is-error');
+      target.classList.add('is-valid');
+      span.classList.remove('show');
+      span.textContent = '';
+      return true;
+    } else {
+      target.classList.remove('is-valid');
+      target.classList.add('is-error');
+      span.classList.add('show');
+      span.textContent = errorMsg;
+      return false;
+    }
+  }
+  document.addEventListener('input', e => {
+    if (e.target.tagName === 'INPUT') validateInput(e.target);
+  });
+  document.addEventListener('change', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') validateInput(e.target);
+  });
+  document.addEventListener('focusout', e => {
+    if (e.target.tagName === 'INPUT') validateInput(e.target);
+  });
+  document.addEventListener('focusin', e => {
+    const target = e.target;
+    if (target.tagName === 'INPUT') {
+      const fg = target.closest('.form-group');
+      const labelText = fg
+        ? fg.querySelector('.form-label')
+          ? fg.querySelector('.form-label').textContent.toLowerCase()
+          : ''
+        : '';
+      const id = (target.id || '').toLowerCase();
+      let isDateField = target.type === 'date' || labelText.includes('date') || id.includes('date');
+      if (isDateField) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (target.type !== 'date') target.type = 'date';
+        if (id !== 'rg-date-of-birth' && target.min !== todayStr) target.min = todayStr;
+      }
+    }
+  });
+  document.addEventListener(
+    'click',
+    e => {
+      const button = e.target.closest('button');
+      if (!button) return;
+      if (button.dataset.validationScope === 'verification') return;
+      if (
+        button.classList.contains('btn-primary') ||
+        button.classList.contains('btn-success') ||
+        button.id === 'login-btn'
+      ) {
+        const onclickCode = button.getAttribute('onclick') || '';
+        if (
+          onclickCode.includes('open') ||
+          onclickCode.includes('goNav') ||
+          onclickCode.includes('showPage') ||
+          onclickCode.includes('doLogin') ||
+          onclickCode.includes('gotoLogin') ||
+          onclickCode.includes('fillLogin') ||
+          onclickCode.includes('selectEmployee') ||
+          onclickCode.includes('doLogout')
+        )
+          return;
+
+        // Scope validation exclusively to modals or explicit form containers
+        const formScope = button.closest('.modal-box, form');
+        if (!formScope) return;
+
+        // Only validate inputs that are currently visible
+        const inputs = formScope.querySelectorAll('input, select, textarea');
+        let hasError = false;
+        inputs.forEach(input => {
+          if (
+            input.offsetWidth > 0 ||
+            input.offsetHeight > 0 ||
+            input.getClientRects().length > 0
+          ) {
+            const isValid = validateInput(input);
+            if (!isValid) hasError = true;
+          }
+        });
+        if (hasError) {
+          e.stopImmediatePropagation();
+          e.stopPropagation();
+          e.preventDefault();
+          if (typeof toast === 'function')
+            toast('Please fix the errors before submitting', 'error');
+        }
+      }
+    },
+    true
+  );
+});
+
+/* ===== Role-owned frontend configuration ===== */
+window.EventFlowRole = {
+  key: 'organizer',
+  label: 'Organizer',
+};
+
+// React pages read the same normalized data and keep the existing workflow action entry points.
+window.EventFlowOrganizerRuntime = {
+  snapshot(pageProps = {}, selectedData) {
+    return {
+      organizerEventCardStatus,
+      CU: typeof CU === 'undefined' ? undefined : CU,
+      DB: typeof DB === 'undefined' ? undefined : DB,
+      EMPLOYEE_TYPE_LABELS:
+        typeof EMPLOYEE_TYPE_LABELS === 'undefined' ? undefined : EMPLOYEE_TYPE_LABELS,
+      ROLE_COLORS: typeof ROLE_COLORS === 'undefined' ? undefined : ROLE_COLORS,
+      ROLE_LABELS: typeof ROLE_LABELS === 'undefined' ? undefined : ROLE_LABELS,
+      _workflowEventTab: typeof _workflowEventTab === 'undefined' ? undefined : _workflowEventTab,
+      _workflowReturnPage:
+        typeof _workflowReturnPage === 'undefined' ? undefined : _workflowReturnPage,
+      agreementBadgeInfo:
+        typeof agreementBadgeInfo === 'undefined' ? undefined : agreementBadgeInfo,
+      canReviewOrganizerRegistration:
+        typeof canReviewOrganizerRegistration === 'undefined'
+          ? undefined
+          : canReviewOrganizerRegistration,
+      escapeHtml: typeof escapeHtml === 'undefined' ? undefined : escapeHtml,
+      evStatBadge: typeof evStatBadge === 'undefined' ? undefined : evStatBadge,
+      eventOpsReportBadge:
+        typeof eventOpsReportBadge === 'undefined' ? undefined : eventOpsReportBadge,
+      filterOrganizerDashboardEvents:
+        typeof filterOrganizerDashboardEvents === 'undefined'
+          ? undefined
+          : filterOrganizerDashboardEvents,
+      g: typeof g === 'undefined' ? undefined : g,
+      getEventReportRecipients:
+        typeof getEventReportRecipients === 'undefined'
+          ? undefined
+          : event => getEventReportRecipients(event, selectedData?.DB, selectedData?.CU),
+      getOngoingWorkflowItems:
+        typeof getOngoingWorkflowItems === 'undefined' ? undefined : getOngoingWorkflowItems,
+      isCancelledWorkflowEvent:
+        typeof isCancelledWorkflowEvent === 'undefined' ? undefined : isCancelledWorkflowEvent,
+      isDepartmentEmployee:
+        typeof isDepartmentEmployee === 'undefined' ? undefined : isDepartmentEmployee,
+      normalizeEventRequest:
+        typeof normalizeEventRequest === 'undefined' ? undefined : normalizeEventRequest,
+      operationalReportBadge:
+        typeof operationalReportBadge === 'undefined' ? undefined : operationalReportBadge,
+      organizerDashboardData:
+        typeof organizerDashboardData === 'undefined' ? undefined : organizerDashboardData,
+      organizerEventCardStatus:
+        typeof organizerEventCardStatus === 'undefined' ? undefined : organizerEventCardStatus,
+      organizerEventRequest:
+        typeof organizerEventRequest === 'undefined'
+          ? undefined
+          : event => organizerEventRequest(event, selectedData?.DB),
+      organizerRegistrationEvents:
+        typeof organizerRegistrationEvents === 'undefined'
+          ? undefined
+          : organizerRegistrationEvents,
+      organizerRegistrationStatus:
+        typeof organizerRegistrationStatus === 'undefined'
+          ? undefined
+          : organizerRegistrationStatus,
+      organizerReportAttachment:
+        typeof organizerReportAttachment === 'undefined' ? undefined : organizerReportAttachment,
+      ownsOrganizerEvent:
+        typeof ownsOrganizerEvent === 'undefined'
+          ? undefined
+          : (event, request) => ownsOrganizerEvent(event, request, selectedData?.DB, selectedData?.CU),
+      pageCompletedEvents:
+        typeof pageCompletedEvents === 'undefined' ? undefined : pageCompletedEvents,
+      pageOngoingEvents: typeof pageOngoingEvents === 'undefined' ? undefined : pageOngoingEvents,
+      paymentBadgeInfo: typeof paymentBadgeInfo === 'undefined' ? undefined : paymentBadgeInfo,
+      reqBadge: typeof reqBadge === 'undefined' ? undefined : reqBadge,
+      reqBadgeColor: typeof reqBadgeColor === 'undefined' ? undefined : reqBadgeColor,
+      visibleNotifications:
+        typeof visibleNotifications === 'undefined' ? undefined : visibleNotifications,
+      workflowEventPhase:
+        typeof workflowEventPhase === 'undefined' ? undefined : workflowEventPhase,
+      workflowEventPolicy:
+        typeof workflowEventPolicy === 'undefined' ? undefined : workflowEventPolicy,
+      workflowHtml: typeof workflowHtml === 'undefined' ? undefined : workflowHtml,
+      workflowMoney: typeof workflowMoney === 'undefined' ? undefined : workflowMoney,
+      workflowPolicyDate:
+        typeof workflowPolicyDate === 'undefined' ? undefined : workflowPolicyDate,
+      workflowPolicyDocuments:
+        typeof workflowPolicyDocuments === 'undefined' ? undefined : workflowPolicyDocuments,
+      pageProps,
+    };
+  },
+};
+`,We=`/* ===== EventFlow source: api.js ===== */
+// ═══════════════════════════════════════════════════════════════
+// CENTRAL API UTILITY — EventFlow Backend Integration
+// All backend calls are routed through this file.
+// Backend: http://localhost:3001/api
+// ═══════════════════════════════════════════════════════════════
+
+const API_BASE_URL = 'http://localhost:3001/api';
+const SESSION_KEY = 'ef_cu';
+
+// ─── Role Normalisation ─────────────────────────────────────────
+// Maps frontend role strings → backend x-role header values
+const ROLE_MAP = {
+  superuser: 'super_admin',
+  super_admin: 'super_admin',
+  'super-user': 'super_admin',
+  admin: 'super_admin',
+  organizer: 'event_organizer',
+  event_organizer: 'event_organizer',
+  'event-organizer': 'event_organizer',
+  client: 'client',
+  attendee: 'attendee',
+};
+
+function normalizeRole(role) {
+  return ROLE_MAP[(role || '').toLowerCase()] || (role || '').toLowerCase();
+}
+
+// ─── Session Helpers ─────────────────────────────────────────────
+function getCurrentUser() {
+  try {
+    const s = sessionStorage.getItem(SESSION_KEY);
+    return s ? JSON.parse(s) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function setCurrentUser(user) {
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  } catch (e) {}
+}
+
+function clearCurrentUser() {
+  try {
+    sessionStorage.removeItem(SESSION_KEY);
+  } catch (e) {}
+}
+
+// ─── Header Helpers ──────────────────────────────────────────────
+function getRoleHeader() {
+  const u = getCurrentUser();
+  return u ? normalizeRole(u.role || u.userRole || '') : '';
+}
+
+function getUserIdHeader() {
+  const u = getCurrentUser();
+  return u ? u.userId || u.id || '' : '';
+}
+
+function getAuthHeader() {
+  const u = getCurrentUser();
+  return u && u.token ? \`Bearer \${u.token}\` : '';
+}
+
+// ─── Core Fetch Wrapper ──────────────────────────────────────────
+// Authorization is handled entirely by JWT Bearer tokens.
+// No client-controlled identity headers (x-role, x-user-id) are sent.
+async function apiRequest(endpoint, options = {}) {
+  const authorization = getAuthHeader();
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(authorization ? { Authorization: authorization } : {}),
+    ...(options.headers || {}),
+  };
+
+  try {
+    const res = await (globalThis.window?.EventFlowFetch || fetch)(\`\${API_BASE_URL}\${endpoint}\`, {
+      ...options,
+      headers,
+    });
+
+    let data = null;
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      data = await res.json();
+    } else {
+      data = { message: await res.text() };
+    }
+
+    if (!res.ok) {
+      const msg = Array.isArray(data?.message)
+        ? data.message.join(', ')
+        : data?.message || \`HTTP \${res.status}\`;
+      throw new ApiError(msg, res.status, data);
+    }
+
+    if (options.method && options.method.toUpperCase() !== 'GET')
+      window.EventFlowData?.invalidate();
+    return data;
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    // Network error (backend offline)
+    if (
+      e.message &&
+      (e.message.toLowerCase().includes('fetch') ||
+        e.message.toLowerCase().includes('network') ||
+        e.name === 'TypeError')
+    ) {
+      throw new ApiError(
+        'Backend server is offline. Please start the NestJS server on port 3001.',
+        0
+      );
+    }
+    throw new ApiError(e.message || 'Unknown error', 0);
+  }
+}
+
+// ─── API Error Class ─────────────────────────────────────────────
+class ApiError extends Error {
+  constructor(message, status, data = null) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
+// ─── AUTH ────────────────────────────────────────────────────────
+async function apiLogin(email, password) {
+  const data = await apiRequest('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+  // Backend returns { success, message, data: { userId, name, email, userRole, status } }
+  // Unwrap the envelope so the caller gets the flat user object
+  if (data && data.data) return data.data;
+  return data;
+}
+
+// ─── USERS ───────────────────────────────────────────────────────
+async function apiGetUsers() {
+  return apiRequest('/users');
+}
+
+async function apiCreateUser(userData) {
+  return apiRequest('/users', {
+    method: 'POST',
+    body: JSON.stringify(userData),
+  });
+}
+
+async function apiUpdateUser(userId, updates) {
+  return apiRequest(\`/users/\${userId}\`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  });
+}
+
+async function apiDeleteUser(userId) {
+  return apiRequest(\`/users/\${userId}\`, {
+    method: 'DELETE',
+  });
+}
+
+// ─── EVENTS ──────────────────────────────────────────────────────
+async function apiGetEvents() {
+  return apiRequest('/events');
+}
+
+async function apiCreateEvent(eventData) {
+  return apiRequest('/events', {
+    method: 'POST',
+    body: JSON.stringify(eventData),
+  });
+}
+
+async function apiUpdateEvent(eventId, updates) {
+  return apiRequest(\`/events/\${eventId}\`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  });
+}
+
+async function apiDeleteEvent(eventId) {
+  return apiRequest(\`/events/\${eventId}\`, {
+    method: 'DELETE',
+  });
+}
+
+// ─── ANALYTICS ───────────────────────────────────────────────────
+async function apiGetDashboard() {
+  return apiRequest('/analytics/dashboard');
+}
+
+async function apiGetOrganizerDashboard(organizerId) {
+  return apiRequest('/analytics/organizer-dashboard');
+}
+
+// ─── EVENT REQUESTS ──────────────────────────────────────────────
+async function apiGetEventRequests() {
+  return apiRequest('/event-requests');
+}
+
+async function apiGetClientRequests(clientId) {
+  return apiRequest('/event-requests');
+}
+
+async function apiGetOrganizerRequests(organizerId) {
+  return apiRequest('/event-requests');
+}
+
+async function apiGetEventPlans() {
+  return apiRequest('/event-plans');
+}
+
+async function apiGetEventOrganizers() {
+  return apiRequest('/event-requests/organizers');
+}
+
+async function apiCreateEventRequest(reqData) {
+  return apiRequest('/event-requests', {
+    method: 'POST',
+    body: JSON.stringify(reqData),
+  });
+}
+
+async function apiGetEventPolicy() {
+  return apiRequest('/event-requests/policies');
+}
+
+async function apiAcceptEventRequest(requestId, acknowledgement) {
+  return apiRequest(\`/event-requests/\${requestId}/accept\`, {
+    method: 'POST',
+    body: JSON.stringify(acknowledgement),
+  });
+}
+
+async function apiRejectEventRequest(requestId, request) {
+  return apiRequest(\`/event-requests/\${requestId}/reject\`, {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
+
+async function apiRespondToEventRequest(requestId, response) {
+  return apiRequest(\`/event-requests/\${requestId}/client-response\`, {
+    method: 'POST',
+    body: JSON.stringify(response),
+  });
+}
+
+async function apiAcceptCounteroffer(requestId, acknowledgement) {
+  return apiRequest(\`/event-requests/\${requestId}/accept-counteroffer\`, {
+    method: 'POST',
+    body: JSON.stringify(acknowledgement),
+  });
+}
+
+async function apiUpdateRequestStatus(requestId, status) {
+  return apiRequest(\`/event-requests/\${requestId}/status\`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+}
+
+async function apiRequestEventModification(requestId, payload) {
+  return apiRequest(\`/event-requests/\${requestId}/modifications\`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+async function apiRespondToEventModification(requestId, modId, payload) {
+  return apiRequest(\`/event-requests/\${requestId}/modifications/\${modId}/respond\`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+async function apiCancelOrganizerEvent(eventId, reason) {
+  return apiRequest(\`/events/\${encodeURIComponent(eventId)}\`, {
+    method: 'PUT',
+    body: JSON.stringify({ status: 'cancelled', changeReason: reason }),
+  });
+}
+
+async function apiSendEventProposal(requestId, proposal, isRevision = false) {
+  return apiRequest(\`/event-requests/\${requestId}/\${isRevision ? 'revise-proposal' : 'proposal'}\`, {
+    method: 'POST',
+    body: JSON.stringify(proposal),
+  });
+}
+
+// ─── EVENT PLANS ─────────────────────────────────────────────────
+async function apiCreateEventPlan(planData) {
+  return apiRequest('/event-plans', {
+    method: 'POST',
+    body: JSON.stringify(planData),
+  });
+}
+
+async function apiUploadEventPlanDocument(requestId, file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await (globalThis.window?.EventFlowFetch || fetch)(
+    \`\${API_BASE_URL}/event-plans/\${encodeURIComponent(requestId)}/document\`,
+    {
+      method: 'POST',
+      headers: getAuthHeader() ? { Authorization: getAuthHeader() } : {},
+      body: formData,
+    }
+  );
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = Array.isArray(data.message) ? data.message.join(', ') : data.message;
+    throw new ApiError(message || \`PDF upload failed (\${response.status})\`, response.status, data);
+  }
+  return data;
+}
+
+async function apiDownloadEventPlanDocument(planId, version) {
+  const vParam = version ? \`?version=\${encodeURIComponent(version)}\` : '';
+  let response = await (globalThis.window?.EventFlowFetch || fetch)(
+    \`\${API_BASE_URL}/event-plans/\${encodeURIComponent(planId)}/document\${vParam}\`,
+    {
+      headers: getAuthHeader() ? { Authorization: getAuthHeader() } : {},
+    }
+  );
+  if (response.status === 404) {
+    response = await (globalThis.window?.EventFlowFetch || fetch)(
+      \`\${API_BASE_URL}/event-requests/\${encodeURIComponent(planId)}/document\${vParam}\`,
+      {
+        headers: getAuthHeader() ? { Authorization: getAuthHeader() } : {},
+      }
+    );
+  }
+  if (response.status === 403) {
+    throw new ApiError('You are not authorized to view or download this document.', 403);
+  }
+  if (response.status === 404) {
+    throw new ApiError('The requested event plan file was not found.', 404);
+  }
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const message = Array.isArray(data.message) ? data.message.join(', ') : data.message;
+    throw new ApiError(
+      message || \`PDF download failed (\${response.status})\`,
+      response.status,
+      data
+    );
+  }
+  return response.blob();
+}
+
+async function apiGetWorkflowEvents() {
+  return apiRequest('/events');
+}
+
+async function apiApproveEventPlan(planId, approvalStatus, reason) {
+  return apiRequest(\`/event-plans/\${planId}/approval\`, {
+    method: 'PATCH',
+    body: JSON.stringify({ approvalStatus, reason }),
+  });
+}
+
+// ─── REGISTRATIONS ───────────────────────────────────────────────
+async function apiGetAttendeeRegistrations(attendeeId) {
+  return apiRequest('/registrations');
+}
+
+async function apiRegisterForEvent(regData) {
+  return apiRequest('/registrations', {
+    method: 'POST',
+    body: JSON.stringify(regData),
+  });
+}
+
+async function apiReviewRegistration(registrationId, decision, reason) {
+  return apiRequest(\`/registrations/\${encodeURIComponent(registrationId)}/review\`, {
+    method: 'PATCH',
+    body: JSON.stringify({ decision, ...(reason ? { reason } : {}) }),
+  });
+}
+
+// ─── PAYMENTS ────────────────────────────────────────────────────
+async function apiMakePayment(paymentData) {
+  return apiRequest('/payments', {
+    method: 'POST',
+    body: JSON.stringify(paymentData),
+  });
+}
+
+async function apiPayForWorkflowEvent(eventId) {
+  return apiRequest(\`/payments/events/\${encodeURIComponent(eventId)}\`, {
+    method: 'POST',
+    body: JSON.stringify({ paymentMethod: 'DEMO_PROVIDER' }),
+  });
+}
+
+async function apiCompleteWorkflowEvent(eventId) {
+  return apiRequest(\`/events/\${encodeURIComponent(eventId)}/complete\`, { method: 'POST' });
+}
+
+async function apiGetCompletionReports() {
+  return apiRequest('/reports/events/completion');
+}
+
+async function apiSubmitCompletionReport(eventId, formData) {
+  const response = await (globalThis.window?.EventFlowFetch || fetch)(
+    \`\${API_BASE_URL}/reports/events/\${encodeURIComponent(eventId)}/completion\`,
+    {
+      method: 'POST',
+      headers: getAuthHeader() ? { Authorization: getAuthHeader() } : {},
+      body: formData,
+    }
+  );
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = Array.isArray(data.message) ? data.message.join(', ') : data.message;
+    throw new ApiError(
+      message || \`Report submission failed (\${response.status})\`,
+      response.status,
+      data
+    );
+  }
+  return data;
+}
+
+// ─── ATTENDANCE ──────────────────────────────────────────────────
+async function apiVerifyAttendance(verifyData) {
+  return apiRequest('/attendance/verify', {
+    method: 'POST',
+    body: JSON.stringify(verifyData),
+  });
+}
+
+// ─── NOTIFICATIONS ───────────────────────────────────────────────
+async function apiGetNotifications(userId) {
+  return apiRequest('/notifications');
+}
+
+async function apiMarkAllNotificationsRead() {
+  return apiRequest('/notifications/read-all', {
+    method: 'PATCH',
+  });
+}
+
+// ─── REPORTS ─────────────────────────────────────────────────────
+
+async function apiGetEventReports() {
+  return apiRequest('/reports/events');
+}
+async function apiUploadEventReport(eventId, file) {
+  const form = new FormData();
+  form.set('file', file);
+  const response = await (globalThis.window?.EventFlowFetch || fetch)(
+    \`\${API_BASE_URL}/reports/events/\${encodeURIComponent(eventId)}/file\`,
+    {
+      method: 'POST',
+      headers: getAuthHeader() ? { Authorization: getAuthHeader() } : {},
+      body: form,
+    }
+  );
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok)
+    throw new ApiError(data.message || 'Unable to submit the event report', response.status, data);
+  return data;
+}
+
+async function apiCreateEventReport(reportData) {
+  return apiRequest('/reports/events', {
+    method: 'POST',
+    body: JSON.stringify(reportData),
+  });
+}
+
+// ─── REVIEWS ─────────────────────────────────────────────────────
+async function apiSubmitEventReview(reviewData) {
+  return apiRequest('/reviews/event', {
+    method: 'POST',
+    body: JSON.stringify(reviewData),
+  });
+}
+
+// ─── ERROR DISPLAY ───────────────────────────────────────────────
+function showApiError(message) {
+  if (typeof toast === 'function') {
+    toast(message, 'error');
+  } else {
+    console.error('[API Error]', message);
+  }
+}
+
+function showApiSuccess(message) {
+  if (typeof toast === 'function') {
+    toast(message, 'success');
+  } else {
+    console.log('[API Success]', message);
+  }
+}
+
+// ─── Export globals ──────────────────────────────────────────────
+window.API_BASE_URL = API_BASE_URL;
+window.normalizeRole = normalizeRole;
+window.getCurrentUser = getCurrentUser;
+window.setCurrentUser = setCurrentUser;
+window.clearCurrentUser = clearCurrentUser;
+window.getRoleHeader = getRoleHeader;
+window.getUserIdHeader = getUserIdHeader;
+window.getAuthHeader = getAuthHeader;
+window.apiRequest = apiRequest;
+window.ApiError = ApiError;
+window.apiLogin = apiLogin;
+window.apiGetUsers = apiGetUsers;
+window.apiCreateUser = apiCreateUser;
+window.apiUpdateUser = apiUpdateUser;
+window.apiDeleteUser = apiDeleteUser;
+window.apiGetEvents = apiGetEvents;
+window.apiCreateEvent = apiCreateEvent;
+window.apiUpdateEvent = apiUpdateEvent;
+window.apiDeleteEvent = apiDeleteEvent;
+window.apiGetDashboard = apiGetDashboard;
+window.apiGetOrganizerDashboard = apiGetOrganizerDashboard;
+window.apiGetEventRequests = apiGetEventRequests;
+window.apiGetClientRequests = apiGetClientRequests;
+window.apiGetOrganizerRequests = apiGetOrganizerRequests;
+window.apiGetEventPlans = apiGetEventPlans;
+window.apiGetEventOrganizers = apiGetEventOrganizers;
+window.apiCreateEventRequest = apiCreateEventRequest;
+window.apiAcceptEventRequest = apiAcceptEventRequest;
+window.apiRejectEventRequest = apiRejectEventRequest;
+window.apiRespondToEventRequest = apiRespondToEventRequest;
+window.apiAcceptCounteroffer = apiAcceptCounteroffer;
+window.apiUpdateRequestStatus = apiUpdateRequestStatus;
+window.apiSendEventProposal = apiSendEventProposal;
+window.apiCreateEventPlan = apiCreateEventPlan;
+window.apiGetWorkflowEvents = apiGetWorkflowEvents;
+window.apiApproveEventPlan = apiApproveEventPlan;
+
+window.apiGetAttendeeRegistrations = apiGetAttendeeRegistrations;
+window.apiRegisterForEvent = apiRegisterForEvent;
+window.apiMakePayment = apiMakePayment;
+
+window.apiVerifyAttendance = apiVerifyAttendance;
+window.apiGetNotifications = apiGetNotifications;
+window.apiMarkAllNotificationsRead = apiMarkAllNotificationsRead;
+
+window.apiCreateEventReport = apiCreateEventReport;
+window.apiSubmitEventReview = apiSubmitEventReview;
+window.showApiError = showApiError;
+window.showApiSuccess = showApiSuccess;
+`,re={success:"✅",error:"❌",info:"ℹ️",warning:"⚠️"};function Ve(){const[o,i]=P.useState([]);return P.useEffect(()=>{const n=new Set,c=p=>{const a=p.detail||{},s=`${Date.now()}-${Math.random().toString(36).slice(2)}`;i(v=>[...v,{id:s,message:String(a.message||""),type:a.type||"info"}]);const g=window.setTimeout(()=>{i(v=>v.filter(t=>t.id!==s)),n.delete(g)},3800);n.add(g)};return window.addEventListener("eventflow:toast",c),()=>{window.removeEventListener("eventflow:toast",c),n.forEach(window.clearTimeout)}},[]),e.jsx("div",{id:"toasts","aria-live":"polite","aria-atomic":"false",children:o.map(n=>e.jsxs("div",{className:`toast ${n.type}`,children:[e.jsx("span",{className:"toast-icon","aria-hidden":"true",children:re[n.type]||re.info}),e.jsx("span",{className:"toast-msg",children:n.message})]},n.id))})}const ve=P.createContext(null);function O(){const o=P.useContext(ve);if(!o)throw new Error("Organizer pages must be rendered inside their page container.");return o}function Ge({events:o,selectedEvent:i,onSelect:n}){const[c,p]=P.useState(""),[a,s]=P.useState(!1),g=o.filter(l=>String(l.title||"").toLowerCase().includes(c.toLowerCase())),v=i.status==="published"?"Published":i.status==="draft"?"Draft":i.status||"Event";function t(l){s(!1),p(""),n(l)}return e.jsxs("details",{className:"org-event-picker",open:a,onToggle:l=>s(l.currentTarget.open),children:[e.jsxs("summary",{onClick:l=>{l.preventDefault(),s(C=>!C)},children:[e.jsxs("span",{children:[e.jsx("strong",{children:i.title}),e.jsxs("small",{children:[v," · ",Number(i.registered)||0," registered"]})]}),e.jsx("span",{"aria-hidden":"true",children:"⌄"})]}),e.jsxs("div",{className:"org-event-options",children:[e.jsxs("div",{className:"search-box input-group",children:[e.jsx("span",{className:"input-icon",children:"🔍"}),e.jsx("input",{className:"form-control","aria-label":"Search your events",placeholder:"Search events…",value:c,onChange:l=>p(l.target.value)})]}),e.jsx("div",{className:"org-event-option-list",role:"listbox","aria-label":"Your events",children:g.map(l=>e.jsxs("button",{type:"button",role:"option","aria-selected":String(l.id)===String(i.id),"data-event-name":l.title,onClick:()=>t(l.id),children:[e.jsxs("span",{children:[e.jsx("strong",{children:l.title}),e.jsx("small",{children:l.status==="published"?"Published":l.status||"Event"})]}),e.jsxs("span",{className:"org-event-option-count",children:[Number(l.registered)||0," registered"]})]},l.id||l.eventId))}),e.jsx("div",{className:"org-event-no-match",hidden:g.length>0,children:"No matching events"})]})]})}function Qe({users:o,onViewOrganizerAttendeeProfile:i,onOrganiserApproveAttendee:n,onOrganiserRejectAttendee:c,canReviewOrganizerRegistration:p,organizerRegistrationStatus:a,registrations:s,event:g,filters:v={}}){const t=(v.query||"").toLowerCase(),l=v.status||"",C=s.filter(y=>{const R=o.find(I=>String(I.id)===String(y.attendeeId))||{name:"",email:""},r=!t||(R.name+R.email+y.ticketId).toLowerCase().includes(t),E=!l||a(y).toLowerCase()===(l==="rejected"?"declined":l);return r&&E});return C.length?e.jsx("div",{className:"table-wrap org-attendee-table",children:e.jsxs("table",{children:[e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{children:"Attendee"}),e.jsx("th",{children:"Email"}),e.jsx("th",{children:"Ticket ID"}),e.jsx("th",{children:"Amount"}),e.jsx("th",{children:"Review Status / Reason"}),e.jsx("th",{children:"Actions"})]})}),e.jsx("tbody",{children:C.map((y,R)=>{const r=o.find(I=>String(I.id)===String(y.attendeeId))||{name:"Unknown",email:"",avatar:"?",phone:""},E=a(y);return e.jsxs("tr",{children:[e.jsx("td",{children:e.jsxs("div",{className:"flex items-center gap-8",children:[e.jsx("div",{className:"av av-xs",children:r.avatar||r.name?.[0]||"?"}),e.jsxs("div",{children:[e.jsx("div",{className:"org-attendee-name",children:r.name}),e.jsx("div",{className:"small",children:r.phone||"—"})]})]})}),e.jsx("td",{className:"small",children:r.email}),e.jsx("td",{children:e.jsx("code",{className:"mono org-attendee-ticket",children:y.ticketId})}),e.jsx("td",{style:{color:"var(--green)",fontWeight:"600"},children:y.amount===0?Number(y.event?.ticketPrice||0)>0?"Not paid":"Free":"₹"+y.amount}),e.jsxs("td",{children:[e.jsx("span",{className:`badge badge-${["Approved","No Approval Required","Attended"].includes(E)?"green":["Declined","Cancelled"].includes(E)?"red":"yellow"}`,children:E}),e.jsxs("div",{className:"small",children:[y.status==="pending_approval"?"Access approval pending":y.status==="pending_payment"?"Registration awaiting payment":y.status==="registered"?"Registration confirmed":y.status==="waitlisted"?"Waitlisted":"",y.payment==="completed"?" · Payment completed":y.payment==="free"?" · Free ticket":""]}),y.rejectionReason?e.jsxs("div",{className:"small mt-8",style:{maxWidth:"280px",whiteSpace:"pre-wrap",overflowWrap:"anywhere"},children:[e.jsx("strong",{children:"Reason:"})," ",y.rejectionReason]}):""]}),e.jsx("td",{children:e.jsxs("div",{className:"actions org-attendee-actions",children:[e.jsx("button",{className:"btn btn-ghost btn-xs",onClick:()=>i(y.id),children:"View Profile"}),p(y,g)?e.jsxs(e.Fragment,{children:[e.jsx("button",{className:"btn btn-success btn-xs",onClick:()=>n(y.id),children:"✓ Approve"}),e.jsx("button",{className:"btn btn-danger btn-xs",onClick:()=>c(y.id),children:"✕ Decline"})]}):""]})})]},y?.id??y?.ticketId??R)})})]})}):e.jsxs("div",{className:"empty org-attendee-empty",children:[e.jsx("div",{className:"empty-icon",children:"👥"}),e.jsx("div",{className:"empty-title",children:s.length?"No attendees match your filters":"No registrations yet"}),e.jsx("p",{className:"empty-desc",children:s.length?"Try a different name, ticket ID or status.":"Attendees will appear here when they register for this event."})]})}function Ke({users:o,events:i,onScanQR:n,onCancelReg:c,registrations:p}){return p.length?e.jsx("div",{className:"table-wrap",children:e.jsxs("table",{children:[e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{children:"Attendee"}),e.jsx("th",{children:"Event"}),e.jsx("th",{children:"Ticket ID"}),e.jsx("th",{children:"Seat"}),e.jsx("th",{children:"Amount"}),e.jsx("th",{children:"Check-In"}),e.jsx("th",{children:"Actions"})]})}),e.jsx("tbody",{children:p.map((a,s)=>{const g=o.find(t=>t.id===a.attendeeId)||{name:"Unknown",email:"",avatar:"?"},v=i.find(t=>t.id===a.eventId)||{title:"—"};return e.jsxs("tr",{children:[e.jsx("td",{children:e.jsxs("div",{className:"flex items-center gap-8",children:[e.jsx("div",{className:"av av-xs",children:g.avatar||g.name[0]}),e.jsxs("div",{children:[e.jsx("div",{style:{fontWeight:"500"},children:g.name}),e.jsx("div",{className:"small",children:g.email})]})]})}),e.jsx("td",{className:"truncate",style:{maxWidth:"160px",fontSize:"13px"},children:v.title}),e.jsx("td",{children:e.jsx("code",{className:"mono",style:{background:"var(--surface3)",padding:"2px 6px",borderRadius:"5px"},children:a.ticketId})}),e.jsx("td",{className:"muted",children:a.seat||"GA"}),e.jsx("td",{style:{color:"var(--green)",fontWeight:"600"},children:a.amount===0?"Free":"₹"+a.amount}),e.jsx("td",{children:e.jsx("span",{className:`badge badge-${a.checkedIn?"green":"gray"}`,children:a.checkedIn?"✓ In":"Pending"})}),e.jsx("td",{children:e.jsxs("div",{className:"actions",children:[a.checkedIn?e.jsx("span",{className:"small",style:{color:"var(--text3)"},children:"Verified"}):e.jsx("button",{className:"btn btn-success btn-xs",onClick:()=>n(a.id,a.ticketId),children:"📱 Scan QR"}),e.jsx("button",{className:"btn btn-xs btn-danger",onClick:()=>c(a.id),children:"🗑️"})]})})]},a?.id??a?.eventId??a?.ticketId??s)})})]})}):e.jsxs("div",{className:"empty",children:[e.jsx("div",{className:"empty-icon",children:"👥"}),e.jsx("div",{className:"empty-title",children:"No registrations found"})]})}function Ye(){const[o,i]=P.useState(()=>sessionStorage.getItem("org_attendees_event")),[n,c]=P.useState(""),[p,a]=P.useState(""),[s,g]=P.useState(""),[v,t]=P.useState(""),l=O(),C=l.actions,{CU:y,DB:R,canReviewOrganizerRegistration:r,organizerRegistrationEvents:E,organizerRegistrationStatus:I}=l,u=y.role==="organizer"?E:R.events.filter(w=>w.organizer===y.id),S=o,h=u.find(w=>String(w.id)===S)||u.find(w=>R.registrations.some(q=>String(q.eventId)===String(w.id)&&r(q,w)))||u[0],k=h?.id;P.useEffect(()=>{k&&sessionStorage.setItem("org_attendees_event",String(k))},[k]);const $=P.useCallback(w=>{i(String(w)),C.onSwitchOrganizerEvent(w)},[C]),m=h?.visibility==="private",x=y.role==="organizer"?R.registrations.filter(w=>w.organizerManaged&&k&&String(w.eventId)===String(k)):y.role==="superuser"?R.registrations:R.registrations.filter(w=>{const q=R.events.find(j=>j.id===w.eventId);return q&&q.organizer===y.id});if(y.role==="organizer"&&!u.length)return e.jsx("div",{className:"org-attendees card",children:e.jsxs("div",{className:"empty",children:[e.jsx("div",{className:"empty-icon",children:"📅"}),e.jsx("div",{className:"empty-title",children:"No events to manage"}),e.jsx("p",{className:"empty-desc",children:"Create an event to start managing attendee registrations."}),e.jsx("button",{className:"btn btn-primary mt-16",onClick:()=>C.onOpenAddEventModal(),children:"Create Event"})]})});if(y.role==="organizer"&&u.length>0){const w=x.filter(N=>["Approved","No Approval Required","Attended"].includes(I(N))).length,q=x.filter(N=>["Pending","Payment Pending"].includes(I(N))).length,j=x.filter(N=>I(N)==="Declined").length;return e.jsxs("div",{className:"org-attendees",children:[e.jsx("div",{className:"page-hd org-attendees-heading",children:e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Attendee Management"}),e.jsxs("div",{className:"page-sub",children:[x.length," attendees · ",w," approved · ",q," pending"]})]})}),e.jsxs("div",{className:"card org-attendee-event-card",children:[e.jsxs("div",{children:[e.jsx("div",{className:"label mb-8",children:"SELECT EVENT"}),e.jsx("div",{className:"small",children:"Choose an event to view its registrations"})]}),e.jsx(Ge,{events:u,selectedEvent:h,onSelect:$}),m?e.jsx("span",{className:"badge badge-blue",children:"🔒 Private Event"}):""]}),e.jsxs("div",{className:"org-attendee-stats",children:[e.jsxs("div",{className:"card",children:[e.jsx("span",{children:"Total Attendees"}),e.jsx("strong",{children:x.length}),e.jsx("small",{children:"For this event"})]}),e.jsxs("div",{className:"card",children:[e.jsx("span",{children:"Approved"}),e.jsx("strong",{children:w}),e.jsx("small",{children:"Confirmed or attended"})]}),e.jsxs("div",{className:"card",children:[e.jsx("span",{children:"Pending"}),e.jsx("strong",{children:q}),e.jsx("small",{children:"Awaiting review or payment"})]}),e.jsxs("div",{className:"card",children:[e.jsx("span",{children:"Rejected"}),e.jsx("strong",{children:j}),e.jsx("small",{children:"Declined registrations"})]})]}),e.jsxs("div",{className:"card org-attendee-list-card",children:[e.jsx("div",{className:"org-attendee-list-heading",children:e.jsxs("div",{children:[e.jsx("div",{className:"h4",children:"Attendees"}),e.jsxs("div",{className:"small",children:[h.title," · ",x.length," registrations"]})]})}),e.jsxs("div",{className:"filter-row org-attendee-filters",children:[e.jsxs("div",{className:"search-box input-group",children:[e.jsx("span",{className:"input-icon",children:"🔍"}),e.jsx("input",{className:"form-control",id:"at-q","aria-label":"Search attendees",placeholder:"Search name, email or ticket ID…",value:n,onChange:N=>c(N.target.value)})]}),e.jsxs(M,{className:"form-control filter-select",id:"at-status","aria-label":"Filter attendee status",value:p,onChange:N=>a(N.target.value),children:[e.jsx("option",{value:"",children:"All Status"}),h?.visibility==="public"?e.jsxs(e.Fragment,{children:[e.jsx("option",{value:"no approval required",children:"No Approval Required"}),e.jsx("option",{value:"payment pending",children:"Payment Pending"})]}):e.jsxs(e.Fragment,{children:[e.jsx("option",{value:"approved",children:"Approved"}),e.jsx("option",{value:"pending",children:"Pending Review"})]}),e.jsx("option",{value:"rejected",children:"Declined"}),e.jsx("option",{value:"cancelled",children:"Cancelled"}),e.jsx("option",{value:"attended",children:"Attended"})]})]}),e.jsx("div",{id:"attendees-tbl",children:e.jsx(Qe,{users:l.DB.users,onViewOrganizerAttendeeProfile:l.actions.onViewOrganizerAttendeeProfile,onOrganiserApproveAttendee:l.actions.onOrganiserApproveAttendee,onOrganiserRejectAttendee:l.actions.onOrganiserRejectAttendee,canReviewOrganizerRegistration:l.canReviewOrganizerRegistration,organizerRegistrationStatus:l.organizerRegistrationStatus,registrations:x,event:h,isPrivate:m,filters:{query:n,status:p}})})]})]})}const T=x.filter(w=>w.checkedIn).length;return e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"page-hd",children:[e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Attendee Management"}),e.jsxs("div",{className:"page-sub",children:[x.length," total · ",T," checked in"]})]}),e.jsx("div",{className:"page-hd-right",children:e.jsx("button",{className:"btn btn-ghost",onClick:()=>C.onToast("Exported to CSV","success"),children:"📥 Export CSV"})})]}),e.jsxs("div",{className:"filter-row",children:[e.jsxs("div",{className:"search-box input-group",children:[e.jsx("span",{className:"input-icon",children:"🔍"}),e.jsx("input",{className:"form-control",id:"at-q",placeholder:"Search attendees…",value:n,onChange:w=>c(w.target.value)})]}),e.jsxs(M,{className:"form-control filter-select",id:"at-ev",value:s,onChange:w=>g(w.target.value),children:[e.jsx("option",{value:"",children:"All Events"}),R.events.map((w,q)=>e.jsx("option",{value:w.id,children:w.title},w?.id??w?.title??q))]}),e.jsxs(M,{className:"form-control filter-select",id:"at-ci",value:v,onChange:w=>t(w.target.value),children:[e.jsx("option",{value:"",children:"All"}),e.jsx("option",{value:"in",children:"Checked In"}),e.jsx("option",{value:"out",children:"Not Checked In"})]})]}),e.jsx("div",{id:"attendees-tbl",children:e.jsx(Ke,{users:l.DB.users,events:l.DB.events,onScanQR:l.actions.onScanQR,onCancelReg:l.actions.onCancelReg,registrations:x})})]})}function ue({embedded:o=!1}){const i=O(),n=i.actions,{DB:c,workflowEventPhase:p}=i,a=c.events.filter(s=>p(s)==="completed").sort((s,g)=>new Date(g.date)-new Date(s.date));return e.jsxs(e.Fragment,{children:[o?"":e.jsx("div",{className:"page-hd",children:e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Completed Events"}),e.jsx("div",{className:"page-sub",children:"Events that have been successfully completed"})]})}),e.jsx("div",{className:"events-grid",children:a.length===0?e.jsxs("div",{className:"empty",style:{gridColumn:"1/-1"},children:[e.jsx("div",{className:"empty-icon",children:"✅"}),e.jsx("div",{className:"empty-title",children:"No completed events"})]}):a.map((s,g)=>{const v=s.image?e.jsxs(e.Fragment,{children:[e.jsx(K,{src:s.image,alt:s.title||"Event",className:"ev-banner-img",fallbackTag:"div",fallbackProps:{className:"ev-banner-fallback",style:{display:"flex",alignItems:"center",justifyContent:"center",fontSize:"52px",width:"100%",height:"100%"}},children:s.emoji||"📅"}),e.jsx("div",{className:"ev-banner-overlay"})]}):e.jsx("span",{style:{fontSize:"52px"},children:s.emoji||"📅"});return e.jsxs("div",{className:"ev-card",children:[e.jsxs("div",{className:"ev-banner",style:{background:`${s.color||"var(--accent)"}18`},children:[v,e.jsx("div",{className:"ev-banner-tag",children:e.jsx("span",{className:"badge badge-green",children:"✓ Completed"})}),e.jsx("div",{className:"ev-banner-price",children:s.price===0?"Free":"₹"+s.price})]}),e.jsxs("div",{className:"ev-body",children:[e.jsx("div",{className:"ev-title",children:s.title}),e.jsxs("div",{className:"ev-meta",children:[e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"📅"}),s.date," · ",s.time]}),e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"📍"}),s.venue]}),e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"🏷️"}),s.category]})]}),e.jsxs("div",{style:{marginBottom:"12px"},children:[e.jsx("div",{className:"flex justify-between ev-cap mb-4",children:e.jsxs("span",{children:[s.registered,"/",s.capacity," attended"]})}),e.jsx("div",{style:{fontSize:"12px",color:"var(--green)",marginTop:"8px"},children:"✓ Event Successfully Completed"})]}),e.jsxs("div",{className:"ev-footer",children:[e.jsxs("div",{className:"flex gap-6",style:{width:"100%",justifyContent:"space-between"},children:[e.jsx("button",{className:"btn btn-ghost btn-xs w-full",onClick:()=>n.onViewWorkflowEventDetails(s.id),title:"View event details",children:"👁️ View Details"}),e.jsx("button",{className:"btn btn-primary btn-xs",onClick:()=>n.onViewWorkflowEventReport(s.id),title:"View completion report",children:"📊 View Report"})]}),e.jsx("div",{className:"tag-list",style:{flex:"1",justifyContent:"flex-end"},children:(s.tags||[]).slice(0,2).map((t,l)=>e.jsx("span",{className:"tag",children:t},t?.id??t?.requestId??t?.eventId??t?.registrationId??t?.reportId??t?.label??(typeof t=="string"||typeof t=="number"?t:l)))})]})]})]},s?.date??s?.title??g)})})]})}function Je({onViewRequestDetail:o,onNavigate:i,onViewWorkflowRequestDrawer:n,request:c}){const p=c.status||"submitted",a=()=>{typeof n=="function"&&n(c.id)};let s="";["submitted","pending"].includes(p)?s=e.jsx("button",{className:"btn btn-primary btn-xs",onClick:()=>{o(c.id),a()},style:{whiteSpace:"nowrap"},children:"Review Request"}):["under_review","in_review","info_requested"].includes(p)?s=e.jsx("button",{className:"btn btn-primary btn-xs",onClick:()=>{o(c.id),a()},style:{whiteSpace:"nowrap"},children:"Continue Review"}):["proposal_sent","awaiting_client"].includes(p)?s=e.jsx("button",{className:"btn btn-primary btn-xs",onClick:()=>{o(c.id),a()},style:{whiteSpace:"nowrap"},children:"View Proposal Status"}):["changes_requested","counteroffer_received","plan_revision_requested"].includes(p)?s=e.jsx("button",{className:"btn btn-primary btn-xs",onClick:()=>{o(c.id),a()},style:{whiteSpace:"nowrap"},children:"Review Changes"}):["confirmed","approved"].includes(p)&&(s=e.jsx("button",{className:"btn btn-primary btn-xs",onClick:()=>i("my-events"),style:{whiteSpace:"nowrap"},children:"Manage Event"}));const g=e.jsx("button",{className:"btn btn-ghost btn-xs",onClick:()=>n(c.id),style:{whiteSpace:"nowrap"},children:"View Details"});return e.jsxs("div",{style:{display:"flex",gap:"6px",flexWrap:"wrap",alignItems:"center"},children:[g,s]})}function ge({organizerEventRequest:o,onOpenEditEventModal:i,registrations:n,payments:c,eventWorkflowPayments:p,onHandleOrganizerDeleteEvent:a,onOpenOrganizerEventCancellationModal:s,organizerEventCardStatus:g,ownsOrganizerEvent:v,event:t,request:l=o(t),onViewWorkflowEventDetails:C,onOpenViewEventDrawer:y}){const R=t?.eventId||t?.id,r=l?.requestId||l?.id||t?.requestId||"",E=g(t),I=!!(l||t?.clientId||t?.backendClientId),u=I||E==="cancelled"?()=>C(R):()=>y(R),S=l?.cancellation||["completed","cancelled","withdrawn","rejected","expired"].includes(String(l?.status||"").toLowerCase()),h=v(t,l)&&!["completed","cancelled"].includes(E)&&!S,k=new Set([t?.id,R].filter(w=>w!=null).map(String)),$=(n||[]).filter(w=>w.eventId!=null&&k.has(String(w.eventId))),m=new Set($.flatMap(w=>[w.registrationId,w.id]).filter(w=>w!=null).map(String)),x=(c||[]).concat(p||[]).some(w=>w.eventId!=null&&k.has(String(w.eventId))||w.registrationId!=null&&m.has(String(w.registrationId))),T=E==="draft"&&!I&&!Number(t.registered||0)&&!$.length&&!x;return e.jsxs("div",{className:"organizer-event-actions",children:[e.jsx("button",{type:"button",className:"btn btn-ghost btn-xs",onClick:u,children:E==="cancelled"?"View Cancellation History":"View Details"}),h&&!I&&e.jsx("button",{type:"button",className:"btn btn-ghost btn-xs",onClick:()=>i(t.id||R),children:"Edit"}),h&&T?e.jsx("button",{type:"button",className:"btn btn-danger btn-xs",onClick:()=>a(R),children:"Delete Draft"}):h&&(!l||["confirmed","approved"].includes(String(l.status||"").toLowerCase()))&&e.jsx("button",{type:"button",className:"btn btn-danger btn-xs",onClick:()=>s(R,r),children:"Cancel Event"})]})}function J({registrations:o,onRegForEvent:i,onOpenViewEventDrawer:n,user:c,evStatBadge:p,isCancelledWorkflowEvent:a,organizerEventCardStatus:s,organizerEventRequest:g,onOpenEditEventModal:v,payments:t,eventWorkflowPayments:l,onHandleOrganizerDeleteEvent:C,onOpenOrganizerEventCancellationModal:y,ownsOrganizerEvent:R,event:r,role:E,reg:I=null,onViewWorkflowEventDetails:u}){const S=r.capacity>0?Math.min(100,Math.round((r.registered||0)/r.capacity*100)):0,h=I||o.find(f=>String(f.attendeeId)===String(c.id)&&String(f.eventId)===String(r.id)),k=a(r),$=E==="organizer"?g(r):null,m=E==="organizer"?s(r):r.status,x=E==="organizer"&&{upcoming:"Upcoming",ongoing:"Ongoing",completed:"Completed",cancelled:"Cancelled",draft:"Draft"}[m]||m,T=E==="organizer"&&{upcoming:"blue",ongoing:"green",completed:"green",cancelled:"red",draft:"yellow"}[m]||p(m),w=$?Number($.agreedPrice??$.budget??0):null,q=$?.paymentStatus==="fully_paid"?"Paid":$?.paymentStatus==="deposit_paid"?"Deposit Paid":"Unpaid",j=$?.paymentStatus==="fully_paid"?"var(--green)":$?.paymentStatus==="deposit_paid"?"var(--blue)":"var(--yellow)",N=r.image?e.jsxs(e.Fragment,{children:[e.jsx(K,{src:r.image,alt:r.title||"Event",className:"ev-banner-img",fallbackTag:"div",fallbackProps:{className:"ev-banner-fallback",style:{display:"flex",alignItems:"center",justifyContent:"center",fontSize:"52px",width:"100%",height:"100%"}},children:r.emoji||"📅"}),e.jsx("div",{className:"ev-banner-overlay"})]}):e.jsx("span",{style:{fontSize:"52px"},children:r.emoji||"📅"});return e.jsxs("div",{className:"ev-card",children:[e.jsxs("div",{className:"ev-banner",style:{background:`${r.color||"var(--accent)"}18`},children:[N,e.jsx("div",{className:"ev-banner-tag",children:e.jsx("span",{className:`badge badge-${T}`,children:x})}),e.jsx("div",{className:"ev-banner-price",children:$?w>0?"₹"+w.toLocaleString("en-IN"):"Budget not set":r.price===0?"Free":"₹"+r.price})]}),e.jsxs("div",{className:"ev-body",children:[e.jsx("div",{className:"ev-title",children:r.title}),e.jsxs("div",{className:"ev-meta",children:[e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"📅"}),r.date," · ",r.time]}),e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"📍"}),r.venue]}),e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"🏷️"}),r.category]}),$?e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"💳"}),"Payment:"," ",e.jsx("strong",{style:{color:j},children:q})]}):""]}),e.jsxs("div",{style:{marginBottom:"12px"},children:[e.jsxs("div",{className:"flex justify-between ev-cap mb-4",children:[e.jsxs("span",{children:[r.registered,"/",r.capacity," registered"]}),e.jsxs("span",{children:[S,"%"]})]}),e.jsx("div",{className:"prog",children:e.jsx("div",{className:"prog-fill",style:{width:`${S}%`}})})]}),e.jsxs("div",{className:"ev-footer",children:[E==="attendee"?e.jsxs("div",{className:"flex gap-6",style:{width:"100%",justifyContent:"space-between"},children:[e.jsx("button",{className:`btn btn-sm ${h?"btn-ghost":"btn-primary"}`,onClick:()=>i(r.id),...r.status==="full"&&!h||r.status==="completed"||k?{disabled:!0}:{},style:r.status==="full"&&!h||r.status==="completed"||k?{opacity:".5"}:{},children:k?"Event Cancelled":h?"✓ Registered":r.status==="full"?"Event Full":"Register"}),e.jsx("button",{className:"btn btn-ghost btn-xs",onClick:()=>n(r.id),title:"View event details",children:"View Details"})]}):E==="organizer"?e.jsx(ge,{organizerEventRequest:g,onOpenEditEventModal:v,registrations:o,payments:t,eventWorkflowPayments:l,onHandleOrganizerDeleteEvent:C,onOpenOrganizerEventCancellationModal:y,organizerEventCardStatus:s,ownsOrganizerEvent:R,event:r,request:$,onViewWorkflowEventDetails:u,onOpenViewEventDrawer:n}):E==="superuser"?e.jsx("div",{className:"actions",children:e.jsx("button",{className:"btn btn-ghost btn-xs w-full",onClick:()=>n(r.id),title:"View event details",children:"👁️ View"})}):E==="employee"||E==="client"?e.jsx("div",{className:"flex gap-6",children:e.jsx("button",{className:"btn btn-ghost btn-xs w-full",onClick:()=>n(r.id),title:"View event details",children:"👁️ View Details"})}):e.jsx("button",{className:"btn btn-ghost btn-xs",onClick:()=>n(r.id),title:"View event details",children:"👁️ Details"}),e.jsx("div",{className:"tag-list",style:{flex:"1",justifyContent:"flex-end"},children:(r.tags||[]).slice(0,2).map((f,z)=>e.jsx("span",{className:"tag",children:f},f?.id??f?.requestId??f?.eventId??f?.registrationId??f?.reportId??f?.label??(typeof f=="string"||typeof f=="number"?f:z)))})]})]})]})}function Xe({events:o,onOpenViewEventDrawer:i,onViewWorkflowEventDetails:n,isCancelledWorkflowEvent:c,embedded:p=!1}){const a=(o||[]).filter(c).sort((g,v)=>new Date(v.cancellation?.cancelledAt||v.updatedAt||0)-new Date(g.cancellation?.cancelledAt||g.updatedAt||0)),s=g=>{const v=g.registrationSummary?.refunds||{},t=["pending","completed","failed"].filter(C=>Number(v[C])>0).map(C=>`${Number(v[C])} ${C}`);if(t.length)return t.join(", ");const l=String(g.cancellation?.refundStatus||"").toLowerCase();return l==="pending"?"Pending":l==="not_applicable"?"Not applicable":l||"Not recorded"};return e.jsxs(e.Fragment,{children:[p?"":e.jsx("div",{className:"page-hd",children:e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Cancelled Events"}),e.jsx("div",{className:"page-sub",children:"Preserved cancellation and refund history"})]})}),e.jsx("div",{className:"events-grid",children:a.length?a.map((g,v)=>e.jsx("div",{className:"ev-card",children:e.jsxs("div",{className:"ev-body",children:[e.jsxs("div",{className:"flex justify-between gap-8",children:[e.jsx("div",{className:"ev-title",children:g.title||g.name||"Cancelled Event"}),e.jsx("span",{className:"badge badge-red",children:"Cancelled"})]}),e.jsxs("div",{className:"ev-meta",children:[e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"📅"}),"Event date: ",g.date||"Date unavailable"," ·"," ",g.time||""]}),e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"📍"}),g.venue||g.location||"Venue unavailable"]})]}),e.jsxs("div",{style:{fontSize:"12px",color:"var(--text2)",marginTop:"10px"},children:[e.jsx("strong",{children:"Cancellation reason:"})," ",g.cancellation?.reason||g.cancellationReason||"No reason recorded"]}),e.jsxs("div",{style:{fontSize:"12px",color:"var(--text2)",marginTop:"6px"},children:[e.jsx("strong",{children:"Cancellation date:"})," ",g.cancellation?.cancelledAt?new Date(g.cancellation.cancelledAt).toLocaleString():"Date unavailable"]}),e.jsxs("div",{style:{fontSize:"12px",color:"var(--text2)",marginTop:"6px"},children:[e.jsx("strong",{children:"Refund status:"})," ",s(g)]}),e.jsxs("div",{className:"ev-footer",children:[e.jsx("button",{className:"btn btn-ghost btn-xs",onClick:()=>i(g.eventId||g.id),children:"View Details"}),e.jsx("button",{className:"btn btn-ghost btn-xs",onClick:()=>n(g.eventId||g.id),children:"View Cancellation History"})]})]})},g?.date??g?.name??g?.title??v)):e.jsxs("div",{className:"empty",style:{gridColumn:"1/-1"},children:[e.jsx("div",{className:"empty-icon",children:"📁"}),e.jsx("div",{className:"empty-title",children:"No cancelled events"})]})})]})}function Ze(){const o=O(),i=o.actions,{CU:n,DB:c,filterOrganizerDashboardEvents:p,isCancelledWorkflowEvent:a,organizerDashboardData:s,workflowEventPhase:g}=o,v=m=>String(m??"");if(typeof s<"u"&&s){const m=s,x=m.eventStatusCounts||{},T=m.eventsNeedingAttention!==void 0?m.eventsNeedingAttention:m.attentionEventIds?.length??0,w=Array.isArray(m.priorityActions)?m.priorityActions:[],q=Array.isArray(m.upcomingSchedule)?m.upcomingSchedule:[];return e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"page-hd",children:[e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Organizer Dashboard"}),e.jsxs("div",{className:"page-sub",children:["Hello ",n&&n.name||"Organizer",", manage your events."]})]}),e.jsx("div",{className:"page-hd-right",children:e.jsx("button",{className:"btn btn-primary",onClick:()=>i.onOpenAddEventModal(),children:"+ Create Event"})})]}),e.jsxs("div",{className:"grid-4 mb-20",children:[e.jsxs("div",{className:"stat-card",onClick:()=>i.onOpenOrganizerEvents("all"),style:{cursor:"pointer"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--accent-dim)",color:"var(--accent)"},children:"🗓️"}),e.jsx("div",{className:"stat-value",style:{color:"var(--accent)"},children:m.totalEvents??(c.events||[]).length}),e.jsx("div",{className:"stat-label",children:"My Events"}),e.jsxs("div",{className:"stat-sub neutral",style:{display:"flex",flexWrap:"wrap",gap:"6px",fontSize:"11px",marginTop:"4px"},children:[e.jsxs("span",{children:["Upcoming ",e.jsx("strong",{children:x.upcoming??0})]}),e.jsxs("span",{children:["In Progress ",e.jsx("strong",{children:x.inProgress??0})]}),e.jsxs("span",{children:["Completed ",e.jsx("strong",{children:x.completed??0})]}),e.jsxs("span",{children:["Cancelled ",e.jsx("strong",{children:x.cancelled??0})]}),e.jsxs("span",{children:["Needs Attention ",e.jsx("strong",{children:x.needsAttention??0})]})]})]}),e.jsxs("div",{className:"stat-card",onClick:()=>i.onOpenOrganizerRequests(),style:{cursor:"pointer"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--blue-dim)",color:"var(--blue)"},children:"📋"}),e.jsx("div",{className:"stat-value",style:{color:"var(--blue)"},children:m.pendingRequests??0}),e.jsx("div",{className:"stat-label",children:"Pending Event Requests"}),e.jsx("div",{className:"stat-sub neutral",children:"Review client proposals"})]}),e.jsxs("div",{className:"stat-card",onClick:()=>i.onPageOrganizerFinancialRecords(),style:{cursor:"pointer"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--green-dim)",color:"var(--green)"},children:"💰"}),e.jsxs("div",{className:"stat-value",style:{color:"var(--green)"},children:["₹",Number(m.totalRevenue??0).toLocaleString()]}),e.jsx("div",{className:"stat-label",children:"Event Revenue"}),e.jsxs("div",{className:"stat-sub neutral",children:["Gross: ₹",Number(m.grossRevenue??m.totalRevenue??0).toLocaleString(),m.refundedAmount?` (Refunded: ₹${Number(m.refundedAmount).toLocaleString()})`:""]})]}),e.jsxs("div",{className:"stat-card",onClick:()=>i.onOpenOrganizerEvents("attention"),style:{cursor:"pointer"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--yellow-dim)",color:"var(--yellow)"},children:"⚠️"}),e.jsx("div",{className:"stat-value",style:{color:"var(--yellow)"},children:T}),e.jsx("div",{className:"stat-label",children:"Events Needing Attention"}),e.jsx("div",{className:"stat-sub neutral",children:"Requires immediate action"})]})]}),e.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"20px",marginBottom:"20px"},children:[e.jsxs("div",{className:"card",children:[e.jsx("div",{style:{fontSize:"16px",fontWeight:"700",marginBottom:"12px"},children:"Priority Actions"}),e.jsx("div",{style:{display:"flex",flexDirection:"column",gap:"10px"},children:w.length===0?e.jsx("div",{className:"small text-muted",children:"No pending priority actions."}):w.map((j,N)=>e.jsxs("div",{style:{padding:"10px",background:"var(--surface2)",borderRadius:"8px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"},onClick:j.type==="preparation"?()=>i.onOrganizerEventSection(j.eventId||j.id,"preparation"):j.type==="request"?()=>i.onViewWorkflowRequestDrawer(j.id):()=>i.onOpenOrganizerIssue(j.id),children:[e.jsxs("div",{children:[e.jsx("div",{style:{fontWeight:"600",fontSize:"13.5px"},children:v(j.title)}),e.jsx("div",{className:"small text-muted",children:v(j.detail||"")})]}),e.jsx("span",{className:`badge badge-${j.type==="preparation"?"yellow":j.type==="request"?"blue":"red"}`,children:j.type})]},j?.id??j?.eventId??j?.title??N))})]}),e.jsxs("div",{className:"card",children:[e.jsx("div",{style:{fontSize:"16px",fontWeight:"700",marginBottom:"12px"},children:"Upcoming Schedule"}),e.jsx("div",{style:{display:"flex",flexDirection:"column",gap:"10px"},children:q.length===0?e.jsx("div",{className:"small text-muted",children:"No upcoming events scheduled."}):q.map((j,N)=>e.jsxs("div",{style:{padding:"10px",background:"var(--surface2)",borderRadius:"8px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"},onClick:()=>i.onOpenViewEventDrawer(j.eventId||j.id),children:[e.jsxs("div",{children:[e.jsx("div",{style:{fontWeight:"600",fontSize:"13.5px"},children:v(j.title)}),e.jsxs("div",{className:"small text-muted",children:["📅 ",v(j.date||"")," ",v(j.time||"")," · 📍"," ",v(j.location||"")]})]}),e.jsx("span",{className:"badge badge-green",children:v(j.status||"published")})]},j?.date??j?.title??N))})]})]})]})}const l=(c&&c.events||[]).filter(m=>String(m.organizer)===String(n.id)),C=l.filter(m=>!a(m)),y=C.filter(m=>g(m)==="upcoming"),R=c&&c.registrations||[],r=R.filter(m=>l.some(x=>String(x.id)===String(m.eventId))).length,I=(c&&c.eventRequests||[]).filter(m=>String(m.organizer)===String(n.id)&&m.status==="plan_submitted"&&(c.eventPlans||[]).some(x=>String(x.eventPlanId)===String(m.activeEventPlanId)&&x.approvalStatus==="pending")).length,u=R.filter(m=>l.some(x=>String(x.id)===String(m.eventId))&&new Date(m.registrationDate||m.createdAt||m.date).getTime()>=Date.now()-7*864e5).length,S=(sessionStorage.getItem("org_events_search")||"").toLowerCase(),h=sessionStorage.getItem("org_events_status")||"",k=sessionStorage.getItem("org_events_category")||"",$=p(C,S,h,k);return e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"page-hd",children:[e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Organizer Dashboard"}),e.jsxs("div",{className:"page-sub",children:["Hello ",n&&n.name||"Organizer",", manage your events."]})]}),e.jsx("div",{className:"page-hd-right",children:e.jsx("button",{className:"btn btn-primary",onClick:()=>i.onOpenAddEventModal(),children:"+ Create Event"})})]}),e.jsxs("div",{className:"grid-4 mb-20",children:[e.jsxs("div",{className:"stat-card",children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--accent-dim)",color:"var(--accent)"},children:"🗓️"}),e.jsx("div",{className:"stat-value",style:{color:"var(--accent)"},children:l.length}),e.jsx("div",{className:"stat-label",children:"My Events"}),e.jsxs("div",{className:"stat-sub neutral",children:[y.length," upcoming"]})]}),e.jsxs("div",{className:"stat-card",children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--green-dim)",color:"var(--green)"},children:"👥"}),e.jsx("div",{className:"stat-value",style:{color:"var(--green)"},children:r}),e.jsx("div",{className:"stat-label",children:"Total Attendees"}),e.jsxs("div",{className:"stat-sub up",children:["↑ ",u," this week"]})]}),e.jsxs("div",{className:"stat-card",children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--blue-dim)",color:"var(--blue)"},children:"📋"}),e.jsx("div",{className:"stat-value",style:{color:"var(--blue)"},children:I}),e.jsx("div",{className:"stat-label",children:"Plans in Review"}),e.jsx("div",{className:"stat-sub neutral",children:"With clients"})]})]}),e.jsxs("div",{className:"mb-16",children:[e.jsxs("div",{className:"mb-12 flex justify-between items-center",children:[e.jsx("span",{className:"h4",children:"My Events"}),e.jsx("button",{className:"btn btn-ghost btn-sm",onClick:()=>i.onOpenOrganizerEvents("cancelled"),children:"Cancelled Events"})]}),e.jsxs("div",{className:"search-box input-group",style:{marginBottom:"16px"},children:[e.jsx("span",{className:"input-icon",children:"🔍"}),e.jsx(ne,{className:"form-control",id:"org-events-search",placeholder:"Search by event name or city...",value:S,onInput:m=>i.onSearchOrganizerEvents(m.currentTarget.value)})]}),e.jsxs("div",{className:"filter-row",style:{marginBottom:"16px"},children:[e.jsxs(M,{className:"form-control filter-select",id:"org-events-status",onChange:()=>i.onFilterOrganizerDashboardEventsFromControls(),value:h,children:[e.jsx("option",{value:"",children:"All Status"}),e.jsx("option",{value:"upcoming",children:"Upcoming"}),e.jsx("option",{value:"ongoing",children:"Ongoing"}),e.jsx("option",{value:"full",children:"Full"}),e.jsx("option",{value:"completed",children:"Completed"})]}),e.jsxs(M,{className:"form-control filter-select",id:"org-events-category",onChange:()=>i.onFilterOrganizerDashboardEventsFromControls(),value:k,children:[e.jsx("option",{value:"",children:"All Categories"}),[...new Set(l.map(m=>m.category).filter(Boolean))].sort().map((m,x)=>e.jsx("option",{value:v(m),children:v(m)},m?.id??m?.requestId??m?.eventId??m?.registrationId??m?.reportId??m?.label??(typeof m=="string"||typeof m=="number"?m:x)))]})]}),e.jsxs("div",{className:"events-grid",id:"org-events-grid",children:[$.length>0?$.map((m,x)=>e.jsx(J,{registrations:o.DB.registrations,onRegForEvent:o.actions.onRegForEvent,onOpenViewEventDrawer:o.actions.onOpenViewEventDrawer,user:o.CU,evStatBadge:o.evStatBadge,isCancelledWorkflowEvent:o.isCancelledWorkflowEvent,organizerEventCardStatus:o.organizerEventCardStatus,organizerEventRequest:o.organizerEventRequest,onOpenEditEventModal:o.actions.onOpenEditEventModal,payments:o.DB.payments,eventWorkflowPayments:o.DB.eventWorkflowPayments,onHandleOrganizerDeleteEvent:o.actions.onHandleOrganizerDeleteEvent,onOpenOrganizerEventCancellationModal:o.actions.onOpenOrganizerEventCancellationModal,ownsOrganizerEvent:o.ownsOrganizerEvent,event:m,role:"organizer",onViewWorkflowEventDetails:o.actions.onViewWorkflowEventDetails},m?.id??m?.requestId??m?.eventId??m?.registrationId??m?.reportId??m?.label??(typeof m=="string"||typeof m=="number"?m:x))):C.length>0?e.jsxs("div",{className:"empty",style:{gridColumn:"1/-1"},children:[e.jsx("div",{className:"empty-icon",children:"🔍"}),e.jsx("div",{className:"empty-title",children:"No events match"}),e.jsx("p",{children:"Try adjusting your filters"})]}):l.length>0?e.jsxs("div",{className:"empty",style:{gridColumn:"1/-1"},children:[e.jsx("div",{className:"empty-icon",children:"📁"}),e.jsx("div",{className:"empty-title",children:"No active events"}),e.jsx("button",{className:"btn btn-ghost mt-16",onClick:()=>i.onOpenOrganizerEvents("cancelled"),children:"View Cancelled Events"})]}):e.jsx("div",{className:"ev-card",style:{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"240px",borderStyle:"dashed",cursor:"pointer"},onClick:()=>i.onOpenAddEventModal(),children:e.jsxs("div",{className:"text-center",style:{color:"var(--text3)"},children:[e.jsx("div",{style:{fontSize:"32px",marginBottom:"8px"},children:"➕"}),e.jsx("div",{style:{fontSize:"13px"},children:"Create Your First Event"})]})}),l.length>0?e.jsx("div",{className:"ev-card",style:{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"240px",borderStyle:"dashed",cursor:"pointer"},onClick:()=>i.onOpenAddEventModal(),children:e.jsxs("div",{className:"text-center",style:{color:"var(--text3)"},children:[e.jsx("div",{style:{fontSize:"32px",marginBottom:"8px"},children:"➕"}),e.jsx("div",{style:{fontSize:"13px"},children:"Create New Event"})]})}):""]})]})]})}function en(){const o=O(),i=o.actions,{CU:n,DB:c,agreementBadgeInfo:p,normalizeEventRequest:a,paymentBadgeInfo:s,reqBadgeColor:g}=o;c.eventRequests.forEach(a);const v=sessionStorage.getItem("org_reqs_tab")||"all",t=(sessionStorage.getItem("org_reqs_search")||"").toLowerCase().trim(),l=c.eventRequests.filter(f=>n.role==="superuser"?!0:String(f.organizer)===String(n.id)||String(f.organizerId)===String(n.id)||String(f.organizerUserId)===String(n.id)||!f.organizer),C=["submitted","pending","proposal_sent","awaiting_client","changes_requested","counteroffer_received","planning","plan_submitted","plan_revision_requested"],y=["under_review","in_review","info_requested"],R=["confirmed","approved"],r=["withdrawn","cancelled","rejected","expired","completed"],E=l.length,I=l.filter(f=>C.includes(f.status)).length,u=l.filter(f=>y.includes(f.status)).length,S=l.filter(f=>R.includes(f.status)).length,h=l.filter(f=>r.includes(f.status)).length,k=l.filter(f=>["submitted","pending","changes_requested","counteroffer_received","planning","plan_submitted","plan_revision_requested"].includes(f.status)).length,$=l.filter(f=>["submitted","pending","under_review","info_requested"].includes(f.status)).length,m=l.filter(f=>["proposal_sent","awaiting_client"].includes(f.status)).length;let x=l.filter(f=>v==="action_required"||v==="actionable"||v==="needs_review"||v==="proposals"?C.includes(f.status):v==="under_review"?y.includes(f.status):v==="confirmed"?R.includes(f.status):v==="closed"?r.includes(f.status):!0);const T=sessionStorage.getItem("org_reqs_status"),w=sessionStorage.getItem("org_reqs_type"),q=sessionStorage.getItem("org_reqs_payment"),j=sessionStorage.getItem("org_reqs_date_from"),N=sessionStorage.getItem("org_reqs_date_to");return T&&(x=x.filter(f=>f.status===T)),w&&(x=x.filter(f=>(f.type||f.eventType)===w)),q&&(x=x.filter(f=>f.paymentStatus===q)),j&&(x=x.filter(f=>(f.date||f.eventDate)>=j)),N&&(x=x.filter(f=>(f.date||f.eventDate)<=N)),t&&(x=x.filter(f=>{const z=c.users&&c.users.find(A=>String(A.id)===String(f.clientId))||{},b=f.clientDetails||{};return f.title&&f.title.toLowerCase().includes(t)||f.type&&f.type.toLowerCase().includes(t)||f.eventType&&f.eventType.toLowerCase().includes(t)||z.name&&z.name.toLowerCase().includes(t)||z.email&&z.email.toLowerCase().includes(t)||b.name&&b.name.toLowerCase().includes(t)||b.email&&b.email.toLowerCase().includes(t)||b.companyName&&b.companyName.toLowerCase().includes(t)})),x.sort(te),e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"page-hd",children:[e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Event Requests"}),e.jsx("div",{className:"page-sub",children:"Review incoming requests and track negotiation, event plans, and client approval."})]}),e.jsx("div",{className:"page-hd-right",style:{display:"flex",gap:"10px",alignItems:"center"},children:e.jsxs("div",{className:"input-group",style:{width:"240px"},children:[e.jsx("span",{className:"input-icon",children:"🔍"}),e.jsx(ne,{className:"form-control",placeholder:"Search requests...",value:t,onInput:f=>{sessionStorage.setItem("org_reqs_search",f.currentTarget.value),i.onRenderPage("event-requests")}})]})})]}),e.jsxs("div",{style:{display:"flex",gap:"12px",marginBottom:"14px",flexWrap:"wrap",alignItems:"center",justifyContent:"space-between"},children:[e.jsxs("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap"},children:[e.jsxs("button",{onClick:()=>{sessionStorage.setItem("org_reqs_tab","all"),i.onRenderPage("event-requests")},className:`btn btn-sm ${v==="all"||!v?"btn-primary":"btn-ghost"}`,children:["All Requests (",E,")"]}),e.jsxs("button",{onClick:()=>{sessionStorage.setItem("org_reqs_tab","action_required"),i.onRenderPage("event-requests")},className:`btn btn-sm ${v==="action_required"||v==="actionable"?"btn-primary":"btn-ghost"}`,children:["Action Required (",I,")"]}),e.jsxs("button",{onClick:()=>{sessionStorage.setItem("org_reqs_tab","under_review"),i.onRenderPage("event-requests")},className:`btn btn-sm ${v==="under_review"?"btn-primary":"btn-ghost"}`,children:["Under Review (",u,")"]}),e.jsxs("button",{onClick:()=>{sessionStorage.setItem("org_reqs_tab","confirmed"),i.onRenderPage("event-requests")},className:`btn btn-sm ${v==="confirmed"?"btn-primary":"btn-ghost"}`,children:["Confirmed Bookings (",S,")"]}),e.jsxs("button",{onClick:()=>{sessionStorage.setItem("org_reqs_tab","closed"),i.onRenderPage("event-requests")},className:`btn btn-sm ${v==="closed"?"btn-primary":"btn-ghost"}`,children:["Closed Requests (",h,")"]})]}),e.jsxs("div",{style:{display:"flex",alignItems:"center",gap:"8px"},children:[e.jsx("label",{htmlFor:"org-filter-dropdown",style:{fontSize:"12px",fontWeight:"600",color:"var(--text3)"},children:"Filter by Status:"}),e.jsxs(M,{id:"org-filter-dropdown",className:"form-control",style:{width:"auto",height:"32px",padding:"4px 8px",fontSize:"12.5px"},onChange:f=>{sessionStorage.setItem("org_reqs_tab",f.currentTarget.value),i.onRenderPage("event-requests")},value:v,children:[e.jsxs("option",{value:"all",children:["All Requests (",E,")"]}),e.jsxs("option",{value:"action_required",children:["Action Required (",I,")"]}),e.jsxs("option",{value:"under_review",children:["Under Review (",u,")"]}),e.jsxs("option",{value:"confirmed",children:["Confirmed Bookings (",S,")"]}),e.jsxs("option",{value:"closed",children:["Closed Requests (",h,")"]})]})]})]}),e.jsxs("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px",fontSize:"13px",color:"var(--text3)"},children:[e.jsxs("span",{children:["Showing ",x.length," of ",l.length," requests"]}),e.jsxs("span",{style:{display:"none"},children:["Actionable (",k,") Needs Review (",$,") Proposals & Client (",m,") DEMO DATA"]})]}),e.jsx("div",{className:"table-wrap",children:e.jsxs("table",{children:[e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{children:"Client"}),e.jsx("th",{children:"Event Details"}),e.jsx("th",{children:"Requested Date"}),e.jsx("th",{children:"Budget"}),e.jsx("th",{children:"Lifecycle Status"}),e.jsx("th",{children:"Agreement"}),e.jsx("th",{children:"Deposit / Payment"}),e.jsx("th",{children:"Actions"})]})}),e.jsxs("tbody",{children:[x.length===0?e.jsx("tr",{children:e.jsx("td",{colSpan:"8",style:{textAlign:"center",padding:"36px",color:"var(--text3)"},children:"No event requests match the selected view."})}):"",x.map((f,z)=>{const b=c.users&&c.users.find(U=>String(U.id)===String(f.clientId))||c.users&&c.users.find(U=>U.role==="client")||f.clientDetails||{name:"Michael Torres",avatar:"MT",avatarImage:"/assets/images/avatars/user-michael-torres.jpg"},A=b.avatarImage?e.jsx("div",{className:"av av-xs",children:e.jsx(K,{src:b.avatarImage,alt:b.name,fallbackTag:"span",fallbackProps:{style:{display:"block"}},children:b.avatar||b.name?.[0]||"C"})}):e.jsx("div",{className:"av av-xs",children:b.avatar||b.name?.[0]||"C"}),L=p(f.agreementStatus),H=s(f.paymentStatus),W=typeof g=="function"?g(f.status):"gray";return e.jsxs("tr",{children:[e.jsx("td",{children:e.jsxs("div",{className:"flex items-center gap-8",children:[A,e.jsxs("div",{children:[e.jsx("div",{style:{fontWeight:"600",fontSize:"13.5px"},children:b.name||"Client"}),e.jsx("div",{className:"small text-muted",children:b.company||b.companyName||b.email||""})]})]})}),e.jsxs("td",{children:[e.jsxs("div",{style:{fontWeight:"700",fontSize:"14px",color:"var(--text)"},children:[f.title||f.eventName||"Event",f.demoScenario?e.jsxs(e.Fragment,{children:[" ",e.jsx("span",{className:"badge badge-warning",style:{fontSize:"10px"},children:"DEMO DATA"})]}):""]}),e.jsxs("div",{className:"small text-muted",children:[f.type||f.eventType||"Corporate"," · ",f.guests||f.capacity||100," ","guests"]})]}),e.jsx("td",{children:e.jsx("div",{style:{fontWeight:"600",fontSize:"13px",marginBottom:"3px"},children:f.date||f.eventDate||""})}),e.jsx("td",{children:e.jsxs("span",{style:{color:"var(--green)",fontWeight:"700",fontSize:"14px"},children:["₹",(Number(f.budget)||0).toLocaleString()]})}),e.jsx("td",{children:e.jsx("span",{className:`badge badge-${W}`,style:{textTransform:"capitalize"},children:(f.status||"submitted").replace(/_/g," ")})}),e.jsx("td",{children:e.jsx("span",{className:`badge badge-${L.cls}`,children:L.lbl})}),e.jsx("td",{children:e.jsx("span",{className:`badge badge-${H.cls}`,children:H.lbl})}),e.jsx("td",{children:e.jsx(Je,{onViewRequestDetail:o.actions.onViewRequestDetail,onNavigate:o.actions.onNavigate,onViewWorkflowRequestDrawer:o.actions.onViewWorkflowRequestDrawer,request:f})})]},f?.date??f?.title??z)})]})]})})]})}function me({embedded:o=!1}){const i=O(),n=i.actions,{CU:c,DB:p,getOngoingWorkflowItems:a,workflowEventPhase:s}=i;if(!["client","organizer"].includes(c.role)){const v=p.events.filter(t=>t.status==="ongoing");return e.jsxs(e.Fragment,{children:[e.jsx("div",{className:"page-hd",children:e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Ongoing Events"}),e.jsx("div",{className:"page-sub",children:"Events currently happening right now"})]})}),e.jsx("div",{className:"events-grid",children:v.length?v.map((t,l)=>e.jsx(J,{registrations:i.DB.registrations,onRegForEvent:i.actions.onRegForEvent,onOpenViewEventDrawer:i.actions.onOpenViewEventDrawer,user:i.CU,evStatBadge:i.evStatBadge,isCancelledWorkflowEvent:i.isCancelledWorkflowEvent,organizerEventCardStatus:i.organizerEventCardStatus,organizerEventRequest:i.organizerEventRequest,onOpenEditEventModal:i.actions.onOpenEditEventModal,payments:i.DB.payments,eventWorkflowPayments:i.DB.eventWorkflowPayments,onHandleOrganizerDeleteEvent:i.actions.onHandleOrganizerDeleteEvent,onOpenOrganizerEventCancellationModal:i.actions.onOpenOrganizerEventCancellationModal,ownsOrganizerEvent:i.ownsOrganizerEvent,event:t,role:"attendee",onViewWorkflowEventDetails:i.actions.onViewWorkflowEventDetails},t?.id??t?.requestId??t?.eventId??t?.registrationId??t?.reportId??t?.label??(typeof t=="string"||typeof t=="number"?t:l))):e.jsxs("div",{className:"empty",style:{gridColumn:"1/-1"},children:[e.jsx("div",{className:"empty-icon",children:"⏱️"}),e.jsx("div",{className:"empty-title",children:"No ongoing events"})]})})]})}const g=i.ongoingWorkflowItems??a();return e.jsxs(e.Fragment,{children:[o?"":e.jsx("div",{className:"page-hd",children:e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Ongoing Events"}),e.jsx("div",{className:"page-sub",children:"Track event planning, approved client events, payment, and completion reports"})]})}),e.jsx("div",{className:"events-grid",children:g.length===0?e.jsxs("div",{className:"empty",style:{gridColumn:"1/-1"},children:[e.jsx("div",{className:"empty-icon",children:"⏱️"}),e.jsx("div",{className:"empty-title",children:"No ongoing events"})]}):g.map(({event:v,request:t,isPlanning:l},C)=>{const y=t?.paymentStatus==="fully_paid",R=t?.paymentStatus==="deposit_paid",r=y?"Paid":R?"Deposit Paid":"Unpaid",E=y?"var(--green)":R?"var(--blue)":"var(--yellow)",I=!l&&s(v)==="upcoming",u=l?{planning:"Planning",plan_submitted:"Awaiting Client Review",plan_revision_requested:"Plan Revision Requested",proposal_sent:"Awaiting Client Review",awaiting_client:"Awaiting Payment",changes_requested:"Changes Requested",counteroffer_received:"Counteroffer Received"}[t?.status]||"Planning":I?"Upcoming":"Ongoing",S=l||I?"blue":"green",h=l?t?.eventName||t?.title||"Event Planning":v?.name||v?.title||"Ongoing Event",k=l?t?.eventDate||t?.date||"TBD":v?.date||"TBD",$=l?t?.eventTime||t?.time||"":v?.time||"",m=l?t?.venue||t?.location||"Venue TBD":v?.location||v?.venue||"Venue TBD",x=l?t?.category||t?.eventType||"Corporate":v?.category||"Event",T=Number(t?.agreedPrice??t?.budget??(t?.proposals?.length?t.proposals[t.proposals.length-1].totalPrice:0)),w=T>0?"₹"+T.toLocaleString("en-IN"):"Budget not set",q=l?t?.guestCount||t?.capacity||0:v?.capacity||t?.guestCount||0,j=l?t?.registered||t?.confirmedAttendees||0:v?.registered||0,N=q>0?Math.min(100,Math.round(j/q*100)):0,f=q>0?`${j}/${q} registered`:l?"Planning in progress":"Ongoing Event",z=!l&&v?.image||null,b=!l&&v?.emoji||(l?"📋":"⏱️"),A=!l&&v?.color||"var(--accent)",L=z?e.jsxs(e.Fragment,{children:[e.jsx(K,{src:z,alt:h,className:"ev-banner-img",fallbackTag:"div",fallbackProps:{className:"ev-banner-fallback",style:{display:"flex",alignItems:"center",justifyContent:"center",fontSize:"52px",width:"100%",height:"100%"}},children:b}),e.jsx("div",{className:"ev-banner-overlay"})]}):e.jsx("span",{style:{fontSize:"52px"},children:b}),H=l?()=>n.onViewWorkflowRequestDrawer(t?.id||t?.requestId):W=>n.onViewWorkflowEventDetails(W?.eventId||W?.id);return e.jsxs("div",{className:"ev-card",children:[e.jsxs("div",{className:"ev-banner",style:{background:`${A}18`},children:[L,e.jsx("div",{className:"ev-banner-tag",children:e.jsx("span",{className:`badge badge-${S}`,children:u})}),e.jsx("div",{className:"ev-banner-price",children:w})]}),e.jsxs("div",{className:"ev-body",children:[e.jsx("div",{className:"ev-title",children:h}),e.jsxs("div",{className:"ev-meta",children:[e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"📅"}),k,$?` · ${$}`:""]}),e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"📍"}),m]}),e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"🏷️"}),x]}),e.jsxs("div",{className:"ev-meta-row",children:[e.jsx("span",{children:"💳"}),"Payment:"," ",e.jsx("strong",{style:{color:E},children:r})]})]}),e.jsxs("div",{style:{marginBottom:"12px"},children:[e.jsxs("div",{className:"flex justify-between ev-cap mb-4",children:[e.jsx("span",{children:f}),e.jsx("span",{children:q>0?N+"%":""})]}),e.jsx("div",{className:"prog",children:e.jsx("div",{className:"prog-fill",style:{width:`${N}%`}})})]}),e.jsx("div",{className:"ev-footer",children:!l&&c.role==="organizer"?e.jsx(ge,{organizerEventRequest:i.organizerEventRequest,onOpenEditEventModal:i.actions.onOpenEditEventModal,registrations:i.DB.registrations,payments:i.DB.payments,eventWorkflowPayments:i.DB.eventWorkflowPayments,onHandleOrganizerDeleteEvent:i.actions.onHandleOrganizerDeleteEvent,onOpenOrganizerEventCancellationModal:i.actions.onOpenOrganizerEventCancellationModal,organizerEventCardStatus:i.organizerEventCardStatus,ownsOrganizerEvent:i.ownsOrganizerEvent,event:v,request:t,onViewWorkflowEventDetails:i.actions.onViewWorkflowEventDetails,onOpenViewEventDrawer:i.actions.onOpenViewEventDrawer}):e.jsx("button",{className:"btn btn-ghost btn-xs w-full",onClick:H,title:"View event details",children:"👁️ View Details"})})]})]},v?.id??v?.eventId??v?.requestId??v?.reportId??C)})})]})}function nn(){const o=O(),i=o.actions,{DB:n,_workflowEventTab:c,getOngoingWorkflowItems:p,pageCompletedEvents:a,pageOngoingEvents:s,workflowEventPhase:g}=o,v=n&&n.events||[],t=v.filter(I=>g(I)==="upcoming").length,l=v.filter(I=>g(I)==="ongoing").length,C=v.filter(I=>g(I)==="completed").length,y=v.filter(I=>(I.backendStatus||I.status)==="cancelled"||!!I.cancellation).length,R=v.filter(I=>I.needsAttention===!0).length,r=v.length,E=(o.ongoingWorkflowItems??p?.())?.length??l;return e.jsxs(e.Fragment,{children:[e.jsx("div",{className:"page-hd",children:e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Events"}),e.jsx("div",{className:"page-sub",children:"Track your ongoing events and review completed events and reports."})]})}),e.jsxs("nav",{"aria-label":"Event subpages",style:{display:"flex",gap:"10px",flexWrap:"wrap",marginBottom:"20px"},children:[e.jsxs("button",{type:"button",className:`btn ${c==="ongoing"?"btn-primary":"btn-ghost"}`,"aria-pressed":c==="ongoing",onClick:()=>i.onSetWorkflowEventTab("ongoing"),children:["Ongoing Events (",E,")"]}),e.jsxs("button",{type:"button",className:`btn ${c==="completed"?"btn-primary":"btn-ghost"}`,"aria-pressed":c==="completed",onClick:()=>i.onSetWorkflowEventTab("completed"),children:["Completed Events (",C,")"]}),e.jsxs("button",{type:"button",className:`btn ${c==="cancelled"?"btn-primary":"btn-ghost"}`,"aria-pressed":c==="cancelled",onClick:()=>i.onSetWorkflowEventTab("cancelled"),children:["Cancelled Events (",y,")"]})]}),e.jsxs("div",{className:"filter-bar",style:{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"16px",fontSize:"12px",alignItems:"center"},children:[e.jsxs("span",{children:["All Events (",r,")"]}),e.jsxs("span",{children:["Upcoming (",t,")"]}),e.jsxs("span",{children:["In Progress (",l,")"]}),e.jsxs("span",{children:["Completed (",C,")"]}),e.jsxs("span",{children:["Cancelled (",y,")"]}),e.jsxs("span",{children:["Needs Attention (",R,")"]}),e.jsx("span",{children:"Newest first"}),e.jsx("button",{className:"btn btn-ghost btn-xs",onClick:()=>i.onSetOrganizerEventFilter("clear"),children:"Clear filters"})]}),e.jsx("section",{"aria-label":c==="cancelled"?"Cancelled Events":c==="completed"?"Completed Events":"Ongoing Events",children:c==="cancelled"?e.jsx(Xe,{events:o.DB.events,onOpenViewEventDrawer:o.actions.onOpenViewEventDrawer,onViewWorkflowEventDetails:o.actions.onViewWorkflowEventDetails,isCancelledWorkflowEvent:o.isCancelledWorkflowEvent,embedded:!0}):c==="completed"?typeof a=="function"?e.jsx(ue,{embedded:!0}):"":typeof s=="function"?e.jsx(me,{embedded:!0}):""})]})}function tn(){const o=O(),i=o.actions,{visibleNotifications:n}=o,c=o.notificationRows??n(),p=c.filter(a=>!a.read).length;return e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"page-hd",children:[e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Notifications"}),e.jsxs("div",{className:"page-sub",children:[p," unread notification",p!==1?"s":""]})]}),e.jsx("div",{className:"page-hd-right",children:e.jsx("button",{className:"btn btn-ghost btn-sm",onClick:()=>i.onMarkAllRead(),children:"✓ Mark All Read"})})]}),e.jsx("div",{className:"card p-0 notif-panel",children:c.length===0?e.jsxs("div",{className:"empty",children:[e.jsx("div",{className:"empty-icon",children:"🔔"}),e.jsx("div",{className:"empty-title",children:"All caught up!"})]}):c.map((a,s)=>e.jsxs("div",{className:`notif-item${a.read?"":" unread"}`,onClick:()=>i.onMarkNotifRead(a.id),children:[e.jsx("div",{className:"notif-icon",style:{background:a.type==="success"?"var(--green-dim)":a.type==="warning"?"var(--yellow-dim)":a.type==="error"?"var(--red-dim)":"var(--accent-dim)"},children:a.icon||"🔔"}),e.jsxs("div",{className:"notif-content",children:[e.jsx("div",{className:"notif-title",style:a.read?{}:{fontWeight:"600"},children:a.title}),e.jsx("div",{className:"notif-msg",children:a.msg}),e.jsx("div",{className:"notif-time",children:a.time})]}),a.read?"":e.jsx("div",{className:"unread-dot"})]},a?.id??a?.title??s))})]})}function sn(){const o=O(),i=o.actions,{CU:n,DB:c,ROLE_COLORS:p,ROLE_LABELS:a,isDepartmentEmployee:s}=o;if(s())return e.jsx(Ue,{registrations:o.DB.registrations,supportRequests:o.DB.supportRequests,financeTransactions:o.DB.financeTransactions,events:o.DB.events,eventOperationsTasks:o.DB.eventOperationsTasks,financeRefunds:o.DB.financeRefunds,eventRequests:o.DB.eventRequests,onNavigate:o.actions.onNavigate,user:o.CU,EMPLOYEE_TYPE_LABELS:o.EMPLOYEE_TYPE_LABELS});const g=n.role==="attendee"?c.registrations.filter(r=>r.attendeeId===n.id):[],v=n.role==="organizer"?c.events.filter(r=>r.organizer===n.id):[],t=n.role==="employee"&&n.employeeType==="SUPPORT_FINANCE",l=(c.supportRequests||[]).length,C=(c.supportRequests||[]).filter(r=>r.status==="Resolved"||r.status==="Closed").length,y=(c.financeTransactions||[]).length,R=(c.operationalReports||[]).filter(r=>r.status==="Submitted"||r.status==="Reviewed").length;return e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"page-hd",children:[e.jsx("div",{className:"page-hd-left",children:e.jsx("div",{className:"page-title",children:"My Profile"})}),e.jsx("div",{className:"page-hd-right",children:e.jsx("button",{className:"btn btn-ghost",onClick:()=>i.onNavigate("settings"),children:"✏️ Edit Profile"})})]}),e.jsxs("div",{className:"profile-banner",children:[n.avatarImage?e.jsx("div",{className:"av av-xl",children:e.jsx(K,{src:n.avatarImage,alt:n.name,fallbackTag:"span",fallbackProps:{style:{display:"block"}},children:n.avatar||n.name[0]})}):e.jsx("div",{className:"av av-xl",children:n.avatar||n.name[0]}),e.jsxs("div",{className:"profile-info",children:[e.jsx("div",{className:"profile-name",children:n.name}),e.jsx("div",{className:"profile-role-tag",children:t?"Customer Support &amp; Finance Executive":a[n.role]}),n.company?e.jsx("div",{className:"small mt-4",children:n.company}):"",n.specialization?e.jsxs("div",{className:"small mt-4",children:["Specialization: ",n.specialization]}):"",n.service?e.jsxs("div",{className:"small mt-4",children:["Service: ",n.service]}):"",e.jsx("span",{className:"badge badge-green mt-8",children:"Active Account"})]})]}),e.jsxs("div",{className:"grid-2",style:{alignItems:"start",gap:"20px"},children:[e.jsxs("div",{className:"card",children:[e.jsx("div",{className:"h4 mb-14",children:"Contact Information"}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Email"}),e.jsx("span",{className:"info-value",children:n.email})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Phone"}),e.jsx("span",{className:"info-value",children:n.phone||"Not set"})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Member Since"}),e.jsx("span",{className:"info-value",children:n.joined||"—"})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Role"}),e.jsx("span",{className:"info-value",children:e.jsx("span",{className:`badge badge-${p[n.role]}`,children:t?"Customer Support &amp; Finance Executive":n.role})})]}),n.bio?e.jsxs("div",{className:"mt-14",children:[e.jsx("div",{className:"label mb-8",children:"Bio"}),e.jsx("p",{style:{fontSize:"13.5px",color:"var(--text2)",lineHeight:"1.7"},children:n.bio})]}):""]}),e.jsxs("div",{children:[t?e.jsxs("div",{className:"card mb-16",children:[e.jsx("div",{className:"h4 mb-14",children:"Work Summary"}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Support Requests Handled"}),e.jsx("span",{className:"info-value",style:{color:"var(--accent)",fontWeight:"700"},children:l})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Issues Resolved"}),e.jsx("span",{className:"info-value",style:{color:"var(--green)",fontWeight:"700"},children:C})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Transactions Reviewed"}),e.jsx("span",{className:"info-value",style:{color:"var(--blue)",fontWeight:"700"},children:y})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Reports Submitted"}),e.jsx("span",{className:"info-value",style:{color:"var(--purple)",fontWeight:"700"},children:R})]})]}):n.role==="attendee"?e.jsxs("div",{className:"card mb-16",children:[e.jsx("div",{className:"h4 mb-14",children:"Activity Summary"}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Events Registered"}),e.jsx("span",{className:"info-value",children:g.length})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Upcoming Events"}),e.jsx("span",{className:"info-value",style:{color:"var(--accent)"},children:g.filter(r=>{const E=c.events.find(I=>I.id===r.eventId);return E&&E.status==="upcoming"}).length})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Events Attended"}),e.jsx("span",{className:"info-value",style:{color:"var(--green)"},children:g.filter(r=>r.checkedIn).length})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Total Spent"}),e.jsxs("span",{className:"info-value",style:{color:"var(--green)",fontWeight:"700"},children:["₹",g.reduce((r,E)=>r+E.amount,0)]})]})]}):n.role==="organizer"?e.jsxs("div",{className:"card mb-16",children:[e.jsx("div",{className:"h4 mb-14",children:"Event Summary"}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Total Events"}),e.jsx("span",{className:"info-value",children:v.length})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Upcoming"}),e.jsx("span",{className:"info-value",style:{color:"var(--accent)"},children:v.filter(r=>r.status==="upcoming").length})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Completed"}),e.jsx("span",{className:"info-value",style:{color:"var(--green)"},children:v.filter(r=>r.status==="completed").length})]})]}):"",e.jsxs("div",{className:"card",children:[e.jsx("div",{className:"h4 mb-14",children:"Quick Actions"}),e.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:"8px"},children:[e.jsx("button",{className:"btn btn-ghost w-full",onClick:()=>i.onNavigate("settings"),children:"⚙️ Account Settings"}),e.jsx("button",{className:"btn btn-danger w-full",onClick:()=>i.onSignOut(),children:"🚪 Sign Out"})]})]})]})]})]})}function an({event:o,recipient:i,onClose:n,onSubmit:c,onSubmitted:p}){const a=P.useRef(null),[s,g]=P.useState(null),[v,t]=P.useState(""),[l,C]=P.useState(!1);P.useEffect(()=>{const r=document.activeElement;return a.current?.focus(),()=>{r?.isConnected&&r.focus()}},[]);async function y(r){if(r.preventDefault(),!(l||!i)){if(!s){t("Please select a report file to submit.");return}if(!/\.(pdf|docx|xlsx)$/i.test(s.name)||s.size>10*1024*1024){t("Choose a PDF, DOCX, or XLSX report no larger than 10 MB.");return}if(!s.size){t("The selected report file is empty. Choose another file.");return}t(""),C(!0);try{await c(s),await p()}catch(E){t(E.message||"Unable to submit the report. Please try again.")}finally{C(!1)}}}function R(r){if(r.key==="Escape"&&(r.preventDefault(),r.stopPropagation(),l||n()),r.key==="Tab"){const E=[...a.current.querySelectorAll("button:not(:disabled), input:not(:disabled)")],I=E[0],u=E.at(-1);if(!I)return;r.shiftKey&&(document.activeElement===I||document.activeElement===a.current)?(r.preventDefault(),u.focus()):!r.shiftKey&&(document.activeElement===u||document.activeElement===a.current)&&(r.preventDefault(),I.focus())}}return Ae.createPortal(e.jsx("div",{className:"overlay open support-modal-overlay",onClick:r=>{r.target===r.currentTarget&&!l&&n()},children:e.jsxs("section",{className:"modal-box",role:"dialog","aria-modal":"true","aria-labelledby":"organizer-report-title",tabIndex:-1,ref:a,onKeyDown:R,children:[e.jsxs("div",{className:"modal-head",children:[e.jsx("h2",{className:"modal-title",id:"organizer-report-title",children:"Submit Event Report"}),e.jsx("button",{type:"button",className:"modal-close-btn","aria-label":"Close report dialog",disabled:l,onClick:n,children:"×"})]}),e.jsxs("form",{noValidate:!0,onSubmit:y,"aria-busy":l,children:[e.jsxs("div",{className:"modal-body",children:[e.jsx("p",{className:"mb-16",children:o.title||o.name||"Completed event"}),i?e.jsxs("div",{className:"form-group",children:[e.jsx("div",{className:"form-label",children:"Send report to"}),e.jsx("div",{children:i.name||"Requesting client"}),i.email&&e.jsx("div",{className:"small muted",children:i.email}),e.jsx("p",{className:"small muted mt-4",children:"This report is sent automatically to the client who requested this event."})]}):e.jsx("p",{role:"alert",children:"This event has no requesting client linked to it. Client reports are available for events created from a client request."}),e.jsxs("div",{className:"form-group",children:[e.jsx("label",{className:"form-label",htmlFor:"organizer-report-file",children:"Report file"}),e.jsx("input",{className:"form-control",id:"organizer-report-file",type:"file",accept:".pdf,.docx,.xlsx",disabled:l||!i,onChange:r=>{g(r.target.files?.[0]||null),t("")},"aria-describedby":"organizer-report-file-help"}),e.jsx("p",{id:"organizer-report-file-help",className:"small muted mt-4",children:"PDF, DOCX, or XLSX. Maximum 10 MB."}),s&&e.jsxs("p",{className:"small mt-4",children:["Selected: ",s.name]})]}),v&&e.jsx("p",{role:"alert",style:{color:"var(--red)"},children:v})]}),e.jsxs("div",{className:"modal-foot",children:[e.jsx("button",{className:"btn btn-ghost",type:"button",disabled:l,onClick:n,children:"Cancel"}),e.jsx("button",{className:"btn btn-primary",type:"submit",disabled:l||!i,children:l?"Submitting…":"Submit File"})]})]})]})}),document.body)}function rn({operationalReports:o,onOpenSubmitOperationalReportModal:i,onSubmitOperationalReport:n,operationalReportBadge:c}){const p=o||[];return e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"page-hd",children:[e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Reports"}),e.jsx("div",{className:"page-sub",children:"Submit support, finance, and combined operational reports to Super Admin."})]}),e.jsx("div",{className:"page-hd-right",children:e.jsx("button",{className:"btn btn-primary",onClick:()=>i(),children:"📤 Submit Report"})})]}),e.jsx("div",{className:"grid-3 mb-20",children:["Support Report","Finance Report","Combined Operational Report"].map((a,s)=>e.jsxs("div",{className:"stat-card",children:[e.jsx("div",{className:"stat-icon",children:a==="Support Report"?"📩":a==="Finance Report"?"💳":"📊"}),e.jsx("div",{className:"stat-value",children:p.filter(g=>g.type===a).length}),e.jsxs("div",{className:"stat-label",children:[a,"s"]})]},a?.id??a?.requestId??a?.eventId??a?.registrationId??a?.reportId??a?.label??(typeof a=="string"||typeof a=="number"?a:s)))}),e.jsxs("div",{className:"card",children:[e.jsx("div",{className:"h4 mb-12",children:"Operational Reports"}),e.jsx("div",{className:"table-wrap",children:e.jsxs("table",{children:[e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{children:"Report"}),e.jsx("th",{children:"Type"}),e.jsx("th",{children:"Owner"}),e.jsx("th",{children:"Status"}),e.jsx("th",{children:"Updated"}),e.jsx("th",{children:"Action"})]})}),e.jsx("tbody",{children:p.map((a,s)=>e.jsxs("tr",{children:[e.jsx("td",{children:e.jsx("strong",{children:a.title})}),e.jsx("td",{children:a.type}),e.jsx("td",{children:a.owner}),e.jsx("td",{children:e.jsx("span",{className:`badge badge-${c(a.status)}`,children:a.status})}),e.jsx("td",{children:a.updated}),e.jsx("td",{children:a.status==="Draft"?e.jsx("button",{className:"btn btn-primary btn-xs",onClick:()=>n(a.id),children:"Submit"}):e.jsx("span",{className:"small",children:"Tracked"})})]},a?.id??a?.title??s))})]})})]})]})}function on({eventOpsReports:o,onOpenCreateEventOpsReportModal:i,onRefreshEorPage:n,onViewEventOpsReportModal:c,onSubmitDraftEventOpsReport:p,eventOpsReportBadge:a}){const s=o||[],g=(sessionStorage.getItem("eor_search")||"").toLowerCase(),v=sessionStorage.getItem("eor_type")||"",t=sessionStorage.getItem("eor_status")||"",l=s.filter(u=>u.type==="Event Performance Report").length,C=s.filter(u=>u.type==="Event Operations Report").length,y=s.filter(u=>u.type==="Event Activity Report").length,R=s.filter(u=>u.status==="Submitted").length,r=s.filter(u=>u.status==="Pending Review"||u.status==="Pending").length,E=s.filter(u=>u.status==="Reviewed").length,I=s.filter(u=>{const S=(u.title||"").toLowerCase(),h=(u.id||"").toLowerCase(),k=(u.scope||"").toLowerCase(),$=!g||S.includes(g)||h.includes(g)||k.includes(g),m=!v||u.type===v,x=!t||u.status===t||t==="Pending Review"&&u.status==="Pending";return $&&m&&x});return e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"page-hd",children:[e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Event Operations Reports"}),e.jsx("div",{className:"page-sub",children:"Submit, view, and track operational performance, logistics, and activity reports for Super Admin review."})]}),e.jsx("div",{className:"page-hd-right",children:e.jsx("button",{className:"btn btn-primary",onClick:()=>i(),children:"📤 Submit Report"})})]}),e.jsxs("div",{className:"grid-3 mb-20",children:[e.jsxs("div",{className:"stat-card",children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--accent-dim)",color:"var(--accent)"},children:"📈"}),e.jsx("div",{className:"stat-value",style:{color:"var(--accent)"},children:l}),e.jsx("div",{className:"stat-label",children:"Performance Reports"})]}),e.jsxs("div",{className:"stat-card",children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--purple-dim)",color:"var(--purple)"},children:"⚙️"}),e.jsx("div",{className:"stat-value",style:{color:"var(--purple)"},children:C}),e.jsx("div",{className:"stat-label",children:"Operations Reports"})]}),e.jsxs("div",{className:"stat-card",children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--blue-dim)",color:"var(--blue)"},children:"📄"}),e.jsx("div",{className:"stat-value",style:{color:"var(--blue)"},children:y}),e.jsx("div",{className:"stat-label",children:"Activity Reports"})]})]}),e.jsxs("div",{className:"grid-3 mb-20",children:[e.jsxs("div",{className:"card",style:{padding:"14px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",background:"var(--surface2)"},children:[e.jsxs("div",{children:[e.jsx("div",{className:"small muted",style:{fontWeight:"600"},children:"Submitted Reports"}),e.jsx("div",{style:{fontSize:"20px",fontWeight:"800",color:"var(--purple)",marginTop:"2px"},children:R})]}),e.jsx("span",{className:"badge badge-purple",children:"Submitted"})]}),e.jsxs("div",{className:"card",style:{padding:"14px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",background:"var(--surface2)"},children:[e.jsxs("div",{children:[e.jsx("div",{className:"small muted",style:{fontWeight:"600"},children:"Pending Review"}),e.jsx("div",{style:{fontSize:"20px",fontWeight:"800",color:"var(--orange)",marginTop:"2px"},children:r})]}),e.jsx("span",{className:"badge badge-orange",children:"In Review"})]}),e.jsxs("div",{className:"card",style:{padding:"14px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",background:"var(--surface2)"},children:[e.jsxs("div",{children:[e.jsx("div",{className:"small muted",style:{fontWeight:"600"},children:"Reviewed Reports"}),e.jsx("div",{style:{fontSize:"20px",fontWeight:"800",color:"var(--green)",marginTop:"2px"},children:E})]}),e.jsx("span",{className:"badge badge-green",children:"Approved"})]})]}),e.jsxs("div",{className:"card",children:[e.jsxs("div",{className:"filter-row mb-16",style:{display:"flex",gap:"12px",flexWrap:"wrap"},children:[e.jsxs("div",{className:"search-box input-group",style:{flex:"1",minWidth:"240px"},children:[e.jsx("span",{className:"input-icon",children:"🔍"}),e.jsx(ne,{className:"form-control",id:"eor-search",placeholder:"Search reports by title, scope, or ID...",value:sessionStorage.getItem("eor_search")||"",onInput:()=>n()})]}),e.jsxs(M,{className:"form-control filter-select",id:"eor-type-filter",onChange:()=>n(),style:{width:"220px"},value:v,children:[e.jsx("option",{value:"",children:"All Report Types"}),e.jsx("option",{value:"Event Performance Report",children:"Event Performance Report"}),e.jsx("option",{value:"Event Operations Report",children:"Event Operations Report"}),e.jsx("option",{value:"Event Activity Report",children:"Event Activity Report"})]}),e.jsxs(M,{className:"form-control filter-select",id:"eor-status-filter",onChange:()=>n(),style:{width:"170px"},value:t,children:[e.jsx("option",{value:"",children:"All Statuses"}),e.jsx("option",{value:"Draft",children:"Draft"}),e.jsx("option",{value:"Submitted",children:"Submitted"}),e.jsx("option",{value:"Pending Review",children:"Pending Review"}),e.jsx("option",{value:"Reviewed",children:"Reviewed"})]})]}),e.jsx("div",{className:"table-wrap",children:e.jsxs("table",{children:[e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{children:"Report"}),e.jsx("th",{children:"Report Type"}),e.jsx("th",{children:"Event / Scope"}),e.jsx("th",{children:"Attached File"}),e.jsx("th",{children:"Status"}),e.jsx("th",{children:"Last Updated"}),e.jsx("th",{children:"Action"})]})}),e.jsx("tbody",{children:I.length?I.map((u,S)=>e.jsxs("tr",{children:[e.jsxs("td",{children:[e.jsx("div",{style:{fontWeight:"700",color:"var(--text)",fontSize:"13.5px"},children:u.title}),e.jsxs("div",{className:"small muted",children:["ID: ",u.id," · Submitted By: ",u.owner||"Elena Rostova"]})]}),e.jsx("td",{children:e.jsx("span",{className:`badge badge-${u.type==="Event Performance Report"?"purple":u.type==="Event Operations Report"?"blue":"orange"}`,children:u.type})}),e.jsx("td",{className:"small",style:{fontWeight:"600",color:"var(--text2)"},children:u.scope||"—"}),e.jsx("td",{children:u.fileName?e.jsxs("span",{style:{fontWeight:"600",color:"var(--accent)",fontSize:"12.5px"},children:["📄 ",u.fileName]}):e.jsx("span",{className:"small muted",children:"No file attached"})}),e.jsx("td",{children:e.jsx("span",{className:`badge badge-${a(u.status)}`,children:u.status})}),e.jsx("td",{className:"small muted",children:u.updated}),e.jsx("td",{children:e.jsxs("div",{className:"flex gap-6",children:[e.jsx("button",{className:"btn btn-ghost btn-xs",onClick:()=>c(u.id),children:"View Details"}),u.status==="Draft"?e.jsx("button",{className:"btn btn-primary btn-xs",onClick:()=>p(u.id),children:"📤 Submit"}):""]})})]},u?.id??u?.fileName??u?.title??S)):e.jsx("tr",{children:e.jsx("td",{colSpan:"7",className:"text-center py-20 muted",children:"No operational reports found matching your criteria."})})})]})})]})]})}function oe({users:o,userId:i,fallbackName:n="Not recorded"}){const c=i==null?null:o.find(a=>String(a.id)===String(i)),p=c?.name||(i!=null?`User (${i})`:n);return e.jsxs(e.Fragment,{children:[e.jsx("span",{children:p}),c?.email?e.jsx("div",{className:"small muted",children:c.email}):""]})}function ln({onOpenOrganizerReportFile:o,organizerReportAttachment:i,report:n}){const c=i(n),p=e.jsx("button",{type:"button",className:"btn btn-primary btn-xs",onClick:()=>o(String(n.id),!0),children:"Download Report"});if(!c)return e.jsxs(e.Fragment,{children:[e.jsx("div",{style:{overflowWrap:"anywhere"},children:n.fileName||n.reportTitle||"Report file"}),e.jsx("div",{className:"small mt-4",children:"Original attachment unavailable. Download saved report details (TXT)."}),e.jsx("div",{style:{marginTop:"8px"},children:p})]});const a=/\.(pdf|html)$/i.test(c.name);return e.jsxs(e.Fragment,{children:[e.jsxs("div",{style:{overflowWrap:"anywhere"},children:[c.name,c.sample?e.jsxs(e.Fragment,{children:[" ",e.jsx("span",{className:"badge badge-gray",children:"Sample"})]}):""]}),e.jsxs("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",marginTop:"8px"},children:[a?e.jsx("button",{type:"button",className:"btn btn-ghost btn-xs",onClick:()=>o(String(n.id)),children:"View File"}):"",p]})]})}function dn(){const[o,i]=P.useState(null),n=O(),c=n.actions,{CU:p,DB:a,ROLE_COLORS:s,evStatBadge:g,getEventReportRecipients:v}=n,t=a.events.find(h=>(h.eventId||h.id)===o);if(p.role==="employee"&&p.employeeType==="SUPPORT_FINANCE")return e.jsx(rn,{operationalReports:n.DB.operationalReports,onOpenSubmitOperationalReportModal:n.actions.onOpenSubmitOperationalReportModal,onSubmitOperationalReport:n.actions.onSubmitOperationalReport,operationalReportBadge:n.operationalReportBadge});if(p.role==="employee"&&p.employeeType==="EVENT_OPERATIONS")return e.jsx(on,{eventOpsReports:n.DB.eventOpsReports,onOpenCreateEventOpsReportModal:n.actions.onOpenCreateEventOpsReportModal,onRefreshEorPage:n.actions.onRefreshEorPage,onViewEventOpsReportModal:n.actions.onViewEventOpsReportModal,onSubmitDraftEventOpsReport:n.actions.onSubmitDraftEventOpsReport,eventOpsReportBadge:n.eventOpsReportBadge});if(p.role==="superuser"){const h=sessionStorage.getItem("admin_reports_tab")||"users",k=a.users,$=k.filter(d=>d.status==="active").length,m=k.filter(d=>d.status!=="active").length,x=k.filter(d=>d.role==="attendee").length,T=k.filter(d=>d.role==="organizer").length,w=k.filter(d=>d.role==="client").length,q=k.filter(d=>d.role==="employee").length,j=k.filter(d=>d.role==="superuser").length,N=new Date,f=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],z={};for(let d=5;d>=0;d--){const D=new Date(N.getFullYear(),N.getMonth()-d,1),B=`${D.getFullYear()}-${String(D.getMonth()+1).padStart(2,"0")}`;z[B]={label:f[D.getMonth()],count:0}}k.filter(d=>d.role==="attendee").forEach(d=>{const B=(d.joined||d.joinedAt||"").slice(0,7);z[B]&&z[B].count++});const b=Object.values(z),A=Math.max(...b.map(d=>d.count),1),L=Math.max(x,T,w,q,j,1),H=d=>Math.round(d/L*100),W=e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"grid-4 mb-24",style:{gap:"14px"},children:[e.jsxs("div",{className:"stat-card",style:{borderLeft:"4px solid var(--accent)"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--accent-dim)",color:"var(--accent)"},children:"👥"}),e.jsx("div",{className:"stat-value",style:{color:"var(--accent)"},children:k.length}),e.jsx("div",{className:"stat-label",children:"Total Users"}),e.jsx("div",{className:"stat-sub neutral",children:"Platform-wide"})]}),e.jsxs("div",{className:"stat-card",style:{borderLeft:"4px solid var(--green)"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--green-dim)",color:"var(--green)"},children:"✅"}),e.jsx("div",{className:"stat-value",style:{color:"var(--green)"},children:$}),e.jsx("div",{className:"stat-label",children:"Active Users"}),e.jsxs("div",{className:"stat-sub up",children:["↑ ",Math.round($/Math.max(k.length,1)*100),"% active rate"]})]}),e.jsxs("div",{className:"stat-card",style:{borderLeft:"4px solid var(--red)"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--red-dim)",color:"var(--red)"},children:"⚠️"}),e.jsx("div",{className:"stat-value",style:{color:"var(--red)"},children:m}),e.jsx("div",{className:"stat-label",children:"Inactive Users"}),e.jsx("div",{className:"stat-sub neutral",children:"Need attention"})]}),e.jsxs("div",{className:"stat-card",style:{borderLeft:"4px solid var(--blue)"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--blue-dim)",color:"var(--blue)"},children:"🎟️"}),e.jsx("div",{className:"stat-value",style:{color:"var(--blue)"},children:x}),e.jsx("div",{className:"stat-label",children:"Attendees"}),e.jsx("div",{className:"stat-sub neutral",children:"Registered attendees"})]})]}),e.jsxs("div",{className:"grid-2 mb-24",style:{gap:"20px"},children:[e.jsxs("div",{className:"card card-lg",children:[e.jsxs("div",{style:{fontFamily:"var(--font-head)",fontSize:"16px",fontWeight:"700",marginBottom:"20px",display:"flex",alignItems:"center",gap:"8px"},children:[e.jsx("span",{style:{background:"var(--accent-dim)",color:"var(--accent)",padding:"6px 8px",borderRadius:"8px",fontSize:"14px"},children:"🏷️"})," ","User Role Breakdown"," "]}),e.jsx("div",{style:{display:"flex",flexDirection:"column",gap:"14px"},children:[{role:"Attendees",count:x,color:"var(--blue)",icon:"🎟️"},{role:"Organizers",count:T,color:"var(--accent)",icon:"🎯"},{role:"Clients",count:w,color:"var(--yellow)",icon:"💼"},{role:"Employees",count:q,color:"var(--green)",icon:"👷"},{role:"Super Admins",count:j,color:"var(--red)",icon:"🛡️"}].map((d,D)=>e.jsxs("div",{children:[e.jsxs("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:"6px",fontSize:"13px"},children:[e.jsxs("span",{style:{display:"flex",alignItems:"center",gap:"6px"},children:[e.jsx("span",{children:d.icon}),e.jsx("span",{style:{fontWeight:"500"},children:d.role})]}),e.jsx("span",{style:{fontWeight:"700",color:d.color},children:d.count})]}),e.jsx("div",{style:{height:"8px",background:"var(--surface3)",borderRadius:"99px",overflow:"hidden"},children:e.jsx("div",{style:{height:"100%",width:`${H(d.count)}%`,background:d.color,borderRadius:"99px",transition:"width 0.6s ease"}})})]},d?.id??d?.eventReportId??d?.requestId??d?.registrationId??d?.ticketId??d?.eventId??d?.reportId??d?.paymentId??d?.refundId??d?.notificationId??d?.label??d?.fileName??D))}),e.jsxs("div",{style:{marginTop:"20px",paddingTop:"16px",borderTop:"1px solid var(--border)",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"},children:[e.jsxs("div",{style:{background:"var(--surface2)",borderRadius:"8px",padding:"10px",textAlign:"center"},children:[e.jsx("div",{style:{fontSize:"20px",fontWeight:"800",color:"var(--green)"},children:$}),e.jsx("div",{style:{fontSize:"11px",color:"var(--text2)",marginTop:"2px"},children:"Active"})]}),e.jsxs("div",{style:{background:"var(--surface2)",borderRadius:"8px",padding:"10px",textAlign:"center"},children:[e.jsx("div",{style:{fontSize:"20px",fontWeight:"800",color:"var(--red)"},children:m}),e.jsx("div",{style:{fontSize:"11px",color:"var(--text2)",marginTop:"2px"},children:"Inactive"})]})]})]}),e.jsxs("div",{className:"card card-lg",children:[e.jsxs("div",{style:{fontFamily:"var(--font-head)",fontSize:"16px",fontWeight:"700",marginBottom:"20px",display:"flex",alignItems:"center",gap:"8px"},children:[e.jsx("span",{style:{background:"var(--green-dim)",color:"var(--green)",padding:"6px 8px",borderRadius:"8px",fontSize:"14px"},children:"📅"})," ","Monthly Attendee Registrations"," "]}),e.jsx("div",{style:{display:"flex",alignItems:"flex-end",gap:"8px",height:"160px",paddingBottom:"4px"},children:b.map((d,D)=>e.jsxs("div",{style:{flex:"1",display:"flex",flexDirection:"column",alignItems:"center",gap:"6px",height:"100%",justifyContent:"flex-end"},children:[e.jsx("div",{style:{fontSize:"11px",fontWeight:"700",color:"var(--green)"},children:d.count||""}),e.jsx("div",{style:{width:"100%",background:"linear-gradient(180deg,var(--green),var(--accent))",borderRadius:"6px 6px 0 0",height:`${d.count?Math.max(Math.round(d.count/A*130),8):4}px`,opacity:d.count?1:.2,transition:"height 0.5s ease"}}),e.jsx("div",{style:{fontSize:"10px",color:"var(--text3)",fontWeight:"600"},children:d.label})]},d?.label??D))}),e.jsxs("div",{style:{marginTop:"16px",paddingTop:"14px",borderTop:"1px solid var(--border)",fontSize:"12px",color:"var(--text2)"},children:[" ","Total attendees registered:"," ",e.jsx("strong",{style:{color:"var(--green)"},children:x})]})]})]}),e.jsxs("div",{className:"card",children:[e.jsxs("div",{style:{fontFamily:"var(--font-head)",fontSize:"15px",fontWeight:"700",marginBottom:"16px",display:"flex",alignItems:"center",justifyContent:"space-between"},children:[e.jsxs("div",{style:{display:"flex",alignItems:"center",gap:"8px"},children:[e.jsx("span",{style:{background:"var(--blue-dim)",color:"var(--blue)",padding:"5px 7px",borderRadius:"8px"},children:"📋"})," ","All Users Overview"]}),e.jsxs("span",{className:"badge badge-blue",children:[k.length," total"]})]}),e.jsx("div",{className:"table-wrap",children:e.jsxs("table",{children:[e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{children:"User"}),e.jsx("th",{children:"Role"}),e.jsx("th",{children:"Status"}),e.jsx("th",{children:"Joined"})]})}),e.jsx("tbody",{children:k.map((d,D)=>e.jsxs("tr",{children:[e.jsx("td",{children:e.jsxs("div",{className:"flex items-center gap-10",children:[e.jsx("div",{className:"av av-sm",children:d.avatar||d.name[0]}),e.jsxs("div",{children:[e.jsx("div",{style:{fontWeight:"500"},children:d.name}),e.jsx("div",{className:"small",children:d.email})]})]})}),e.jsx("td",{children:e.jsx("span",{className:`badge badge-${s[d.role]}`,children:d.role})}),e.jsx("td",{children:e.jsx("span",{className:`badge badge-${d.status==="active"?"green":"red"}`,children:d.status||"active"})}),e.jsx("td",{className:"small",children:d.joined||d.joinedAt||"—"})]},d?.name??d?.email??D))})]})})]})]}),U=a.events,F=a.registrations,se=F.reduce((d,D)=>d+(D.amount||0),0),ie=F.filter(d=>d.checkedIn).length,be=U.filter(d=>d.status==="upcoming").length,he=U.filter(d=>d.status==="completed").length,V={};U.forEach(d=>{V[d.category]||(V[d.category]={count:0,regs:0,revenue:0}),V[d.category].count++;const D=F.filter(B=>B.eventId===d.id);V[d.category].regs+=D.length,V[d.category].revenue+=D.reduce((B,_)=>B+(_.amount||0),0)});const X=Object.entries(V).sort((d,D)=>D[1].regs-d[1].regs),ye=Math.max(...X.map(d=>d[1].regs),1),Y=["var(--accent)","var(--green)","var(--blue)","var(--yellow)","var(--orange)","var(--red)"],xe=[...U].sort((d,D)=>D.registered-d.registered).slice(0,5),Q={};for(let d=5;d>=0;d--){const D=new Date(N.getFullYear(),N.getMonth()-d,1),B=`${D.getFullYear()}-${String(D.getMonth()+1).padStart(2,"0")}`;Q[B]={label:f[D.getMonth()],revenue:0,regs:0}}F.forEach(d=>{const D=(d.date||"").slice(0,7);Q[D]&&(Q[D].revenue+=d.amount||0,Q[D].regs++)});const ae=Object.values(Q),we=Math.max(...ae.map(d=>d.revenue),1),Ee=e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"grid-4 mb-24",style:{gap:"14px"},children:[e.jsxs("div",{className:"stat-card",style:{borderLeft:"4px solid var(--green)"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--green-dim)",color:"var(--green)"},children:"💰"}),e.jsxs("div",{className:"stat-value",style:{color:"var(--green)"},children:["₹",se.toLocaleString()]}),e.jsx("div",{className:"stat-label",children:"Total Revenue"}),e.jsx("div",{className:"stat-sub up",children:"From all ticket sales"})]}),e.jsxs("div",{className:"stat-card",style:{borderLeft:"4px solid var(--accent)"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--accent-dim)",color:"var(--accent)"},children:"🗓️"}),e.jsx("div",{className:"stat-value",style:{color:"var(--accent)"},children:U.length}),e.jsx("div",{className:"stat-label",children:"Total Events"}),e.jsxs("div",{className:"stat-sub neutral",children:[be," upcoming · ",he," completed"]})]}),e.jsxs("div",{className:"stat-card",style:{borderLeft:"4px solid var(--blue)"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--blue-dim)",color:"var(--blue)"},children:"🎟️"}),e.jsx("div",{className:"stat-value",style:{color:"var(--blue)"},children:F.length}),e.jsx("div",{className:"stat-label",children:"Total Registrations"}),e.jsx("div",{className:"stat-sub neutral",children:"Across all events"})]}),e.jsxs("div",{className:"stat-card",style:{borderLeft:"4px solid var(--yellow)"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--yellow-dim)",color:"var(--yellow)"},children:"✅"}),e.jsx("div",{className:"stat-value",style:{color:"var(--yellow)"},children:ie}),e.jsx("div",{className:"stat-label",children:"Checked In"}),e.jsxs("div",{className:"stat-sub up",children:[Math.round(ie/Math.max(F.length,1)*100),"% attendance rate"]})]})]}),e.jsxs("div",{className:"grid-2 mb-24",style:{gap:"20px"},children:[e.jsxs("div",{className:"card card-lg",children:[e.jsxs("div",{style:{fontFamily:"var(--font-head)",fontSize:"16px",fontWeight:"700",marginBottom:"20px",display:"flex",alignItems:"center",gap:"8px"},children:[e.jsx("span",{style:{background:"var(--green-dim)",color:"var(--green)",padding:"6px 8px",borderRadius:"8px",fontSize:"14px"},children:"📈"})," ","Monthly Revenue (₹)"," "]}),e.jsx("div",{style:{display:"flex",alignItems:"flex-end",gap:"8px",height:"160px",paddingBottom:"4px"},children:ae.map((d,D)=>e.jsxs("div",{style:{flex:"1",display:"flex",flexDirection:"column",alignItems:"center",gap:"6px",height:"100%",justifyContent:"flex-end"},children:[e.jsx("div",{style:{fontSize:"10px",fontWeight:"700",color:"var(--green)"},children:d.revenue>0?"₹"+d.revenue:""}),e.jsx("div",{style:{width:"100%",background:"linear-gradient(180deg,#22d3a5,#4299e1)",borderRadius:"6px 6px 0 0",height:`${d.revenue?Math.max(Math.round(d.revenue/we*130),8):4}px`,opacity:d.revenue?1:.2}}),e.jsx("div",{style:{fontSize:"10px",color:"var(--text3)",fontWeight:"600"},children:d.label})]},d?.label??D))}),e.jsxs("div",{style:{marginTop:"16px",paddingTop:"14px",borderTop:"1px solid var(--border)",fontSize:"12px",color:"var(--text2)"},children:[" ","Total platform revenue:"," ",e.jsxs("strong",{style:{color:"var(--green)"},children:["₹",se.toLocaleString()]})]})]}),e.jsxs("div",{className:"card card-lg",children:[e.jsxs("div",{style:{fontFamily:"var(--font-head)",fontSize:"16px",fontWeight:"700",marginBottom:"20px",display:"flex",alignItems:"center",gap:"8px"},children:[e.jsx("span",{style:{background:"var(--accent-dim)",color:"var(--accent)",padding:"6px 8px",borderRadius:"8px",fontSize:"14px"},children:"🏆"})," ","Popular Event Categories"," "]}),X.length===0?e.jsxs("div",{className:"empty",children:[e.jsx("div",{className:"empty-icon",children:"📊"}),e.jsx("div",{className:"empty-title",children:"No data yet"})]}):e.jsx("div",{style:{display:"flex",flexDirection:"column",gap:"14px"},children:X.map(([d,D],B)=>e.jsxs("div",{children:[e.jsxs("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:"6px",fontSize:"13px"},children:[e.jsx("span",{style:{fontWeight:"600",color:Y[B%Y.length]},children:d}),e.jsxs("span",{style:{display:"flex",gap:"12px"},children:[e.jsxs("span",{style:{color:"var(--text2)"},children:[D.regs," attendees"]}),e.jsxs("span",{style:{color:"var(--green)",fontWeight:"600"},children:["₹",D.revenue.toLocaleString()]})]})]}),e.jsx("div",{style:{height:"8px",background:"var(--surface3)",borderRadius:"99px",overflow:"hidden"},children:e.jsx("div",{style:{height:"100%",width:`${Math.round(D.regs/ye*100)}%`,background:Y[B%Y.length],borderRadius:"99px"}})})]},d))})]})]}),e.jsxs("div",{className:"card mb-24",children:[e.jsxs("div",{style:{fontFamily:"var(--font-head)",fontSize:"15px",fontWeight:"700",marginBottom:"16px",display:"flex",alignItems:"center",gap:"8px"},children:[e.jsx("span",{style:{background:"var(--yellow-dim)",color:"var(--yellow)",padding:"5px 7px",borderRadius:"8px"},children:"🏅"})," ","Top Events by Attendance"," "]}),e.jsx("div",{className:"table-wrap",children:e.jsxs("table",{children:[e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{children:"#"}),e.jsx("th",{children:"Event"}),e.jsx("th",{children:"Category"}),e.jsx("th",{children:"Registered"}),e.jsx("th",{children:"Capacity"}),e.jsx("th",{children:"Revenue"}),e.jsx("th",{children:"Status"})]})}),e.jsx("tbody",{children:xe.map((d,D)=>{const B=F.filter(_=>_.eventId===d.id).reduce((_,G)=>_+(G.amount||0),0);return e.jsxs("tr",{children:[e.jsx("td",{children:e.jsx("span",{style:{fontWeight:"700",color:"var(--text3)"},children:D+1})}),e.jsx("td",{children:e.jsxs("div",{style:{display:"flex",alignItems:"center",gap:"8px"},children:[e.jsx("span",{style:{fontSize:"18px"},children:d.emoji||"🎪"}),e.jsxs("div",{children:[e.jsx("div",{style:{fontWeight:"600",fontSize:"13.5px"},children:d.title}),e.jsx("div",{className:"small",children:d.date})]})]})}),e.jsx("td",{children:e.jsx("span",{className:"badge badge-purple",children:d.category})}),e.jsx("td",{children:e.jsx("strong",{style:{color:"var(--blue)"},children:d.registered})}),e.jsx("td",{className:"small",children:d.capacity}),e.jsx("td",{children:e.jsxs("strong",{style:{color:"var(--green)"},children:["₹",B.toLocaleString()]})}),e.jsx("td",{children:e.jsx("span",{className:`badge badge-${g(d.status)}`,children:d.status})})]},d?.id??d?.date??d?.title??D)})})]})})]}),e.jsxs("div",{className:"card",children:[e.jsxs("div",{style:{fontFamily:"var(--font-head)",fontSize:"15px",fontWeight:"700",marginBottom:"16px",display:"flex",alignItems:"center",gap:"8px"},children:[e.jsx("span",{style:{background:"var(--green-dim)",color:"var(--green)",padding:"5px 7px",borderRadius:"8px"},children:"📊"})," ","All Events Revenue Breakdown"," "]}),e.jsx("div",{className:"table-wrap",children:e.jsxs("table",{children:[e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{children:"Event"}),e.jsx("th",{children:"Price"}),e.jsx("th",{children:"Registrations"}),e.jsx("th",{children:"Revenue"}),e.jsx("th",{children:"Occupancy"})]})}),e.jsx("tbody",{children:U.map((d,D)=>{const B=F.filter(Z=>Z.eventId===d.id),_=B.reduce((Z,Re)=>Z+(Re.amount||0),0),G=Math.round(d.registered/Math.max(d.capacity,1)*100);return e.jsxs("tr",{children:[e.jsx("td",{children:e.jsx("div",{style:{fontWeight:"500"},children:d.title})}),e.jsx("td",{children:d.price===0?e.jsx("span",{className:"badge badge-green",children:"Free"}):"₹"+d.price}),e.jsx("td",{children:e.jsx("strong",{children:B.length})}),e.jsxs("td",{style:{color:"var(--green)",fontWeight:"700"},children:["₹",_.toLocaleString()]}),e.jsx("td",{children:e.jsxs("div",{style:{display:"flex",alignItems:"center",gap:"8px"},children:[e.jsx("div",{style:{flex:"1",height:"6px",background:"var(--surface3)",borderRadius:"99px",overflow:"hidden"},children:e.jsx("div",{style:{height:"100%",width:`${G}%`,background:G>=80?"var(--green)":G>=50?"var(--yellow)":"var(--red)",borderRadius:"99px"}})}),e.jsxs("span",{style:{fontSize:"12px",fontWeight:"600",color:"var(--text2)",minWidth:"32px"},children:[G,"%"]})]})})]},d?.id??d?.title??D)})})]})})]})]});return e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"page-hd",children:[e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Reports & Analytics"}),e.jsx("div",{className:"page-sub",children:"Platform-wide statistics for super administration"})]}),e.jsx("div",{className:"page-hd-right",children:e.jsx("button",{className:"btn btn-ghost",onClick:()=>c.onToast("Export feature coming soon","info"),children:"📥 Export"})})]}),e.jsxs("div",{style:{display:"flex",gap:"4px",background:"var(--surface2)",borderRadius:"12px",padding:"4px",marginBottom:"28px",border:"1px solid var(--border)"},children:[e.jsxs("button",{onClick:()=>c.onSwitchReportTab("users"),style:{flex:"1",padding:"10px 20px",borderRadius:"9px",fontWeight:"600",fontSize:"13.5px",transition:"all 0.2s",border:"none",cursor:"pointer",background:h==="users"?"var(--accent)":"transparent",color:h==="users"?"#fff":"var(--text2)"},children:[" ","👥 User Statistics"," "]}),e.jsxs("button",{onClick:()=>c.onSwitchReportTab("events"),style:{flex:"1",padding:"10px 20px",borderRadius:"9px",fontWeight:"600",fontSize:"13.5px",transition:"all 0.2s",border:"none",cursor:"pointer",background:h==="events"?"var(--accent)":"transparent",color:h==="events"?"#fff":"var(--text2)"},children:[" ","📊 Event Analytics"," "]})]}),h==="users"?W:Ee]})}const l=p.role==="organizer"?a.events.filter(h=>h.organizer===p.id):a.events,C=l.filter(h=>h.status==="completed").length,y=l.map(h=>String(h.id)),R=(a.reports||[]).filter(h=>y.includes(String(h.eventId))),r=p.role==="organizer"?R.filter(h=>String(h.submittedBy)===String(p.id)):R,E=l.filter(h=>h.status==="completed"&&!r.some(k=>String(k.eventId)===String(h.id))),I=E.length,u=r.length,S=e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"grid-3 mb-24",children:[e.jsxs("div",{className:"stat-card",style:{border:"1px solid var(--blue-dim)",background:"rgba(66, 153, 225, 0.05)",padding:"16px"},children:[e.jsx("div",{className:"small",style:{color:"var(--blue)",fontWeight:"600",marginBottom:"12px"},children:"Total Completed"}),e.jsxs("div",{style:{display:"flex",alignItems:"center",gap:"12px"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--blue)",color:"#fff",margin:"0",fontSize:"16px",borderRadius:"50%"},children:"✓"}),e.jsxs("div",{children:[e.jsx("div",{className:"stat-value",style:{color:"var(--text)",fontSize:"24px",margin:"0"},children:C}),e.jsx("div",{className:"small",style:{color:"var(--text2)"},children:"Total events"})]})]})]}),e.jsxs("div",{className:"stat-card",style:{border:"1px solid var(--green-dim)",background:"rgba(34, 211, 165, 0.05)",padding:"16px"},children:[e.jsx("div",{className:"small",style:{color:"var(--green)",fontWeight:"600",marginBottom:"12px"},children:"Reports Submitted"}),e.jsxs("div",{style:{display:"flex",alignItems:"center",gap:"12px"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--green)",color:"#fff",margin:"0",fontSize:"15px",borderRadius:"8px"},children:"📄"}),e.jsxs("div",{children:[e.jsx("div",{className:"stat-value",style:{color:"var(--text)",fontSize:"24px",margin:"0"},children:u}),e.jsx("div",{className:"small",style:{color:"var(--text2)"},children:"Reports submitted"})]})]})]}),e.jsxs("div",{className:"stat-card",style:{border:"1px solid var(--orange-dim)",background:"rgba(237, 137, 54, 0.05)",padding:"16px"},children:[e.jsx("div",{className:"small",style:{color:"var(--orange)",fontWeight:"600",marginBottom:"12px"},children:"Pending Submissions"}),e.jsxs("div",{style:{display:"flex",alignItems:"center",gap:"12px"},children:[e.jsx("div",{className:"stat-icon",style:{background:"var(--orange)",color:"#fff",margin:"0",fontSize:"16px",borderRadius:"50%"},children:"🕒"}),e.jsxs("div",{children:[e.jsx("div",{className:"stat-value",style:{color:"var(--text)",fontSize:"24px",margin:"0"},children:I}),e.jsx("div",{className:"small",style:{color:"var(--text2)"},children:"Reports pending"})]})]})]})]}),e.jsxs("div",{className:"h4 mb-16",style:{display:"flex",alignItems:"center",gap:"8px"},children:[e.jsx("span",{style:{color:"var(--orange)",fontSize:"18px"},children:"⭕"})," ","Pending Submissions"]}),e.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:"16px"},children:[E.map((h,k)=>{const $=v(h)[0];return e.jsxs("div",{className:"card",style:{background:"var(--surface)",border:"1px solid var(--border)",padding:"20px",borderRadius:"12px"},children:[e.jsx("div",{style:{fontWeight:"700",fontSize:"16px",marginBottom:"12px",color:"var(--text)"},children:h.title}),e.jsxs("div",{style:{display:"flex",flexWrap:"wrap",gap:"24px",marginBottom:"16px",color:"var(--text2)",fontSize:"13px"},children:[e.jsxs("div",{style:{display:"flex",alignItems:"center",gap:"6px"},children:[e.jsx("span",{children:"📅"})," ",h.date]}),e.jsxs("div",{style:{display:"flex",alignItems:"center",gap:"6px"},children:[e.jsx("span",{children:"📍"})," ",h.venue||h.city||"Location"]}),e.jsxs("div",{style:{display:"flex",alignItems:"center",gap:"6px"},children:[e.jsx("span",{children:"👥"})," ",a.registrations.filter(m=>m.eventId===h.id).length," ","Attendees"]})]}),e.jsxs("div",{className:"small mb-12",children:[e.jsx("strong",{children:"Send to:"})," ",e.jsx(oe,{users:n.DB.users,userId:$?.id,fallbackName:$?.name||"No requesting client linked"})]}),e.jsxs("div",{className:"flex gap-12",children:[e.jsx("button",{className:"btn btn-primary",type:"button",onClick:()=>i(h.eventId||h.id),style:{gap:"6px",background:"var(--accent)",borderRadius:"8px"},children:"📤 Submit Report"}),e.jsx("button",{className:"btn btn-ghost",onClick:()=>c.onOpenViewEventDrawer(h.id),style:{color:"var(--accent)",borderColor:"var(--accent-dim)",background:"var(--accent-dim)",gap:"6px",borderRadius:"8px"},children:"👁 View Event Details"})]})]},h?.id??h?.date??h?.title??k)}),I===0?e.jsxs("div",{className:"empty",children:[e.jsx("div",{className:"empty-icon",children:"✓"}),e.jsx("div",{className:"empty-title",children:"All Reports Submitted"}),e.jsx("p",{className:"empty-desc",children:"Great job! All your completed events have reports."})]}):""]}),e.jsx("div",{className:"h4 mb-16",style:{marginTop:"28px"},children:"Submitted Reports"}),e.jsx("div",{className:"table-wrap",children:r.length===0?e.jsxs("div",{className:"empty",children:[e.jsx("div",{className:"empty-icon",children:"📄"}),e.jsx("div",{className:"empty-title",children:"No submitted reports yet"})]}):e.jsxs("table",{children:[e.jsx("thead",{children:e.jsxs("tr",{children:[e.jsx("th",{children:"Event"}),e.jsx("th",{children:"Report File"}),e.jsx("th",{children:"Sent To"}),e.jsx("th",{children:"Submitted At"})]})}),e.jsx("tbody",{children:r.map((h,k)=>{const $=l.find(m=>String(m.id)===String(h.eventId));return e.jsxs("tr",{children:[e.jsx("td",{children:$?$.title:"Unknown event"}),e.jsx("td",{children:e.jsx(ln,{onOpenOrganizerReportFile:n.actions.onOpenOrganizerReportFile,organizerReportAttachment:n.organizerReportAttachment,report:h})}),e.jsx("td",{children:e.jsx(oe,{users:n.DB.users,userId:h.recipientId,fallbackName:"Recipient not recorded"})}),e.jsx("td",{children:h.submittedAt||"—"})]},h?.eventId??k)})})]})})]});return e.jsxs("div",{style:{padding:"24px",background:"var(--bg)"},children:[e.jsxs("div",{className:"page-hd",style:{marginBottom:"24px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"},children:[e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Event Reports"}),e.jsx("div",{className:"page-sub",children:"Send completed-event reports to the requesting client and review submitted files"})]}),e.jsx("div",{className:"page-hd-right",children:e.jsxs("button",{className:"btn",style:{background:"var(--surface2)",border:"1px solid var(--border)",color:"var(--text)",fontWeight:"600",padding:"8px 16px",borderRadius:"8px",gap:"8px"},onClick:()=>c.onToast(`${C} Completed Events`,"info"),children:[e.jsx("span",{style:{fontSize:"16px",color:"var(--accent)"},children:"📄"})," ",C," Completed Events"]})})]}),S,t&&e.jsx(an,{event:t,recipient:v(t)[0],onClose:()=>i(null),onSubmit:h=>c.onUploadEventReport(t.eventId||t.id,h),onSubmitted:async()=>{i(null),c.onToast("Report sent to the requesting client.","success");try{await c.onRenderPage("reports")}catch{c.onToast("Report was saved. Refresh Reports to view the submitted file.","info")}}},t.eventId||t.id)]})}function cn({eventFileReports:o,onDownloadWorkflowEventReport:i,eventId:n}){const c=(o||[]).filter(p=>String(p.eventId)===String(n));return c.length?e.jsxs("section",{style:{marginTop:"16px"},children:[e.jsx("h3",{children:"Reports from the Organizer"}),c.map((p,a)=>e.jsxs("div",{style:{padding:"12px",border:"1px solid var(--border)",marginTop:"8px"},children:[e.jsx("strong",{children:p.reportTitle}),e.jsx("p",{style:{whiteSpace:"pre-wrap",color:"var(--text2)"},children:p.reportDetails}),p.documentFileName?e.jsxs("button",{className:"btn btn-ghost btn-sm",onClick:()=>i(p.eventReportId),children:["Download ",p.documentName]}):""]},p?.id??p?.eventReportId??p?.requestId??p?.registrationId??p?.ticketId??p?.eventId??p?.reportId??p?.paymentId??p?.refundId??p?.notificationId??p?.label??p?.fileName??a))]}):""}function pn({workflowMoney:o,workflowPolicyDate:i,cancellation:n}){return n?e.jsxs("section",{style:{marginTop:"16px",padding:"16px",border:"1px solid var(--border)"},children:[e.jsx("h3",{style:{margin:"0 0 12px"},children:"Event cancelled"}),e.jsx("p",{style:{whiteSpace:"pre-wrap",overflowWrap:"anywhere"},children:n.reason}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Amount paid"}),e.jsx("span",{children:o(n.paidAmount)})]}),e.jsxs("div",{className:"info-row",children:[e.jsxs("span",{className:"info-label",children:["Cancellation fee (",n.cancellationFeePercent,"%)"]}),e.jsx("span",{children:o(n.cancellationFee)})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Refund due"}),e.jsx("strong",{children:o(n.refundAmount)})]}),e.jsxs("p",{className:"small",children:[n.refundStatus==="pending"?n.refundSimulated?"Simulated refund pending provider confirmation.":"Refund pending review.":"No payment was taken; no refund is needed."," ","Cancelled: ",i(n.cancelledAt)]})]}):""}function vn({onOpenWorkflowPolicyDocument:o,workflowPolicyDocuments:i,policy:n,checkboxId:c}){const[p,a]=P.useState(!1);return P.useEffect(()=>{n&&i.set(n.version,n)},[n,i]),P.useEffect(()=>a(!1),[c,n?.version]),n?e.jsxs("section",{style:{margin:"16px 0",padding:"16px",border:"1px solid var(--border)",background:"var(--surface2)"},children:[e.jsxs("div",{style:{display:"flex",gap:"10px",flexWrap:"wrap"},children:[e.jsx("button",{type:"button",className:"btn btn-ghost","data-policy-version":n.version,onClick:s=>o("policies",s.currentTarget.dataset.policyVersion),children:"Event Policies & Rules"}),e.jsx("button",{type:"button",className:"btn btn-ghost","data-policy-version":n.version,onClick:s=>o("terms",s.currentTarget.dataset.policyVersion),children:"Terms and Conditions"})]}),e.jsxs("p",{className:"small",style:{margin:"12px 0 0",lineHeight:"1.6"},children:["Cancellation requires at least ",n.cancellation.minimumNoticeDays," days' notice. The cancellation fee is ",n.cancellation.feePercent,"% of the amount actually paid."]}),e.jsxs("p",{className:"small",style:{margin:"8px 0 0"},children:["Policy version: ",n.version]}),c?e.jsxs("label",{htmlFor:c,style:{display:"flex",alignItems:"flex-start",gap:"10px",marginTop:"16px",cursor:"pointer"},children:[e.jsx("input",{id:c,type:"checkbox",required:!0,style:{width:"auto",marginTop:"4px",flexShrink:"0"},checked:p,onChange:s=>a(s.target.checked)}),e.jsx("span",{style:{fontSize:"13px",lineHeight:"1.6"},children:"I have read and agree to the Event Rules, Cancellation Policy, and Terms and Conditions."})]}):""]}):e.jsx("p",{role:"alert",children:"Event policies could not be loaded. Refresh before continuing."})}function un({id:o}){const i=O(),n=i.actions,{CU:c,DB:p,_workflowReturnPage:a,reqBadge:s,workflowEventPolicy:g,workflowPolicyDate:v}=i,t=p.eventRequests.find(b=>String(b.id)===String(o));if(!t)return e.jsxs("div",{className:"empty",children:[e.jsx("div",{className:"empty-title",children:"Request not found"}),e.jsx("button",{className:"btn btn-primary mt-16",onClick:()=>n.onNavigate("request-status"),children:"Back to requests"})]});const l=(p.eventPlans||[]).find(b=>b.eventPlanId===t.activeEventPlanId)||(p.eventPlans||[]).filter(b=>b.requestId===t.requestId).sort((b,A)=>(A.revision||0)-(b.revision||0))[0],C=c.role==="organizer",y=[["Request sent",!0],["Organizer review",!["submitted","pending"].includes(t.status)],["Budget and date agreed",["planning","plan_submitted","plan_revision_requested","confirmed"].includes(t.status)],["Event plan submitted",["plan_submitted","plan_revision_requested","confirmed"].includes(t.status)],["Plan approved",["confirmed","approved","completed"].includes(t.status)],["Ongoing event",["confirmed","approved","completed"].includes(t.status)],["Event completed",t.status==="completed"]],R=[...t.negotiations||[]].reverse().find(b=>b.action==="changes_requested"),r=[...t.negotiations||[]].reverse().find(b=>b.action==="counteroffer"),E=(p.eventPlans||[]).filter(b=>b.requestId===t.requestId).sort((b,A)=>(b.revision||0)-(A.revision||0)),I=["submitted","pending","under_review","info_requested"].includes(t.status)?e.jsxs("div",{style:{display:"flex",gap:"10px",marginTop:"16px"},children:[e.jsx("button",{className:"btn btn-success w-full",onClick:()=>n.onAcceptWorkflowRequest(t.id),children:"Accept"}),e.jsx("button",{className:"btn btn-danger w-full",onClick:()=>n.onOpenWorkflowRejectModal(t.id),children:"Reject"})]}):t.status==="counteroffer_received"?e.jsxs("div",{style:{display:"flex",gap:"10px",marginTop:"16px"},children:[e.jsx("button",{className:"btn btn-success w-full",onClick:()=>n.onAcceptWorkflowCounteroffer(t.id),children:"Accept Counteroffer"}),e.jsx("button",{className:"btn btn-danger w-full",onClick:()=>n.onOpenWorkflowRejectModal(t.id),children:"Reject / Propose Changes"})]}):["planning","plan_revision_requested"].includes(t.status)?e.jsx("button",{className:"btn btn-primary w-full",style:{marginTop:"16px"},onClick:()=>n.onOpenWorkflowPlanModal(t.id),children:t.status==="plan_revision_requested"?"Edit and Resubmit Plan":"Create Event Plan"}):"",u=t.status==="changes_requested"?e.jsxs("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",marginTop:"16px"},children:[e.jsx("button",{className:"btn btn-success",onClick:()=>n.onRespondToWorkflowChanges(t.id,"accept_changes"),children:"Accept Changes"}),e.jsx("button",{className:"btn btn-danger",onClick:()=>n.onRespondToWorkflowChanges(t.id,"reject_changes"),children:"Reject Changes"}),e.jsx("button",{className:"btn btn-primary",onClick:()=>n.onOpenWorkflowCounterofferModal(t.id),children:"Send Counteroffer"})]}):t.status==="plan_submitted"&&l?.approvalStatus==="pending"?e.jsxs("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",marginTop:"16px"},children:[e.jsx("button",{className:"btn btn-success",onClick:()=>n.onReviewWorkflowPlan(l.eventPlanId,"approved",t.id),children:"Accept Plan"}),e.jsx("button",{className:"btn btn-primary",onClick:()=>n.onOpenWorkflowPlanRevisionModal(l.eventPlanId,t.id),children:"Request New Plan"})]}):"",S=(t.negotiations||[]).map((b,A)=>e.jsxs("div",{style:{padding:"10px",borderLeft:"3px solid var(--accent)",background:"var(--surface2)",borderRadius:"6px",marginTop:"8px"},children:[e.jsx("strong",{children:String(b.action||"").replaceAll("_"," ")}),e.jsxs("div",{style:{fontSize:"12px",color:"var(--text2)",marginTop:"4px"},children:[b.reason,b.budget?` · Budget ₹${Number(b.budget).toLocaleString()}`:"",b.eventDate?` · Date ${b.eventDate}`:""]})]},b?.id??b?.eventReportId??b?.requestId??b?.registrationId??b?.ticketId??b?.eventId??b?.reportId??b?.paymentId??b?.refundId??b?.notificationId??b?.label??b?.fileName??A)),h=l?e.jsxs("div",{style:{marginTop:"12px",padding:"14px",background:"var(--surface2)",borderRadius:"10px"},children:[e.jsxs("div",{style:{display:"flex",justifyContent:"space-between",gap:"8px"},children:[e.jsxs("strong",{children:[l.title," · Revision ",l.revision||1]}),e.jsx("span",{className:`badge badge-${l.approvalStatus==="approved"?"green":l.approvalStatus==="revision_requested"?"yellow":"blue"}`,children:String(l.approvalStatus||"pending").replaceAll("_"," ")})]}),e.jsx("p",{style:{fontSize:"13px",color:"var(--text2)",lineHeight:"1.6"},children:l.description}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Budget"}),e.jsxs("span",{className:"info-value",children:["₹",Number(l.budget||0).toLocaleString()]})]}),e.jsxs("div",{style:{marginTop:"12px",padding:"14px",border:"1px solid var(--border)",borderRadius:"8px"},children:[e.jsx("strong",{children:"Event plan document"}),l.documentFileName?e.jsxs(e.Fragment,{children:[e.jsx("div",{style:{marginTop:"6px",color:"var(--text2)"},children:l.documentName||"Event plan PDF"}),e.jsxs("div",{style:{display:"flex",gap:"8px",marginTop:"10px"},children:[e.jsx("button",{className:"btn btn-ghost btn-sm",onClick:()=>n.onOpenEventPlanPdf(l.eventPlanId,encodeURIComponent(l.documentName||"event-plan.pdf"),!0),children:"View PDF"}),e.jsx("button",{className:"btn btn-primary btn-sm",onClick:()=>n.onOpenEventPlanPdf(l.eventPlanId,encodeURIComponent(l.documentName||"event-plan.pdf"),!1),children:"Download PDF"})]})]}):e.jsx("p",{style:{fontSize:"13px",color:"var(--text3)"},children:"No PDF was attached to this plan."})]}),l.revisionReason?e.jsxs("div",{style:{fontSize:"12px",color:"var(--yellow)",marginTop:"8px"},children:["Requested revision: ",l.revisionReason]}):"",E.length>1?e.jsxs("details",{style:{marginTop:"10px"},children:[e.jsxs("summary",{children:["Plan revision history (",E.length,")"]}),E.map((b,A)=>e.jsxs("div",{style:{fontSize:"12px",padding:"6px 0",borderBottom:"1px solid var(--border2)"},children:["Revision ",b.revision||1,": ",b.title," —"," ",String(b.approvalStatus).replaceAll("_"," ")]},b?.title??A))]}):""]}):e.jsx("p",{style:{color:"var(--text3)",fontSize:"13px"},children:"The organizer has not submitted an event plan yet."}),k=t.eventId,$=k&&p.events.find(b=>String(b.eventId||b.id)===String(k)),m=(p.eventCompletionReports||[]).find(b=>b.eventId===k),x=t.paymentStatus==="fully_paid",T=t.paymentStatus==="deposit_paid",w=new Date(`${t.eventDate||t.date}T23:59:59`)<=new Date,q=(m?.photos||[]).map((b,A)=>e.jsxs("button",{className:"btn btn-ghost btn-xs",onClick:()=>n.onOpenEventCompletionPhoto(k,encodeURIComponent(b.fileName)),children:["View ",b.originalName]},b?.fileName??A)),j=m?e.jsxs("div",{style:{marginTop:"16px",padding:"16px",border:"1px solid var(--border)",borderRadius:"10px"},children:[e.jsx("h3",{style:{margin:"0 0 10px"},children:"Event Completion Report"}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Event"}),e.jsxs("span",{className:"info-value",children:[m.eventName," · ",m.eventDate]})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Venue"}),e.jsx("span",{className:"info-value",children:m.venue||"—"})]}),e.jsxs("div",{style:{marginTop:"10px"},children:[e.jsx("strong",{children:"Services provided"}),e.jsx("p",{style:{whiteSpace:"pre-wrap",color:"var(--text2)"},children:m.servicesProvided})]}),e.jsxs("div",{style:{marginTop:"10px"},children:[e.jsx("strong",{children:"Expenses"}),e.jsx("p",{style:{whiteSpace:"pre-wrap",color:"var(--text2)"},children:m.expenses})]}),e.jsxs("div",{style:{marginTop:"10px"},children:[e.jsx("strong",{children:"Completion notes"}),e.jsx("p",{style:{whiteSpace:"pre-wrap",color:"var(--text2)"},children:m.completionNotes})]}),q?e.jsxs("div",{style:{marginTop:"10px"},children:[e.jsx("strong",{children:"Photos"}),e.jsx("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",marginTop:"6px"},children:q})]}):""]}):"",N=$?.status==="ongoing"?x?w?e.jsx("button",{className:"btn btn-primary",style:{marginTop:"10px"},onClick:()=>n.onCompleteWorkflowEvent(k,t.id),children:"Mark Event as Completed"}):e.jsx("p",{style:{marginTop:"10px",color:"var(--text3)"},children:"Completion is available after the event date."}):e.jsx("p",{style:{marginTop:"10px",color:"var(--yellow)"},children:T?"Deposit received. The remaining balance must be paid before the event can be marked completed.":"The client must complete full payment before the event can be marked completed."}):"",f=$?.status==="completed"&&!m?e.jsx("button",{className:"btn btn-primary",style:{marginTop:"12px"},onClick:()=>n.onOpenCompletionReportModal(k,t.id,t.title),children:"Create Event Completion Report"}):"",z=k&&$?e.jsxs("section",{style:{marginTop:"18px",padding:"16px",background:"var(--surface2)",borderRadius:"10px"},children:[e.jsx("h3",{style:{margin:"0 0 10px"},children:"Ongoing Event Workflow"}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Event status"}),e.jsx("span",{className:"info-value",children:$.status})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Payment status"}),e.jsx("span",{className:"info-value",style:{color:x?"var(--green)":T?"var(--blue)":"var(--yellow)"},children:x?"Paid":T?"Deposit Paid":"Unpaid"})]}),N,f,j,e.jsx(cn,{eventFileReports:i.DB.eventFileReports,onDownloadWorkflowEventReport:i.actions.onDownloadWorkflowEventReport,eventId:k}),e.jsx(pn,{workflowMoney:i.workflowMoney,workflowPolicyDate:i.workflowPolicyDate,cancellation:t.cancellation||$.cancellation})]}):"";return e.jsxs(e.Fragment,{children:[e.jsx("div",{className:"page-hd",children:e.jsxs("div",{className:"page-hd-left",children:[e.jsxs("button",{className:"btn btn-ghost btn-sm",onClick:()=>n.onNavigate(a),children:["← Back to"," ",a==="my-events"?"Events":a==="ongoing-events"?"Ongoing Events":a==="completed-events"?"Completed Events":a==="event-requests"?"Event Requests":a==="dashboard"?"Dashboard":"Request Status"]}),e.jsx("div",{className:"page-title",style:{marginTop:"12px"},children:t.title}),e.jsx("div",{className:"page-sub",children:"Request details, workflow progress, negotiation, and event plan"})]})}),e.jsxs(Le,{eventId:k,children:[e.jsxs("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:"10px",flexWrap:"wrap"},children:[e.jsx("span",{className:`badge badge-${s(t.status)}`,style:{textTransform:"capitalize"},children:String(t.status).replaceAll("_"," ")}),e.jsxs("span",{style:{fontSize:"12px",color:"var(--text3)"},children:["Request ID: ",t.requestId]})]}),e.jsx("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",margin:"16px 0"},children:y.map(([b,A])=>e.jsxs("div",{style:{flex:"1",minWidth:"105px",padding:"8px",borderRadius:"8px",background:A?"var(--accent-dim)":"var(--surface2)",color:A?"var(--accent)":"var(--text3)",fontSize:"11px",fontWeight:"600"},children:[A?"✓ ":"○ ",b]},b))}),e.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"},children:[e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Event date"}),e.jsx("span",{className:"info-value",children:t.eventDate||t.date})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Budget"}),e.jsxs("span",{className:"info-value",children:["₹",Number(t.budget||0).toLocaleString()]})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Ticket price per attendee"}),e.jsx("span",{className:"info-value",children:Number(t.ticketPrice||0)===0?"Free":"₹"+Number(t.ticketPrice).toLocaleString("en-IN")})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Event access"}),e.jsx("span",{className:"info-value",children:t.visibility==="private"?"Private — approval before payment":"Public — direct registration"})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Guests"}),e.jsx("span",{className:"info-value",children:t.capacity||t.guests})]}),e.jsxs("div",{className:"info-row",children:[e.jsx("span",{className:"info-label",children:"Event type"}),e.jsx("span",{className:"info-value",children:t.eventType||t.type})]})]}),e.jsxs("div",{style:{margin:"12px 0"},children:[e.jsx("strong",{children:"Event details"}),e.jsx("p",{style:{whiteSpace:"pre-wrap",color:"var(--text2)",lineHeight:"1.6"},children:t.requirements||t.desc||"—"})]}),t.status==="rejected"&&t.rejectionReason?e.jsxs("div",{style:{padding:"12px",background:"var(--red-dim)",margin:"12px 0"},children:[e.jsx("strong",{children:"Reason for declining"}),e.jsx("p",{style:{margin:"6px 0 0",whiteSpace:"pre-wrap",overflowWrap:"anywhere"},children:t.rejectionReason})]}):"",R?e.jsxs("div",{style:{padding:"12px",borderRadius:"8px",background:"rgba(245,158,11,.1)",margin:"12px 0"},children:[e.jsx("strong",{children:"Organizer requested changes"}),e.jsx("div",{style:{fontSize:"13px",marginTop:"5px"},children:R.reason}),R.budget?e.jsxs("div",{children:["Proposed budget: ₹",Number(R.budget).toLocaleString()]}):"",R.eventDate?e.jsxs("div",{children:["Proposed date: ",R.eventDate]}):""]}):"",t.status==="counteroffer_received"&&r?e.jsxs("div",{style:{padding:"12px",borderRadius:"8px",background:"rgba(124,111,247,.1)",margin:"12px 0"},children:[e.jsx("strong",{children:"Client counteroffer — review proposed event details"}),r.reason?e.jsx("div",{style:{fontSize:"13px",marginTop:"5px"},children:r.reason}):"",e.jsxs("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",marginTop:"8px",fontSize:"13px"},children:[r.eventName?e.jsxs("div",{children:[e.jsx("strong",{children:"Event:"})," ",r.eventName]}):"",r.eventType?e.jsxs("div",{children:[e.jsx("strong",{children:"Type:"})," ",r.eventType]}):"",r.eventDate?e.jsxs("div",{children:[e.jsx("strong",{children:"Date:"})," ",r.eventDate]}):"",r.budget?e.jsxs("div",{children:[e.jsx("strong",{children:"Budget:"})," ₹",Number(r.budget).toLocaleString()]}):"",r.capacity!==void 0?e.jsxs("div",{children:[e.jsx("strong",{children:"Guests:"})," ",r.capacity]}):"",r.venue!==void 0?e.jsxs("div",{children:[e.jsx("strong",{children:"Venue:"})," ",r.venue||"Not specified"]}):""]}),r.requirements!==void 0?e.jsxs("div",{style:{marginTop:"8px"},children:[e.jsx("strong",{children:"Requirements:"}),e.jsx("div",{style:{whiteSpace:"pre-wrap"},children:r.requirements||"Not specified"})]}):""]}):"",e.jsxs("div",{style:{marginTop:"16px"},children:[e.jsx("strong",{children:"Event plan"}),h]}),e.jsx(vn,{onOpenWorkflowPolicyDocument:i.actions.onOpenWorkflowPolicyDocument,workflowPolicyDocuments:i.workflowPolicyDocuments,policy:t.policySnapshot||g}),e.jsxs("p",{className:"small",children:["Client acknowledgement: ",v(t.clientPolicyAcceptedAt),e.jsx("br",{}),"Organizer acknowledgement: ",v(t.organizerPolicyAcceptedAt)]}),C?I:u,z,S?e.jsxs("div",{style:{marginTop:"18px"},children:[e.jsx("strong",{children:"Negotiation history"}),S]}):"",e.jsxs("div",{style:{marginTop:"18px"},children:[e.jsx("strong",{children:"Progress history"}),_e((t.auditHistory||[]).slice().reverse().map(b=>e.jsxs("div",{style:{padding:"8px 0",borderBottom:"1px solid var(--border2)",fontSize:"12px"},children:[e.jsx("strong",{children:b.action}),e.jsxs("div",{style:{color:"var(--text3)"},children:[b.timestamp?String(b.timestamp).replace("T"," ").slice(0,16):""," ","· ",b.role]})]},b.id??JSON.stringify([b.timestamp,b.action,b.performedBy,b.role,b.details]))),e.jsx("div",{style:{fontSize:"12px",color:"var(--text3)"},children:"No workflow actions yet."}))]})]})]})}function gn(){const o=O(),{CU:i,DB:n,isCancelledWorkflowEvent:c}=o,p=new Date;p.setHours(0,0,0,0);const a=n.events.filter(s=>new Date(s.date)>=p&&s.status==="upcoming"&&!c(s)).sort(te);return e.jsxs(e.Fragment,{children:[e.jsx("div",{className:"page-hd",children:e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Upcoming Events"}),e.jsx("div",{className:"page-sub",children:"Events happening soon that you might be interested in"})]})}),e.jsx("div",{className:"events-grid",children:a.length===0?e.jsxs("div",{className:"empty",style:{gridColumn:"1/-1"},children:[e.jsx("div",{className:"empty-icon",children:"📅"}),e.jsx("div",{className:"empty-title",children:"No upcoming events"})]}):a.map((s,g)=>e.jsx(J,{registrations:o.DB.registrations,onRegForEvent:o.actions.onRegForEvent,onOpenViewEventDrawer:o.actions.onOpenViewEventDrawer,user:o.CU,evStatBadge:o.evStatBadge,isCancelledWorkflowEvent:o.isCancelledWorkflowEvent,organizerEventCardStatus:o.organizerEventCardStatus,organizerEventRequest:o.organizerEventRequest,onOpenEditEventModal:o.actions.onOpenEditEventModal,payments:o.DB.payments,eventWorkflowPayments:o.DB.eventWorkflowPayments,onHandleOrganizerDeleteEvent:o.actions.onHandleOrganizerDeleteEvent,onOpenOrganizerEventCancellationModal:o.actions.onOpenOrganizerEventCancellationModal,ownsOrganizerEvent:o.ownsOrganizerEvent,event:s,role:i.role==="client"?"client":"attendee",onViewWorkflowEventDetails:o.actions.onViewWorkflowEventDetails},s?.id??s?.requestId??s?.eventId??s?.registrationId??s?.reportId??s?.label??(typeof s=="string"||typeof s=="number"?s:g)))})]})}function mn({events:o,onFilterEventReportsStage:i}){const n=sessionStorage.getItem("admin_event_reports_stage")||"all",c=o,p=c.filter(u=>u.status==="ongoing"),a=c.filter(u=>u.status==="upcoming"||u.status==="published"||u.status==="full"),s=c.filter(u=>u.status==="completed"),g=c.filter(u=>u.status==="draft");let v=c;n==="ongoing"?v=p:n==="upcoming"?v=a:n==="completed"&&(v=s);const t=[{label:"Ongoing (Now)",value:p.length,color:"linear-gradient(180deg, #3b82f6, #1d4ed8)"},{label:"About to Happen",value:a.length,color:"linear-gradient(180deg, #22c55e, #15803d)"},{label:"Completed",value:s.length,color:"linear-gradient(180deg, #8b5cf6, #7c3aed)"},{label:"Draft / Planning",value:g.length,color:"linear-gradient(180deg, #64748b, #475569)"}],l=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],C={},y=new Date;for(let u=-2;u<=3;u++){const S=new Date(y.getFullYear(),y.getMonth()+u,1),h=`${S.getFullYear()}-${String(S.getMonth()+1).padStart(2,"0")}`;C[h]={label:l[S.getMonth()],count:0,isPast:u<0,isCurrent:u===0}}v.forEach(u=>{const h=(u.date||"").toString().match(/(\d{4}-\d{2})/);h&&C[h[1]]&&C[h[1]].count++});const R=Object.values(C).map(u=>({label:u.label+(u.isCurrent?" (Now)":""),value:u.count,color:u.isCurrent?"linear-gradient(180deg, #3b82f6, #1d4ed8)":u.isPast?"linear-gradient(180deg, #8b5cf6, #7c3aed)":"linear-gradient(180deg, #22c55e, #15803d)"})),r={};v.forEach(u=>{const S=u.category||"Other";r[S]=(r[S]||0)+1});const E=Object.entries(r).sort((u,S)=>S[1]-u[1]).slice(0,6).map(([u,S],h)=>({label:u,value:S,color:["linear-gradient(180deg, #3b82f6, #1d4ed8)","linear-gradient(180deg, #22c55e, #15803d)","linear-gradient(180deg, #f59e0b, #d97706)","linear-gradient(180deg, #8b5cf6, #7c3aed)","linear-gradient(180deg, #ec4899, #be185d)","linear-gradient(180deg, #14b8a6, #0f766e)"][h%6]})),I=[{label:"Ongoing",bars:[{label:"Registered",value:p.reduce((u,S)=>u+(S.registered||0),0),color:"linear-gradient(180deg, #22c55e, #15803d)"},{label:"Capacity",value:p.reduce((u,S)=>u+(S.capacity||0),0),color:"linear-gradient(180deg, #3b82f6, #1d4ed8)"}]},{label:"About to Happen",bars:[{label:"Registered",value:a.reduce((u,S)=>u+(S.registered||0),0),color:"linear-gradient(180deg, #22c55e, #15803d)"},{label:"Capacity",value:a.reduce((u,S)=>u+(S.capacity||0),0),color:"linear-gradient(180deg, #3b82f6, #1d4ed8)"}]},{label:"Completed",bars:[{label:"Registered",value:s.reduce((u,S)=>u+(S.registered||0),0),color:"linear-gradient(180deg, #22c55e, #15803d)"},{label:"Capacity",value:s.reduce((u,S)=>u+(S.capacity||0),0),color:"linear-gradient(180deg, #3b82f6, #1d4ed8)"}]}];return e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"page-hd",children:[e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:"Event Reports & Analytics"}),e.jsx("div",{className:"page-sub",children:"Bar graph analytics for ongoing events, completed events, and events about to happen."})]}),e.jsx("div",{className:"page-hd-right",children:e.jsxs("div",{style:{display:"flex",gap:"6px",background:"var(--surface2)",padding:"4px",borderRadius:"10px",border:"1px solid var(--border)"},children:[e.jsx("button",{className:`btn btn-xs ${n==="all"?"btn-primary":"btn-ghost"}`,onClick:()=>i("all"),children:"All Stages"}),e.jsx("button",{className:`btn btn-xs ${n==="ongoing"?"btn-primary":"btn-ghost"}`,onClick:()=>i("ongoing"),children:"▶️ Ongoing"}),e.jsx("button",{className:`btn btn-xs ${n==="upcoming"?"btn-primary":"btn-ghost"}`,onClick:()=>i("upcoming"),children:"⏳ About to Happen"}),e.jsx("button",{className:`btn btn-xs ${n==="completed"?"btn-primary":"btn-ghost"}`,onClick:()=>i("completed"),children:"✅ Completed"})]})})]}),e.jsxs("div",{className:"grid-3 mb-20",style:{gap:"16px"},children:[e.jsxs("div",{className:"stat-card",style:{borderLeft:"4px solid var(--blue)"},children:[e.jsx("div",{className:"glow",style:{background:"var(--blue)"}}),e.jsxs("div",{className:"flex justify-between items-center mb-6",children:[e.jsx("span",{style:{fontSize:"12px",fontWeight:"700",color:"var(--blue)",textTransform:"uppercase"},children:"▶️ Ongoing Events"}),e.jsx("span",{className:"badge badge-blue",children:"Happening Now"})]}),e.jsx("div",{className:"stat-value",style:{color:"var(--blue)",fontSize:"32px"},children:p.length}),e.jsx("div",{className:"stat-label",children:"Currently in Progress"}),e.jsxs("div",{className:"stat-sub neutral",style:{marginTop:"6px"},children:[p.reduce((u,S)=>u+(S.registered||0),0)," ","live attendees participating"]})]}),e.jsxs("div",{className:"stat-card",style:{borderLeft:"4px solid var(--green)"},children:[e.jsx("div",{className:"glow",style:{background:"var(--green)"}}),e.jsxs("div",{className:"flex justify-between items-center mb-6",children:[e.jsx("span",{style:{fontSize:"12px",fontWeight:"700",color:"var(--green)",textTransform:"uppercase"},children:"⏳ About to Happen"}),e.jsx("span",{className:"badge badge-green",children:"Scheduled"})]}),e.jsx("div",{className:"stat-value",style:{color:"var(--green)",fontSize:"32px"},children:a.length}),e.jsx("div",{className:"stat-label",children:"Upcoming & Scheduled"}),e.jsxs("div",{className:"stat-sub up",style:{marginTop:"6px"},children:[a.reduce((u,S)=>u+(S.registered||0),0)," ","reservations confirmed"]})]}),e.jsxs("div",{className:"stat-card",style:{borderLeft:"4px solid var(--purple)"},children:[e.jsx("div",{className:"glow",style:{background:"var(--purple)"}}),e.jsxs("div",{className:"flex justify-between items-center mb-6",children:[e.jsx("span",{style:{fontSize:"12px",fontWeight:"700",color:"var(--purple)",textTransform:"uppercase"},children:"✅ Completed Events"}),e.jsx("span",{className:"badge badge-purple",children:"Finished"})]}),e.jsx("div",{className:"stat-value",style:{color:"var(--purple)",fontSize:"32px"},children:s.length}),e.jsx("div",{className:"stat-label",children:"Concluded Events"}),e.jsxs("div",{className:"stat-sub neutral",style:{marginTop:"6px"},children:[s.reduce((u,S)=>u+(S.registered||0),0)," ","past attendees reached"]})]})]}),e.jsxs("div",{className:"grid-2 mb-20",style:{gap:"20px"},children:[e.jsxs("div",{className:"card",children:[e.jsx("div",{className:"h4 mb-12",children:"📊 Event Lifecycle Stages (Bar Graph)"}),e.jsx(ee,{items:t,height:215})]}),e.jsxs("div",{className:"card",children:[e.jsx("div",{className:"h4 mb-12",children:"🏷️ Event Category Breakdown (Bar Graph)"}),e.jsx(ee,{items:E.length?E:[{label:"No Events",value:0,color:"linear-gradient(180deg, #64748b, #475569)"}],height:215})]})]}),e.jsxs("div",{className:"grid-2",style:{gap:"20px"},children:[e.jsxs("div",{className:"card",children:[e.jsx("div",{className:"h4 mb-12",children:"📅 Monthly Event Timeline (Past, Current & Future Bar Graph)"}),e.jsx(ee,{items:R,height:215})]}),e.jsxs("div",{className:"card",children:[e.jsx("div",{className:"h4 mb-12",children:"🎟️ Booked Seats vs Total Capacity (Grouped Bar Graph)"}),e.jsx(fn,{groups:I,height:215,legend:[{label:"Booked Seats",color:"linear-gradient(180deg, #22c55e, #15803d)"},{label:"Total Capacity",color:"linear-gradient(180deg, #3b82f6, #1d4ed8)"}]})]})]})]})}function ee({items:o,height:i}){const n=Math.max(1,...o.map(p=>p.value||0)),c=i||180;return e.jsx("div",{style:{display:"flex",alignItems:"flex-end",gap:"14px",height:`${c}px`,paddingTop:"12px"},children:o.map((p,a)=>{const s=Math.max(8,Math.round((p.value||0)/n*Math.max(c-52,40)));return e.jsxs("div",{style:{flex:"1",minWidth:"0",display:"flex",flexDirection:"column",justifyContent:"flex-end",alignItems:"center",gap:"8px"},children:[e.jsx("div",{style:{fontSize:"11px",color:"var(--text3)"},children:p.value}),e.jsx("div",{style:{width:"100%",maxWidth:"58px",height:`${s}px`,flexShrink:"0",borderRadius:"18px 18px 8px 8px",background:"linear-gradient(180deg,var(--green),#15803d)",boxShadow:"0 16px 28px rgba(15,23,42,.18)"}}),e.jsx("div",{style:{fontSize:"11px",color:"var(--text2)",textAlign:"center",lineHeight:"1.35"},children:p.label})]},p?.label??p?.value??a)})})}function fn({groups:o,height:i,legend:n}){let c=1;o.forEach(a=>{(a.bars||[]).forEach(s=>{(s.value||0)>c&&(c=s.value)})});const p=i||200;return e.jsxs("div",{style:{display:"flex",flexDirection:"column",gap:"10px"},children:[n?e.jsx("div",{style:{display:"flex",justifyContent:"flex-end",gap:"16px",fontSize:"12px",color:"var(--text2)",marginBottom:"4px"},children:n.map((a,s)=>e.jsxs("span",{style:{display:"inline-flex",alignItems:"center",gap:"6px"},children:[e.jsx("span",{style:{width:"10px",height:"10px",borderRadius:"3px",background:a.color}}),a.label]},a?.label??s))}):"",e.jsx("div",{style:{display:"flex",alignItems:"flex-end",gap:"16px",height:`${p}px`,paddingTop:"16px",borderBottom:"1px solid var(--border)"},children:o.map((a,s)=>e.jsxs("div",{style:{flex:"1",minWidth:"0",display:"flex",flexDirection:"column",justifyContent:"flex-end",alignItems:"center",gap:"6px",height:"100%"},children:[e.jsx("div",{style:{display:"flex",alignItems:"flex-end",gap:"5px",width:"100%",height:"100%",justifyContent:"center"},children:a.bars.map((g,v)=>{const t=Math.max(8,Math.round((g.value||0)/c*Math.max(p-52,40)));return e.jsxs("div",{style:{flex:"1",maxWidth:"26px",display:"flex",flexDirection:"column",alignItems:"center",height:"100%",justifyContent:"flex-end",gap:"4px"},children:[e.jsx("div",{style:{fontSize:"10px",fontWeight:"700",color:"var(--text3)"},children:g.value}),e.jsx("div",{style:{width:"100%",height:`${t}px`,flexShrink:"0",borderRadius:"6px 6px 2px 2px",background:"linear-gradient(180deg,var(--green),#15803d)",boxShadow:"0 8px 16px rgba(15,23,42,.12)"},title:`${g.label||""}: ${g.value}`})]},g?.label??g?.value??v)})}),e.jsx("div",{style:{fontSize:"11px",fontWeight:"600",color:"var(--text2)",textAlign:"center",lineHeight:"1.2",marginTop:"4px"},children:a.label})]},a?.label??s))})]})}function bn(){const[o,i]=P.useState(""),[n,c]=P.useState(""),[p,a]=P.useState(""),s=O(),g=s.actions,{CU:v,DB:t,isCancelledWorkflowEvent:l,ownsOrganizerEvent:C}=s;if(v.role==="superuser")return e.jsx(mn,{events:s.DB.events,onFilterEventReportsStage:s.actions.onFilterEventReportsStage});if(v.role==="client")return e.jsxs("div",{className:"empty",children:[e.jsx("div",{className:"empty-icon",children:"🚫"}),e.jsx("div",{className:"empty-title",children:"Access Denied"}),e.jsx("p",{className:"empty-desc",children:"This page is not available for clients. Please use Find Organizers to request events."}),e.jsx("button",{className:"btn btn-primary mt-16",onClick:()=>g.onNavigate("find-organizers"),children:"Find Organizers"})]});const y=v.role==="organizer",R=(y?t.events.filter(r=>C(r)):t.events).filter(r=>{const E=s.organizerEventCardStatus(r);return(!o||String(r.title||r.name||"").toLowerCase().includes(o.toLowerCase()))&&(!n||E===n||n==="full"&&r.status==="full"&&!["completed","cancelled"].includes(E))&&(!p||r.category===p)}).sort(te);return e.jsxs(e.Fragment,{children:[e.jsxs("div",{className:"page-hd",children:[e.jsxs("div",{className:"page-hd-left",children:[e.jsx("div",{className:"page-title",children:y?"My Events":"All Events"}),e.jsxs("div",{className:"page-sub",children:[R.length," event(s)"]})]}),e.jsx("div",{className:"page-hd-right",children:y?e.jsxs(e.Fragment,{children:[e.jsxs("button",{className:"btn btn-ghost",onClick:()=>g.onSetWorkflowEventTab("cancelled"),children:["Cancelled Events (",R.filter(l).length,")"]}),e.jsx("button",{className:"btn btn-primary",onClick:()=>g.onOpenAddEventModal(),children:"+ Create Event"})]}):""})]}),e.jsxs("div",{className:"filter-row",children:[e.jsxs("div",{className:"search-box input-group",children:[e.jsx("span",{className:"input-icon",children:"🔍"}),e.jsx("input",{className:"form-control",id:"ev-q",placeholder:"Search events…",value:o,onChange:r=>i(r.target.value)})]}),e.jsxs(M,{className:"form-control filter-select",id:"ev-st",value:n,onChange:r=>c(r.target.value),children:[e.jsx("option",{value:"",children:"All Status"}),e.jsx("option",{value:"upcoming",children:"Upcoming"}),y?e.jsxs(e.Fragment,{children:[e.jsx("option",{value:"ongoing",children:"In Progress"}),e.jsx("option",{value:"draft",children:"Draft"})]}):"",e.jsx("option",{value:"full",children:"Full"}),e.jsx("option",{value:"completed",children:"Completed"}),y?e.jsx("option",{value:"cancelled",children:"Cancelled"}):""]}),e.jsxs(M,{className:"form-control filter-select",id:"ev-cat",value:p,onChange:r=>a(r.target.value),children:[e.jsx("option",{value:"",children:"All Categories"}),e.jsx("option",{children:"Conference"}),e.jsx("option",{children:"Corporate"}),e.jsx("option",{children:"Concert"}),e.jsx("option",{children:"Workshop"}),e.jsx("option",{children:"Networking"})]})]}),e.jsx("div",{className:"events-grid",id:"ev-grid",children:R.map((r,E)=>e.jsx(J,{registrations:s.DB.registrations,onRegForEvent:s.actions.onRegForEvent,onOpenViewEventDrawer:s.actions.onOpenViewEventDrawer,user:s.CU,evStatBadge:s.evStatBadge,isCancelledWorkflowEvent:s.isCancelledWorkflowEvent,organizerEventCardStatus:s.organizerEventCardStatus,organizerEventRequest:s.organizerEventRequest,onOpenEditEventModal:s.actions.onOpenEditEventModal,payments:s.DB.payments,eventWorkflowPayments:s.DB.eventWorkflowPayments,onHandleOrganizerDeleteEvent:s.actions.onHandleOrganizerDeleteEvent,onOpenOrganizerEventCancellationModal:s.actions.onOpenOrganizerEventCancellationModal,ownsOrganizerEvent:s.ownsOrganizerEvent,event:r,role:v.role,onViewWorkflowEventDetails:s.actions.onViewWorkflowEventDetails},r?.id??r?.requestId??r?.eventId??r?.registrationId??r?.reportId??r?.label??(typeof r=="string"||typeof r=="number"?r:E)))})]})}const fe={"customer-support":pe,attendees:Ye,"completed-events":ue,dashboard:Ze,"event-requests":en,"my-events":nn,notifications:tn,"ongoing-events":me,profile:sn,reports:dn,"request-details":un,settings:ce,"upcoming-events":gn,events:bn},hn=Object.keys(fe);function yn({page:o,pageProps:i}){const{data:n,loading:c,error:p,retry:a}=Te(ke,o,i,Ce,window.EventFlowOrganizerRuntime),s=fe[o];return p?e.jsx(ze,{message:p,onRetry:a}):c||!n?.actions?e.jsx(Be,{title:"Loading…"}):e.jsx(ve.Provider,{value:n,children:o==="settings"?e.jsx(ce,{user:n.CU,roleLabel:n.ROLE_LABELS[n.CU.role],actions:n.actions}):e.jsx(s,{...n.pageProps,page:o})})}function xn(o){return e.jsx(Se,{children:o.page==="customer-support"?e.jsx(pe,{user:de(),onBack:()=>window.goNav("settings")}):e.jsx(yn,{...o})})}const le=Me(xn,hn),wn=He.replace("/* PORTAL_SECTION_api */",()=>We).replace("/* PORTAL_SECTION_state */",()=>Fe);function Pn(){const o=de(),i=o?.avatar&&o.avatar!=="?"?o.avatar:"👤";return typeof window<"u"&&(window.EventFlowOrganizerPages=le,window.EventFlowReactPages=le),e.jsxs(e.Fragment,{children:[e.jsx(Pe,{}),e.jsx(Ie,{workspace:"organizer"}),e.jsx(Oe,{}),e.jsx($e,{}),e.jsx(je,{}),e.jsx(De,{}),e.jsx(qe,{sidebar:e.jsxs(e.Fragment,{children:[e.jsx("div",{className:"sb-logo",children:e.jsx("div",{className:"sb-logo-mark",children:e.jsx("span",{className:"brand-logo",children:e.jsx("span",{className:"brand-logo-art",children:e.jsx("img",{src:"/assets/images/eventflow-logo.png",alt:"EventFlow",width:"2172",height:"724",decoding:"async"})})})})}),e.jsx("nav",{className:"sb-nav",id:"sb-nav"}),e.jsx("div",{className:"sb-bottom",children:e.jsxs("button",{type:"button",className:"sb-user","aria-label":"Account settings","aria-describedby":"sb-name sb-role-lbl",title:"Account settings",onClick:()=>window.goNav("settings"),children:[e.jsx("span",{className:"av",id:"sb-av","aria-hidden":"true",children:i}),e.jsxs("span",{className:"sb-user-info",children:[e.jsx("span",{className:"sb-user-name",id:"sb-name",children:o?.name||"Organizer"}),e.jsx("span",{className:"sb-user-role",id:"sb-role-lbl",children:"Event Organizer"})]}),e.jsx("span",{className:"sb-user-action","aria-hidden":"true",children:"⚙️"})]})})]}),navbar:e.jsxs(e.Fragment,{children:[e.jsx("div",{className:"topbar-title",id:"topbar-title",children:"User"}),e.jsxs("div",{className:"topbar-right",children:[e.jsxs("button",{className:"notif-trigger",onClick:()=>window.goNav("notifications"),children:["🔔",e.jsx("span",{className:"notif-badge",id:"notif-count-dot"})]}),e.jsx("button",{className:"btn btn-ghost btn-sm",onClick:()=>window.doLogout(),children:"Sign Out"})]})]})}),e.jsx("div",{className:"overlay",id:"modal-overlay",onClick:n=>window.closeModalOnBg(n),children:e.jsxs("div",{className:"modal-box",id:"modal-box",children:[e.jsxs("div",{className:"modal-head",children:[e.jsx("span",{className:"modal-title",id:"modal-title"}),e.jsx("button",{className:"modal-close-btn",onClick:()=>window.closeModal(),children:"✕"})]}),e.jsx("div",{className:"modal-body",id:"modal-body"}),e.jsx("div",{className:"modal-foot",id:"modal-foot"})]})}),e.jsx("div",{className:"overlay",id:"confirm-overlay",onClick:n=>window.closeConfirmOnBg(n),children:e.jsxs("div",{className:"modal-box",style:{maxWidth:"360px"},children:[e.jsxs("div",{className:"modal-head",children:[e.jsx("span",{className:"modal-title",id:"confirm-title",children:"Confirm Action"}),e.jsx("button",{className:"modal-close-btn",onClick:()=>window.closeConfirm(),children:"✕"})]}),e.jsx("div",{className:"modal-body",children:e.jsx("p",{id:"confirm-msg",style:{color:"var(--text2)",fontSize:"13.5px",lineHeight:"1.6"}})}),e.jsxs("div",{className:"modal-foot",children:[e.jsx("button",{className:"btn btn-ghost",onClick:()=>window.closeConfirm(),children:"Cancel"}),e.jsx("button",{className:"btn btn-danger",id:"confirm-ok",onClick:()=>window.runConfirm(),children:"Confirm"})]})]})}),e.jsx("div",{className:"drawer-overlay",id:"drawer-overlay",onClick:()=>window.closeDrawer()}),e.jsxs("div",{className:"drawer",id:"drawer",children:[e.jsxs("div",{className:"drawer-head",children:[e.jsx("span",{className:"h4",id:"drawer-title",children:"Details"}),e.jsx("button",{className:"modal-close-btn",onClick:()=>window.closeDrawer(),children:"✕"})]}),e.jsx("div",{className:"drawer-body",id:"drawer-body"})]}),e.jsx(Ve,{}),e.jsx(Ne,{source:wn,role:"organizer"})]})}export{Pn as default};

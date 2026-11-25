@@ -1,0 +1,1 @@
+import{r as s,j as n}from"./index-Ca0ZN0F_.js";function x({value:t="",onChange:u,...o}){const[a,e]=s.useState(t);return s.useEffect(()=>e(t),[t]),n.jsx("input",{...o,value:a,onChange:r=>{e(r.target.value),u?.(r)}})}export{x as F};
