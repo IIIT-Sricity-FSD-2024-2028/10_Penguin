@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, Min, Max } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateEventReportDto {
@@ -17,17 +17,15 @@ export class CreateEventReportDto {
   @IsOptional()
   clientId?: string;
 
-  @ApiPropertyOptional({ description: 'Staff ID (if submitted by staff)', example: 'staff-001' })
-  @IsString()
-  @IsOptional()
-  submittedByStaffId?: string;
-
   @ApiProperty({ description: 'Report title', example: 'Tech Conference 2024 - Final Report' })
   @IsString()
   @IsNotEmpty()
   reportTitle!: string;
 
-  @ApiProperty({ description: 'Report details', example: 'Event was successful with 450 attendees.' })
+  @ApiProperty({
+    description: 'Report details',
+    example: 'Event was successful with 450 attendees.',
+  })
   @IsString()
   @IsNotEmpty()
   reportDetails!: string;
@@ -36,28 +34,6 @@ export class CreateEventReportDto {
   @IsString()
   @IsNotEmpty()
   submissionDate!: string;
-}
-
-export class CreateStaffReportDto {
-  @ApiProperty({ description: 'Staff ID', example: 'staff-001' })
-  @IsString()
-  @IsNotEmpty()
-  staffId!: string;
-
-  @ApiProperty({ description: 'Organizer ID', example: 'org-001' })
-  @IsString()
-  @IsNotEmpty()
-  organizerId!: string;
-
-  @ApiProperty({ description: 'Event ID', example: 'evt-001' })
-  @IsString()
-  @IsNotEmpty()
-  eventId!: string;
-
-  @ApiProperty({ description: 'Report text', example: 'Event ran smoothly. Check-in was efficient.' })
-  @IsString()
-  @IsNotEmpty()
-  reportText!: string;
 }
 
 export class CreateEventReviewDto {
@@ -83,17 +59,24 @@ export class CreateEventReviewDto {
   comment!: string;
 }
 
-export class CreateStaffReviewDto {
-  @ApiProperty({ description: 'Organizer ID (reviewer)', example: 'org-001' })
+export class CreateEventCompletionReportDto {
+  @ApiProperty({ description: 'Services provided during the event' })
   @IsString()
   @IsNotEmpty()
-  reviewerId!: string;
+  servicesProvided!: string;
 
-  @ApiProperty({ description: 'Staff ID being reviewed', example: 'staff-001' })
+  @ApiProperty({ description: 'Expenses and budget reconciliation' })
   @IsString()
   @IsNotEmpty()
-  staffId!: string;
+  expenses!: string;
 
+  @ApiProperty({ description: 'Event completion notes' })
+  @IsString()
+  @IsNotEmpty()
+  completionNotes!: string;
+}
+
+export class CreateClientOrganizerReviewDto {
   @ApiProperty({ description: 'Event ID', example: 'evt-001' })
   @IsString()
   @IsNotEmpty()
@@ -105,7 +88,7 @@ export class CreateStaffReviewDto {
   @Max(5)
   rating!: number;
 
-  @ApiProperty({ description: 'Review comment', example: 'Very professional.' })
+  @ApiProperty({ description: 'Written review' })
   @IsString()
   @IsNotEmpty()
   comment!: string;

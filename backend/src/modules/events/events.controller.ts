@@ -5,15 +5,18 @@ import {
   Body,
   Param,
   Put,
+  Patch,
   Delete,
   UseGuards,
   Query,
   HttpStatus,
   HttpCode,
+  Header,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiHeader, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { EventsService } from './events.service';
-import { CreateEventDto, UpdateEventDto } from './dtos/event.dto';
+import { CancelClientEventDto, CreateEventDto, UpdateEventDto } from './dtos/event.dto';
+import { SendEventChatMessageDto, UpdateEventChatMessageDto } from './dtos/event-chat.dto';
 import { RoleGuard } from '../../common/guards/role.guard';
 import { UserRoleDecorator } from '../../common/decorators/user-role.decorator';
 import { UserId } from '../../common/decorators/user-id.decorator';
@@ -24,7 +27,7 @@ import { UserRole } from '../../common/constants';
 @UseGuards(RoleGuard)
 @ApiHeader({
   name: 'x-role',
-  description: 'User role (super_admin, client, event_organizer, event_staff, attendee)',
+  description: 'User role (super_admin, client, event_organizer, employee, attendee)',
   required: true,
 })
 @ApiHeader({
@@ -39,26 +42,34 @@ export class EventsController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new event' })
   @ApiResponse({ status: 201, description: 'Event created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request - missing required fields or insufficient permissions' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - missing required fields or insufficient permissions',
+  })
   create(
     @Body() createEventDto: CreateEventDto,
     @UserRoleDecorator() role: UserRole,
-    @UserId() userId: string,
+    @UserId() userId: string
   ) {
     return this.eventsService.create(createEventDto, role, userId);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all events with optional filters' })
-  @ApiQuery({ name: 'search', required: false, description: 'Search by event name, description, or location' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search by event name, description, or location',
+  })
   @ApiQuery({ name: 'status', required: false, description: 'Filter by status' })
   @ApiResponse({ status: 200, description: 'List of events' })
   findAll(
     @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string,
     @Query('search') search?: string,
-    @Query('status') status?: string,
+    @Query('status') status?: string
   ) {
-    return this.eventsService.findAll(role, search, status);
+    return this.eventsService.findAll(role, search, status, userId);
   }
 
   @Get('admin')
@@ -67,10 +78,11 @@ export class EventsController {
   @ApiQuery({ name: 'status', required: false })
   @ApiResponse({ status: 200, description: 'All events for admin view' })
   findAllAdmin(
+    @UserRoleDecorator() role: UserRole,
     @Query('search') search?: string,
-    @Query('status') status?: string,
+    @Query('status') status?: string
   ) {
-    return this.eventsService.findAllAdmin(search, status);
+    return this.eventsService.findAllAdmin(role, search, status);
   }
 
   @Get('statistics')
@@ -84,8 +96,90 @@ export class EventsController {
   @ApiOperation({ summary: 'Get event by ID' })
   @ApiResponse({ status: 200, description: 'Event details' })
   @ApiResponse({ status: 404, description: 'Event not found' })
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findOne(id);
+  findOne(@Param('id') id: string, @UserRoleDecorator() role: UserRole, @UserId() userId: string) {
+    return this.eventsService.findOne(id, role, userId);
+  }
+
+  @Get(':id/chat')
+  @Header('Cache-Control', 'no-store')
+  @ApiOperation({ summary: 'Read the private conversation between the client and assigned organizer' })
+  getChat(@Param('id') id: string, @UserRoleDecorator() role: UserRole, @UserId() userId: string) {
+    return this.eventsService.getChat(id, role, userId);
+  }
+
+  @Post(':id/chat')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Send a chat message as an event participant' })
+  sendChatMessage(
+    @Param('id') id: string,
+    @Body() dto: SendEventChatMessageDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ): void {
+    this.eventsService.sendChatMessage(id, dto, role, userId);
+  }
+
+  @Patch(':id/chat/:messageId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Edit a message sent by the current event participant' })
+  updateChatMessage(
+    @Param('id') id: string,
+    @Param('messageId') messageId: string,
+    @Body() dto: UpdateEventChatMessageDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ): void {
+    this.eventsService.updateChatMessage(id, messageId, dto, role, userId);
+  }
+
+  @Delete(':id/chat/:messageId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a message sent by the current event participant' })
+  deleteChatMessage(
+    @Param('id') id: string,
+    @Param('messageId') messageId: string,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ): void {
+    this.eventsService.deleteChatMessage(id, messageId, role, userId);
+  }
+
+  @Post(':id/complete')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Mark a fully paid client event completed after its event date (assigned organizer only)',
+  })
+  completeClientEvent(
+    @Param('id') id: string,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.eventsService.completeClientEvent(id, role, userId);
+  }
+
+  @Get(':id/cancellation-preview')
+  @ApiOperation({ summary: 'Preview the client cancellation deadline, fee, and refund due' })
+  cancellationPreview(
+    @Param('id') id: string,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return { success: true, data: this.eventsService.clientCancellationPreview(id, role, userId) };
+  }
+
+  @Post(':id/cancel')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Client cancels an event under its accepted, versioned cancellation policy',
+  })
+  cancelClientEvent(
+    @Param('id') id: string,
+    @Body() dto: CancelClientEventDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.eventsService.cancelClientEvent(id, dto, role, userId);
   }
 
   @Put(':id')
@@ -97,7 +191,7 @@ export class EventsController {
     @Param('id') id: string,
     @Body() updateEventDto: UpdateEventDto,
     @UserRoleDecorator() role: UserRole,
-    @UserId() userId: string,
+    @UserId() userId: string
   ) {
     return this.eventsService.update(id, updateEventDto, role, userId);
   }
@@ -108,11 +202,7 @@ export class EventsController {
   @ApiResponse({ status: 200, description: 'Event deleted successfully' })
   @ApiResponse({ status: 400, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Event not found' })
-  delete(
-    @Param('id') id: string,
-    @UserRoleDecorator() role: UserRole,
-    @UserId() userId: string,
-  ) {
+  delete(@Param('id') id: string, @UserRoleDecorator() role: UserRole, @UserId() userId: string) {
     return this.eventsService.delete(id, role, userId);
   }
 }

@@ -24,7 +24,7 @@ import { UserRole } from '../../common/constants';
 @UseGuards(RoleGuard)
 @ApiHeader({
   name: 'x-role',
-  description: 'User role (super_admin, client, event_organizer, event_staff, attendee)',
+  description: 'User role (super_admin, client, event_organizer, employee, attendee)',
   required: true,
 })
 export class AttendeesController {
@@ -34,11 +34,11 @@ export class AttendeesController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new attendee' })
   @ApiResponse({ status: 201, description: 'Attendee created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request - missing required fields or email already exists' })
-  create(
-    @Body() createAttendeeDto: CreateAttendeeDto,
-    @UserRoleDecorator() role: UserRole,
-  ) {
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - missing required fields or email already exists',
+  })
+  create(@Body() createAttendeeDto: CreateAttendeeDto, @UserRoleDecorator() role: UserRole) {
     return this.attendeesService.create(createAttendeeDto, role);
   }
 
@@ -46,10 +46,7 @@ export class AttendeesController {
   @ApiOperation({ summary: 'Get all attendees' })
   @ApiQuery({ name: 'search', required: false, description: 'Search by attendee name or email' })
   @ApiResponse({ status: 200, description: 'List of attendees' })
-  findAll(
-    @UserRoleDecorator() role: UserRole,
-    @Query('search') search?: string,
-  ) {
+  findAll(@UserRoleDecorator() role: UserRole, @Query('search') search?: string) {
     return this.attendeesService.findAll(role, search);
   }
 
@@ -66,19 +63,17 @@ export class AttendeesController {
   findByEvent(
     @Param('eventId') eventId: string,
     @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
   ) {
-    return this.attendeesService.findByEvent(eventId, role);
+    return this.attendeesService.findByEvent(eventId, role, userId);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get attendee by ID' })
   @ApiResponse({ status: 200, description: 'Attendee details' })
   @ApiResponse({ status: 404, description: 'Attendee not found' })
-  findOne(
-    @Param('id') id: string,
-    @UserRoleDecorator() role: UserRole,
-  ) {
-    return this.attendeesService.findOne(id, role);
+  findOne(@Param('id') id: string, @UserRoleDecorator() role: UserRole, @UserId() userId: string) {
+    return this.attendeesService.findOne(id, role, userId);
   }
 
   @Put(':id')
@@ -90,7 +85,7 @@ export class AttendeesController {
     @Param('id') id: string,
     @Body() updateAttendeeDto: UpdateAttendeeDto,
     @UserRoleDecorator() role: UserRole,
-    @UserId() userId: string,
+    @UserId() userId: string
   ) {
     return this.attendeesService.update(id, updateAttendeeDto, role, userId);
   }
@@ -101,10 +96,7 @@ export class AttendeesController {
   @ApiResponse({ status: 200, description: 'Attendee deleted successfully' })
   @ApiResponse({ status: 400, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Attendee not found' })
-  delete(
-    @Param('id') id: string,
-    @UserRoleDecorator() role: UserRole,
-  ) {
+  delete(@Param('id') id: string, @UserRoleDecorator() role: UserRole) {
     return this.attendeesService.delete(id, role);
   }
 }

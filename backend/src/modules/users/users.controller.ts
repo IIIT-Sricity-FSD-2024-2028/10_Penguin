@@ -1,9 +1,18 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiHeader } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { ChangePasswordDto, CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { RoleGuard } from '../../common/guards/role.guard';
 import { UserRoleDecorator } from '../../common/decorators/user-role.decorator';
 import { UserId } from '../../common/decorators/user-id.decorator';
@@ -53,9 +62,15 @@ export class UsersController {
     @Param('id') id: string,
     @Body() dto: UpdateUserDto,
     @UserRoleDecorator() role: UserRole,
-    @UserId() userId: string,
+    @UserId() userId: string
   ) {
     return this.usersService.update(id, dto, role, userId);
+  }
+
+  @Patch('me/password')
+  @ApiOperation({ summary: 'Change the authenticated user password' })
+  changePassword(@Body() dto: ChangePasswordDto, @UserId() userId: string) {
+    return this.usersService.changePassword(userId, dto);
   }
 
   @Delete(':id')
@@ -73,7 +88,7 @@ export class UsersController {
   updateStatus(
     @Param('id') id: string,
     @Body() body: { status: 'active' | 'inactive' | 'suspended' },
-    @UserRoleDecorator() role: UserRole,
+    @UserRoleDecorator() role: UserRole
   ) {
     return this.usersService.updateStatus(id, body.status, role);
   }

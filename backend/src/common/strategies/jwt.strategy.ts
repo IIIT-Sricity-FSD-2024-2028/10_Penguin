@@ -22,20 +22,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   validate(payload: JwtPayload) {
-    const user = this.dataStore.findUserByEmail(payload.email);
+    const user = this.dataStore.findUserById(payload.userId);
 
-    if (
-      !user ||
-      user.status !== 'active' ||
-      user.userId !== payload.userId
-    ) {
+    if (!user || user.status !== 'active' || user.userId !== payload.userId) {
       throw new UnauthorizedException('User not found or inactive');
     }
 
     // Return user info to be attached to request
     return {
       userId: payload.userId,
-      email: payload.email,
+      email: user.email,
       userRole: user.userRole,
     };
   }

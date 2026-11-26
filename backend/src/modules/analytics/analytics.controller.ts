@@ -10,13 +10,18 @@ import { UserRole } from '../../common/constants';
 @Controller('api/analytics')
 @UseGuards(RoleGuard)
 @ApiHeader({ name: 'x-role', description: 'User role', required: true })
-@ApiHeader({ name: 'x-user-id', description: 'User ID for role-specific dashboard', required: false })
+@ApiHeader({
+  name: 'x-user-id',
+  description: 'User ID for role-specific dashboard',
+  required: false,
+})
 export class AnalyticsController {
   constructor(private readonly service: AnalyticsService) {}
 
   @Get('dashboard')
   @ApiOperation({
-    summary: 'Super admin dashboard — total users, events, revenue, registrations, pending requests, etc.',
+    summary:
+      'Super admin dashboard — total users, events, revenue, registrations, pending requests, etc.',
   })
   @ApiResponse({
     status: 200,
@@ -25,7 +30,11 @@ export class AnalyticsController {
       example: {
         success: true,
         data: {
-          users: { total: 12, active: 12, byRole: { super_admin: 1, client: 2, event_organizer: 3, event_staff: 3, attendee: 3 } },
+          users: {
+            total: 12,
+            active: 12,
+            byRole: { super_admin: 1, client: 2, event_organizer: 3, employee: 3, attendee: 3 },
+          },
           events: { total: 4, published: 3, draft: 1 },
           eventRequests: { total: 2, pending: 1, approved: 1 },
           registrations: { total: 3 },
@@ -40,7 +49,7 @@ export class AnalyticsController {
   }
 
   @Get('organizer-dashboard')
-  @ApiOperation({ summary: 'Event organizer dashboard: my events, registrations, staff assignments, revenue' })
+  @ApiOperation({ summary: 'Event organizer dashboard: my events, registrations, revenue' })
   @ApiResponse({ status: 200, description: 'Organizer dashboard data' })
   @ApiResponse({ status: 403, description: 'Access denied' })
   getOrganizerDashboard(@UserRoleDecorator() role: UserRole, @UserId() userId: string) {
@@ -48,19 +57,23 @@ export class AnalyticsController {
   }
 
   @Get('client-dashboard')
-  @ApiOperation({ summary: 'Client dashboard: my event requests, event plans, ongoing/completed events' })
+  @ApiOperation({
+    summary: 'Client dashboard: my event requests, event plans, ongoing/completed events',
+  })
   @ApiResponse({ status: 200, description: 'Client dashboard data' })
   @ApiResponse({ status: 403, description: 'Only CLIENT can view' })
   getClientDashboard(@UserRoleDecorator() role: UserRole, @UserId() userId: string) {
     return this.service.getClientDashboard(role, userId);
   }
 
-  @Get('staff-dashboard')
-  @ApiOperation({ summary: 'Event staff dashboard: my assignments, reports submitted, available dates' })
-  @ApiResponse({ status: 200, description: 'Staff dashboard data' })
-  @ApiResponse({ status: 403, description: 'Only EVENT_STAFF can view' })
-  getStaffDashboard(@UserRoleDecorator() role: UserRole, @UserId() userId: string) {
-    return this.service.getStaffDashboard(role, userId);
+  @Get('employee-dashboard')
+  @ApiOperation({
+    summary: 'Employee dashboard: registrations, support requests, and operational totals',
+  })
+  @ApiResponse({ status: 200, description: 'Employee dashboard data' })
+  @ApiResponse({ status: 403, description: 'Only EMPLOYEE can view' })
+  getEmployeeDashboard(@UserRoleDecorator() role: UserRole, @UserId() userId: string) {
+    return this.service.getEmployeeDashboard(role, userId);
   }
 
   @Get('attendee-dashboard')

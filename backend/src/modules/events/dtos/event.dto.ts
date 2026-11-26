@@ -1,7 +1,59 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEnum, IsDateString } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsBoolean,
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  IsInt,
+  IsIn,
+  Min,
+  Max,
+  MinLength,
+  MaxLength,
+  ValidateNested,
+} from 'class-validator';
+import { EVENTFLOW_NUMERIC_LIMITS } from '../../../common/validation-rules';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
+import { EventPolicyAcknowledgementDto } from '../../../common/event-policy';
+
+export class CancelClientEventDto extends EventPolicyAcknowledgementDto {
+  @ApiProperty({ description: 'Reason for cancelling the event (10–1000 characters)' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @MinLength(10)
+  @MaxLength(1000)
+  reason!: string;
+
+  @ApiProperty({
+    description:
+      'Amount paid shown in the cancellation preview; prevents accepting a stale fee quote',
+  })
+  @IsNumber()
+  @Min(0)
+  expectedPaidAmount!: number;
+}
 
 export class CreateEventDto {
+  @ApiProperty({
+    description: 'Private events require attendee approval before payment',
+    enum: ['public', 'private'],
+    required: false,
+    default: 'public',
+  })
+  @IsIn(['public', 'private'])
+  @IsOptional()
+  visibility?: 'public' | 'private';
+
+  @IsIn(['draft', 'published', 'ongoing', 'completed', 'cancelled'])
+  @IsOptional()
+  status?: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
+
+  @IsString() @IsOptional() description?: string;
+  @IsString() @IsOptional() city?: string;
+
   @ApiProperty({
     description: 'Event name/title',
     example: 'Tech Conference 2024',
@@ -19,8 +71,8 @@ export class CreateEventDto {
   category!: string;
 
   @ApiProperty({
-    description: 'Event date (YYYY-MM-DD)',
-    example: '2024-06-15',
+    description: 'Event date (YYYY-MM-DD), at least 7 calendar days from today in India',
+    example: '2026-11-20',
   })
   @IsString()
   @IsNotEmpty()
@@ -46,7 +98,11 @@ export class CreateEventDto {
     description: 'Event capacity',
     example: 500,
   })
-  @IsNumber()
+  @IsInt({ message: 'Event capacity must be a whole number' })
+  @Min(EVENTFLOW_NUMERIC_LIMITS.CAPACITY.MIN, {
+    message: 'Event capacity must be at least 1 guest',
+  })
+  @Max(EVENTFLOW_NUMERIC_LIMITS.CAPACITY.MAX, { message: 'Maximum event capacity is 50,000' })
   @IsNotEmpty()
   capacity!: number;
 
@@ -54,7 +110,11 @@ export class CreateEventDto {
     description: 'Ticket price',
     example: 99,
   })
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Ticket price can have at most 2 decimal places' })
+  @Min(EVENTFLOW_NUMERIC_LIMITS.TICKET_PRICE.MIN, { message: 'Ticket price cannot be negative' })
+  @Max(EVENTFLOW_NUMERIC_LIMITS.TICKET_PRICE.MAX, {
+    message: 'Ticket price cannot exceed ₹1,00,000',
+  })
   @IsNotEmpty()
   ticketPrice!: number;
 
@@ -75,15 +135,31 @@ export class CreateEventDto {
   @IsString()
   @IsOptional()
   clientId?: string;
+
+  @IsString() @IsOptional() registrationDeadline?: string;
+  @IsString() @IsOptional() cancellationDeadline?: string;
+  @IsString() @IsOptional() eligibility?: string;
+  @IsBoolean() @IsOptional() waitlistEnabled?: boolean;
+}
+
+export class EventPreparationTaskDto {
+  @IsString() @IsOptional() taskId?: string;
+  @IsString() @IsNotEmpty() @MaxLength(200) title!: string;
+  @IsString() @IsNotEmpty() deadline!: string;
+  @IsIn(['pending', 'in_progress', 'completed']) status!: 'pending' | 'in_progress' | 'completed';
 }
 
 export class UpdateEventDto {
+  @IsString() @IsOptional() description?: string;
+  @IsString() @IsOptional() city?: string;
+
   @ApiProperty({
     description: 'Event name',
     required: false,
   })
   @IsString()
   @IsOptional()
+  @IsNotEmpty()
   name?: string;
 
   @ApiProperty({
@@ -92,6 +168,7 @@ export class UpdateEventDto {
   })
   @IsString()
   @IsOptional()
+  @IsNotEmpty()
   category?: string;
 
   @ApiProperty({
@@ -100,6 +177,7 @@ export class UpdateEventDto {
   })
   @IsString()
   @IsOptional()
+  @IsNotEmpty()
   date?: string;
 
   @ApiProperty({
@@ -108,6 +186,7 @@ export class UpdateEventDto {
   })
   @IsString()
   @IsOptional()
+  @IsNotEmpty()
   time?: string;
 
   @ApiProperty({
@@ -116,13 +195,18 @@ export class UpdateEventDto {
   })
   @IsString()
   @IsOptional()
+  @IsNotEmpty()
   location?: string;
 
   @ApiProperty({
     description: 'Event capacity',
     required: false,
   })
-  @IsNumber()
+  @IsInt({ message: 'Event capacity must be a whole number' })
+  @Min(EVENTFLOW_NUMERIC_LIMITS.CAPACITY.MIN, {
+    message: 'Event capacity must be at least 1 guest',
+  })
+  @Max(EVENTFLOW_NUMERIC_LIMITS.CAPACITY.MAX, { message: 'Maximum event capacity is 50,000' })
   @IsOptional()
   capacity?: number;
 
@@ -130,7 +214,11 @@ export class UpdateEventDto {
     description: 'Ticket price',
     required: false,
   })
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Ticket price can have at most 2 decimal places' })
+  @Min(EVENTFLOW_NUMERIC_LIMITS.TICKET_PRICE.MIN, { message: 'Ticket price cannot be negative' })
+  @Max(EVENTFLOW_NUMERIC_LIMITS.TICKET_PRICE.MAX, {
+    message: 'Ticket price cannot exceed ₹1,00,000',
+  })
   @IsOptional()
   ticketPrice?: number;
 
@@ -141,7 +229,22 @@ export class UpdateEventDto {
   })
   @IsString()
   @IsOptional()
+  @IsIn(['draft', 'published', 'ongoing', 'completed', 'cancelled'])
   status?: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
+
+  @IsString() @IsOptional() registrationDeadline?: string;
+  @IsString() @IsOptional() cancellationDeadline?: string;
+  @IsString() @IsOptional() eligibility?: string;
+  @IsBoolean() @IsOptional() waitlistEnabled?: boolean;
+
+  @IsString() @IsOptional() @MinLength(10) @MaxLength(1000) changeReason?: string;
+
+  @IsArray()
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => EventPreparationTaskDto)
+  @IsOptional()
+  preparationTasks?: EventPreparationTaskDto[];
 }
 
 export class EventResponseDto {

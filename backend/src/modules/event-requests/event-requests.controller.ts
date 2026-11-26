@@ -1,27 +1,100 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  Res,
+  StreamableFile,
+} from '@nestjs/common';
+import { Response } from 'express';
+import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiQuery } from '@nestjs/swagger';
 import { EventRequestsService } from './event-requests.service';
-import { CreateEventRequestDto, UpdateEventRequestStatusDto } from './dto/event-request.dto';
+import {
+  CreateEventRequestDto,
+  UpdateEventRequestStatusDto,
+  RequestMissingInfoDto,
+  ProvideMissingInfoDto,
+  SendProposalDto,
+  ReviseProposalDto,
+  RejectRequestDto,
+  ClientResponseDto,
+  UpdateAgreementStatusDto,
+  UpdatePaymentStatusDto,
+  ConfirmBookingDto,
+  PayDepositDto,
+  RequestEventModificationDto,
+  RespondToEventModificationDto,
+} from './dto/event-request.dto';
 import { RoleGuard } from '../../common/guards/role.guard';
 import { UserRoleDecorator } from '../../common/decorators/user-role.decorator';
 import { UserId } from '../../common/decorators/user-id.decorator';
 import { UserRole } from '../../common/constants';
+import { EventPolicyAcknowledgementDto, getEventPolicy } from '../../common/event-policy';
 
 @ApiTags('event-requests')
 @Controller('api/event-requests')
 @UseGuards(RoleGuard)
-@ApiHeader({ name: 'x-role', description: 'User role (client, event_organizer, super_admin)', required: true })
+@ApiHeader({
+  name: 'x-role',
+  description: 'User role (client, event_organizer, super_admin)',
+  required: true,
+})
 @ApiHeader({ name: 'x-user-id', description: 'User ID for ownership checks', required: false })
 export class EventRequestsController {
   constructor(private readonly service: EventRequestsService) {}
+
+  @Get('policies')
+  @ApiOperation({
+    summary:
+      'Read the event rules, cancellation policy, and terms acknowledged by clients and organizers',
+  })
+  policies() {
+    return { success: true, data: getEventPolicy() };
+  }
+
+  @Get('check-availability')
+  @ApiOperation({ summary: 'Check date availability for an organizer' })
+  @ApiQuery({ name: 'organizerId', required: true, example: 'org-001' })
+  @ApiQuery({ name: 'date', required: true, example: '2026-09-05' })
+  @ApiQuery({
+    name: 'excludeRequestId',
+    required: false,
+    description: 'Exclude the request currently being reviewed',
+  })
+  @ApiResponse({ status: 200, description: 'Date availability check results' })
+  checkAvailability(
+    @Query('organizerId') organizerId: string,
+    @Query('date') date: string,
+    @Query('excludeRequestId') excludeRequestId?: string
+  ) {
+    return this.service.checkDateAvailability(organizerId, date, excludeRequestId);
+  }
+
+  @Get('organizers')
+  @ApiOperation({ summary: 'List public organizer profiles for event requests' })
+  findOrganizers(@UserRoleDecorator() role: UserRole) {
+    return this.service.findOrganizers(role);
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create event request (CLIENT only)' })
   @ApiResponse({ status: 201, description: 'Event request created' })
+  @ApiResponse({ status: 400, description: 'Past date or invalid data' })
   @ApiResponse({ status: 403, description: 'Only CLIENT can create event requests' })
-  create(@Body() dto: CreateEventRequestDto, @UserRoleDecorator() role: UserRole) {
-    return this.service.create(dto, role);
+  @ApiResponse({ status: 409, description: 'Duplicate active request exists' })
+  create(
+    @Body() dto: CreateEventRequestDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.create(dto, role, userId);
   }
 
   @Get()
@@ -39,17 +112,256 @@ export class EventRequestsController {
     return this.service.findOne(id, role, userId);
   }
 
-  @Patch(':id/status')
-  @ApiOperation({ summary: 'Update event request status (ORGANIZER approves/rejects, CLIENT cancels)' })
-  @ApiResponse({ status: 200, description: 'Status updated. Notifies client.' })
+  @Get(':id/document')
+  @ApiOperation({ summary: 'Download event plan document attached to proposal or request' })
+  @ApiResponse({ status: 200, description: 'Document stream' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Event request not found' })
+  @ApiResponse({ status: 404, description: 'Document or request not found' })
+  async downloadDocument(
+    @Param('id') id: string,
+    @Query('version') version: string | undefined,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string,
+    @Res({ passthrough: true }) response: Response
+  ): Promise<StreamableFile> {
+    const parsedVersion = version !== undefined ? Number(version) : undefined;
+    const result = await this.service.getDocument(id, role, userId, parsedVersion);
+    const fileName = result.fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    response.set({
+      'Content-Type': result.mimeType || 'application/pdf',
+      'Content-Disposition': `attachment; filename="${fileName}"`,
+    });
+    return new StreamableFile(result.stream);
+  }
+
+  @Post(':id/review')
+  @ApiOperation({ summary: 'Organizer starts review (ORGANIZER only)' })
+  @ApiResponse({ status: 200, description: 'Status moved to under_review' })
+  startReview(
+    @Param('id') id: string,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.startReview(id, role, userId);
+  }
+
+  @Post(':id/accept')
+  @ApiOperation({ summary: 'Organizer accepts an event request and starts planning' })
+  acceptRequest(
+    @Param('id') id: string,
+    @Body() acknowledgement: EventPolicyAcknowledgementDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.acceptRequest(id, role, userId, acknowledgement);
+  }
+
+  @Post(':id/accept-counteroffer')
+  @ApiOperation({ summary: 'Organizer accepts the client counteroffer and starts planning' })
+  acceptCounteroffer(
+    @Param('id') id: string,
+    @Body() acknowledgement: EventPolicyAcknowledgementDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.acceptCounteroffer(id, role, userId, acknowledgement);
+  }
+
+  @Post(':id/request-info')
+  @ApiOperation({ summary: 'Request missing information from client (ORGANIZER only)' })
+  @ApiResponse({ status: 200, description: 'Query recorded and client notified' })
+  requestMissingInfo(
+    @Param('id') id: string,
+    @Body() dto: RequestMissingInfoDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.requestMissingInfo(id, dto, role, userId);
+  }
+
+  @Post(':id/provide-info')
+  @ApiOperation({ summary: 'Client provides missing information (CLIENT only)' })
+  @ApiResponse({ status: 200, description: 'Information provided and organizer notified' })
+  provideMissingInfo(
+    @Param('id') id: string,
+    @Body() dto: ProvideMissingInfoDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.provideMissingInfo(id, dto, role, userId);
+  }
+
+  @Post(':id/proposal')
+  @ApiOperation({ summary: 'Send proposal to client (ORGANIZER only)' })
+  @ApiResponse({ status: 200, description: 'Proposal recorded and status moved to proposal_sent' })
+  sendProposal(
+    @Param('id') id: string,
+    @Body() dto: SendProposalDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.sendProposal(id, dto, role, userId);
+  }
+
+  @Post(':id/revise-proposal')
+  @ApiOperation({ summary: 'Revise proposal to client (ORGANIZER only)' })
+  @ApiResponse({ status: 200, description: 'Revised proposal version recorded' })
+  reviseProposal(
+    @Param('id') id: string,
+    @Body() dto: ReviseProposalDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.reviseProposal(id, dto, role, userId);
+  }
+
+  @Post(':id/reject')
+  @ApiOperation({ summary: 'Reject request with mandatory reason (ORGANIZER only)' })
+  @ApiResponse({ status: 200, description: 'Request rejected and reason recorded' })
+  rejectRequest(
+    @Param('id') id: string,
+    @Body() dto: RejectRequestDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.rejectRequest(id, dto, role, userId);
+  }
+
+  @Post(':id/client-response')
+  @ApiOperation({
+    summary:
+      'Client responds to proposal: accept, request_revision, reject, withdraw (CLIENT only)',
+  })
+  @ApiResponse({ status: 200, description: 'Client decision recorded' })
+  clientResponse(
+    @Param('id') id: string,
+    @Body() dto: ClientResponseDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.clientResponse(id, dto, role, userId);
+  }
+
+  @Post(':id/agreement')
+  @ApiOperation({ summary: 'Record the client agreement acknowledgement or decline' })
+  @ApiResponse({ status: 200, description: 'Agreement status updated' })
+  updateAgreementStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateAgreementStatusDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.updateAgreementStatus(id, dto, role, userId);
+  }
+
+  @Post(':id/payment')
+  @ApiOperation({
+    summary: 'Legacy endpoint; payment status is changed only by verified payment processing',
+  })
+  @ApiResponse({ status: 403, description: 'Manual payment status changes are not allowed' })
+  updatePaymentStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdatePaymentStatusDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.updatePaymentStatus(id, dto, role, userId);
+  }
+
+  @Post(':id/confirm')
+  @ApiOperation({
+    summary: 'Confirm booking after agreement and deposit satisfied (ORGANIZER only)',
+  })
+  @ApiResponse({ status: 200, description: 'Booking confirmed and event created' })
+  @ApiResponse({ status: 400, description: 'Missing agreement or deposit satisfaction' })
+  confirmBooking(
+    @Param('id') id: string,
+    @Body() dto: ConfirmBookingDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.confirmBooking(id, dto, role, userId);
+  }
+
+  @Post(':id/pay-deposit')
+  @ApiOperation({ summary: 'Client pays the required deposit using demo provider' })
+  @ApiResponse({ status: 200, description: 'Deposit payment processed' })
+  payDeposit(
+    @Param('id') id: string,
+    @Body() dto: PayDepositDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.payDeposit(id, dto, role, userId);
+  }
+
+  @Post(':id/modifications')
+  @ApiOperation({ summary: 'Request modification for a confirmed event' })
+  @ApiResponse({ status: 201, description: 'Modification recorded and awaiting approval' })
+  requestModification(
+    @Param('id') id: string,
+    @Body() dto: RequestEventModificationDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.requestModification(id, dto, role, userId);
+  }
+
+  @Post(':id/modifications/:modId/respond')
+  @ApiOperation({ summary: 'Approve or reject a confirmed event modification' })
+  @ApiResponse({ status: 200, description: 'Modification approved or rejected' })
+  respondToModification(
+    @Param('id') id: string,
+    @Param('modId') modId: string,
+    @Body() dto: RespondToEventModificationDto,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.respondToModification(id, modId, dto, role, userId);
+  }
+
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Perform the supported Under Review transition only' })
+  @ApiResponse({ status: 200, description: 'Status updated' })
   updateStatus(
     @Param('id') id: string,
     @Body() dto: UpdateEventRequestStatusDto,
     @UserRoleDecorator() role: UserRole,
-    @UserId() userId: string,
+    @UserId() userId: string
   ) {
     return this.service.updateStatus(id, dto, role, userId);
+  }
+
+  @Get(':id/cancellation-preview')
+  @ApiOperation({
+    summary: 'Preview the cancellation policy, fee, and refund for a client event request',
+  })
+  @ApiResponse({ status: 200, description: 'Cancellation preview data' })
+  @ApiResponse({ status: 403, description: 'Only clients can view cancellation previews' })
+  @ApiResponse({ status: 404, description: 'Request not found' })
+  cancellationPreview(
+    @Param('id') id: string,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.requestCancellationPreview(id, role, userId);
+  }
+
+  @Post(':id/cancel')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Client cancels or withdraws their event request, applying the cancellation policy',
+  })
+  @ApiResponse({ status: 200, description: 'Request cancelled or withdrawn' })
+  @ApiResponse({ status: 400, description: 'Cancellation not permitted or bad payload' })
+  @ApiResponse({ status: 403, description: 'Only clients can cancel their own requests' })
+  @ApiResponse({ status: 409, description: 'Duplicate cancellation or paid-amount mismatch' })
+  cancelRequest(
+    @Param('id') id: string,
+    @Body() dto: any,
+    @UserRoleDecorator() role: UserRole,
+    @UserId() userId: string
+  ) {
+    return this.service.cancelRequest(id, dto, role, userId);
   }
 }

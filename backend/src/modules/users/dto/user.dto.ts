@@ -1,7 +1,18 @@
 import {
-  IsString, IsNotEmpty, IsOptional, IsEmail,
-  IsEnum, MinLength, Matches,
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEmail,
+  IsEnum,
+  MinLength,
+  Matches,
+  ValidateIf,
+  MaxLength,
+  IsBoolean,
+  IsObject,
+  ValidateNested,
 } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '../../../common/constants';
 
@@ -40,13 +51,41 @@ export class CreateUserDto {
     description: 'Phone number (10 digits, starts with 6-9)',
     example: '9876543210',
   })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsOptional()
-  @Matches(/^[6-9]\d{9}$/, { message: 'Phone must be 10 digits starting with 6, 7, 8, or 9' })
+  @ValidateIf((_, value) => value !== '')
+  @Matches(/^[6-9]\d{9}$/, { message: 'Enter a valid 10-digit Indian mobile number.' })
   phoneNo?: string;
 }
 
+export class UpdateUserPreferencesDto {
+  @IsOptional()
+  @IsBoolean()
+  emailNotifications?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  smsReminders?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  eventRecommendations?: boolean;
+}
+
 export class UpdateUserDto {
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => UpdateUserPreferencesDto)
+  preferences?: UpdateUserPreferencesDto;
+
+  @ApiPropertyOptional({ description: 'Profile biography' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(2000)
+  bio?: string;
+
   @ApiPropertyOptional({ description: 'Full name' })
   @IsString()
   @IsOptional()
@@ -63,9 +102,11 @@ export class UpdateUserDto {
   address?: string;
 
   @ApiPropertyOptional({ description: 'Phone number (10 digits, starts with 6-9)' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsOptional()
-  @Matches(/^[6-9]\d{9}$/, { message: 'Phone must be 10 digits starting with 6, 7, 8, or 9' })
+  @ValidateIf((_, value) => value !== '')
+  @Matches(/^[6-9]\d{9}$/, { message: 'Enter a valid 10-digit Indian mobile number.' })
   phoneNo?: string;
 
   @ApiPropertyOptional({
@@ -75,4 +116,14 @@ export class UpdateUserDto {
   @IsEnum(['active', 'inactive', 'suspended'])
   @IsOptional()
   status?: 'active' | 'inactive' | 'suspended';
+}
+
+export class ChangePasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  currentPassword!: string;
+
+  @IsString()
+  @MinLength(6)
+  newPassword!: string;
 }

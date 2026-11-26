@@ -1,6 +1,33 @@
 # Event Management & Coordination System - Backend
 
-Complete NestJS backend with in-memory data structures and role-based access control (RBAC).
+NestJS backend with role-based access control (RBAC), repeatable demo seed data, and restart-safe local JSON persistence.
+
+## Demo data and persistence
+
+The backend seeds linked demo users, role profiles, events, registrations, payments, attendance, and activity records when its data file does not exist. Mutations are saved before successful responses are sent, so the demo state survives server restarts.
+
+By default, the file is `backend/data/eventflow-store.json` (ignored by Git). Set `EVENTFLOW_DATA_FILE` to use a different path. Keep this file private: it contains local demo account data.
+
+Payments use the `DEMO_PROVIDER` only and are simulated. No card or bank details are accepted, and processed refunds are simulated as well.
+
+### Organizer attendee examples
+
+Active organizer demo events, including **Women in Engineering Conference**, have linked attendee profiles, registrations, ticket payments, and cancellation refunds. Open **Attendee Management** and select an event. Select **Engineering Leadership Roundtable (Demo)** to try private-event approvals and declines with reasons; the standard attendee account has a pending application there.
+
+### Cancellation workflow examples
+
+The standard client and organizer accounts share six events labeled `(Demo)`. Use **My Events → Upcoming Events** to try cancelling an active example and **Request Status → Cancelled** to inspect saved cancellation details. The organizer sees the same bookings in **Event Requests**.
+
+| Example | Amount paid | Cancellation fee | Refund due |
+| --- | ---: | ---: | ---: |
+| Deposit Paid - Cancel and Preview Refund | ₹30,000 | ₹3,000 | ₹27,000 |
+| Fully Paid - Cancel and Preview Refund | ₹1,20,000 | ₹12,000 | ₹1,08,000 |
+| No Payment - Cancel Without a Fee | ₹0 | ₹0 | ₹0 |
+| Deadline Passed - Cancellation Blocked | ₹27,000 | Cancellation unavailable within 14 days | — |
+| Client Cancelled - Refund Pending | ₹60,000 | ₹6,000 | ₹54,000 pending |
+| Organizer Cancelled - Full Refund Pending | ₹24,000 | ₹0 | ₹24,000 pending |
+
+Both sets of examples are added only outside production and preserve saved interactions on restart. Their additional profiles, payments, refunds, and dependent demo records are removed when restoring production data. Event dates are relative to the day each example is first added.
 
 ## 📋 Table of Contents
 
@@ -44,12 +71,7 @@ backend/
 │   │   │   ├── attendees.controller.ts
 │   │   │   ├── attendees.service.ts
 │   │   │   └── attendees.module.ts
-│   │   ├── staff/
 │   │   │   ├── dtos/
-│   │   │   │   └── staff.dto.ts
-│   │   │   ├── staff.controller.ts
-│   │   │   ├── staff.service.ts
-│   │   │   └── staff.module.ts
 │   │   └── activity-log/
 │   │       ├── activity-log.controller.ts
 │   │       ├── activity-log.service.ts
@@ -169,7 +191,7 @@ Headers: role: attendee
     "description": "Welcome event for new students",
     "date": "2024-06-15",
     "location": "Main Auditorium",
-    "organizerId": "staff-001",
+    "organizerId": "org-001",
     "attendees": ["att-001", "att-002"],
     "capacity": 500,
     "status": "upcoming",
@@ -198,7 +220,7 @@ Body:
   "description": "Event description",
   "date": "2024-06-20",
   "location": "Hall A",
-  "organizerId": "staff-001",
+  "organizerId": "org-001",
   "capacity": 300
 }
 ```
@@ -306,74 +328,6 @@ Headers: role: admin
 
 ---
 
-### 👔 STAFF ENDPOINTS
-
-#### Get All Staff (Admin/Superuser only)
-
-```http
-GET /staff?search=Alice
-Headers: role: admin
-```
-
-#### Get Staff by ID (Admin/Superuser only)
-
-```http
-GET /staff/:id
-Headers: role: admin
-```
-
-#### Create Staff (Superuser only)
-
-```http
-POST /staff
-Headers: role: superuser, Content-Type: application/json
-
-Body:
-{
-  "name": "Alice Manager",
-  "role": "manager",
-  "email": "alice@college.edu",
-  "availability": ["Monday", "Wednesday", "Friday"],
-  "assignedEvents": ["evt-001"]
-}
-```
-
-#### Update Staff (Superuser only)
-
-```http
-PUT /staff/:id
-Headers: role: superuser, Content-Type: application/json
-
-Body:
-{
-  "name": "Bob Manager",
-  "status": "inactive"
-}
-```
-
-#### Delete Staff (Superuser only)
-
-```http
-DELETE /staff/:id
-Headers: role: superuser
-```
-
-#### Assign Event to Staff (Superuser only)
-
-```http
-POST /staff/:id/events/:eventId
-Headers: role: superuser
-```
-
-#### Get Staff Statistics
-
-```http
-GET /staff/statistics
-Headers: role: admin
-```
-
----
-
 ### 📊 ACTIVITY LOGS ENDPOINTS
 
 #### Get All Activity Logs
@@ -418,9 +372,6 @@ Headers: role: superuser
 | View Events     |    ✅     |  ✅   |    ✅    |
 | Create Attendee |    ✅     |  ✅   |    ❌    |
 | Delete Attendee |    ✅     |  ❌   |    ❌    |
-| Create Staff    |    ✅     |  ❌   |    ❌    |
-| View Staff      |    ✅     |  ✅   |    ❌    |
-| Delete Staff    |    ✅     |  ❌   |    ❌    |
 
 ### Implementation Details
 
@@ -464,7 +415,7 @@ const newEvent = await api.createEvent({
   name: "New Event",
   date: "2024-06-20",
   location: "Hall A",
-  organizerId: "staff-001",
+  organizerId: "org-001",
   capacity: 300,
 });
 
@@ -527,22 +478,6 @@ Use the provided `integrated-index.html` which includes:
 }
 ```
 
-### Staff
-
-```typescript
-{
-  id: string;
-  name: string;
-  role: 'coordinator' | 'support' | 'manager';
-  email: string;
-  availability: string[];    // Days of week
-  assignedEvents: string[];  // Array of event IDs
-  status: 'active' | 'inactive';
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
-
 ### Activity Log
 
 ```typescript
@@ -574,7 +509,7 @@ curl -X POST http://localhost:3001/events \
     "description": "Annual tech conference",
     "date": "2024-07-15",
     "location": "Convention Center",
-    "organizerId": "staff-001",
+    "organizerId": "org-001",
     "capacity": 500
   }'
 ```
